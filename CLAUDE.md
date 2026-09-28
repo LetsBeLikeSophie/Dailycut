@@ -23,7 +23,10 @@
   `dailycut-web` 설정으로 실행(Browser pane에서 `preview_start name: dailycut-web`).
   - `lib/theme.dart` — 디자인 v6 토큰(색·섹션 테마·폰트). 색 바꾸려면 여기만 고치면 됨.
   - `lib/widgets/components.dart` — 기획 문서 "컴포넌트" 표의 부품들
-    (SectionHeader, HeroCard, StatTile, RankRow). 화면은 이 조합으로만 만듦.
+    (SectionHeader, HeroCard, StatTile, RankRow, SeasonalHero, ChartCard).
+    화면은 이 조합으로만 만듦. ChartCard의 라인 차트는 새 패키지 없이
+    CustomPainter로 직접 그림. HeroCard/ChartCard는 `showHeader: false`로
+    SectionScreen 안에서 쓸 때 섹션 헤더 중복을 끔(투데이에서만 true 유지).
   - `lib/screens/` — 투데이/시세/문화/머니/AI 다섯 화면.
   - `lib/api_client.dart` — 백엔드 클라이언트. 기본 `http://127.0.0.1:8010`,
     `--dart-define=API_BASE_URL=...`로 오버라이드(이슈팝과 같은 패턴).
@@ -39,12 +42,23 @@
 캡션 한 줄에서 카드 목록으로 승격, 축산물 시세/생필품 물가지수/우리 동네
 전통시장 세 카테고리 추가함(모두 아직 스텁).
 
+**시세 화면 구조 2차 개편(2026-09-29)**: "가격 순위(전주 대비 -18%)보다 지금
+뭐가 제철인지가 장보기 결정에 더 도움된다"는 피드백 — SeasonalHero(제철 목록)
+를 화면 맨 위로 올리고, 단일 텍스트 대신 ChartCard(배추 14일 가격 추이)로
+바꿈. 같은 ChartCard를 머니 탭 환율 카드에도 재사용. `price_trend`는 아직
+`_mock_daily_series()`로 만든 결정론적 가짜 데이터 — 실제로는
+**price_history 테이블 + 매일 스냅샷 배치**가 있어야 진짜 추이/인사이트가
+나옴(사용자가 "쌓아서 인사이트 발견에 활용"하고 싶다고 명시함 — 이건 API
+연동보다 먼저 설계해둘 만한 부분).
+
 **다음 할 일**:
 1. 공공 API 키 발급 + 상업적 이용/출처 표기 조건 확인 (기획 문서 "확인된 이용
    조건" 항목 참고).
 2. 각 backend 엔드포인트의 TODO를 실제 API 호출로 교체.
-3. 배포 인프라 결정 (이슈팝처럼 별도 Oracle Cloud 인스턴스 vs 다른 선택).
-4. 품목 상세/글 상세 화면 추가 (기획 문서 "다음 할 일" 항목).
+3. price_history 테이블 설계 + 매일 스냅샷 배치(스케줄러) — 그래프/인사이트의
+   전제조건.
+4. 배포 인프라 결정 (이슈팝처럼 별도 Oracle Cloud 인스턴스 vs 다른 선택).
+5. 품목 상세/글 상세 화면 추가 (기획 문서 "다음 할 일" 항목).
 
 ## 톤/작업 스타일
 
