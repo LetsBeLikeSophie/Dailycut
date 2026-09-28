@@ -1,0 +1,21 @@
+# Flutter/Dart
+app/.dart_tool/
+app/.flutter-plugin-registrant/
+app/build/
+app/.pub-cache/
+app/.pub/
+app/*.iml
+app/android/local.properties
+app/android/**/gradle-wrapper.jar
+app/android/.gradle/
+app/ios/Pods/
+app/ios/.symlinks/
+
+# Python
+backend/venv/
+backend/__pycache__/
+backend/*.pyc
+backend/*.db
+
+# OS
+.DS_Store
