@@ -70,30 +70,40 @@ Widget _statGrid(List<Map<String, dynamic>> items) => GridView.count(
 
 /// 2026-09-29: "시세"를 품목 가격 순위만 보여주는 좁은 지표가 아니라
 /// "장 볼 때 필요한 생활 물가" 전체로 넓히자는 피드백으로, 제철 과일·채소를
-/// 캡션 한 줄에서 카드 목록으로 승격하고 축산물/생필품/전통시장을 추가함.
+/// 캡션 한 줄에서 축산물/생필품/전통시장과 함께 추가함.
+/// 2026-09-29(2차): "제철인 게 뭔지가 가격 순위보다 결정에 더 도움된다"는
+/// 피드백으로 SeasonalHero를 화면 맨 위로 올리고, "전주 대비 -18%" 텍스트
+/// 대신 ChartCard로 실제 가격 추이를 보여줌.
 Widget marketScreen(ApiClient api) => SectionScreen(
       section: Section.market,
       fetch: api.market,
       contentBuilder: (context, data) {
-        final hero = data['hero'] as Map<String, dynamic>;
+        final trend = data['price_trend'] as Map<String, dynamic>;
+        final trendSeries = (trend['series'] as List)
+            .cast<Map<String, dynamic>>()
+            .map((e) => (e['price'] as num).toDouble())
+            .toList();
         final items = (data['items'] as List).cast<Map<String, dynamic>>();
-        final season = (data['in_season'] as List).cast<Map<String, dynamic>>();
+        final season = (data['in_season'] as List)
+            .cast<Map<String, dynamic>>()
+            .map((e) => (name: e['name'] as String, meta: e['meta'] as String))
+            .toList();
         final livestock = (data['livestock'] as List).cast<Map<String, dynamic>>();
         final essentials = (data['essentials'] as List).cast<Map<String, dynamic>>();
         final marketsNearby = (data['markets_nearby'] as List).cast<Map<String, dynamic>>();
         return [
-          HeroCard(
+          SeasonalHero(section: Section.market, items: season),
+          const SizedBox(height: 16),
+          ChartCard(
             section: Section.market,
-            title: hero['title'] as String,
-            highlight: hero['highlight'] as String?,
-            meta: hero['meta'] as String?,
+            label: '${trend['item']} 14일 추이 (${trend['unit']})',
+            value: '${trendSeries.last.round()}',
+            change: (trend['change_pct'] as num) >= 0 ? 'up' : 'down',
+            series: trendSeries,
+            showHeader: false,
           ),
           const SizedBox(height: 16),
           _statGrid(items),
-          const SizedBox(height: 24),
-          Text('제철 과일·채소', style: AppTheme.displaySerif(size: 16)),
-          for (final it in season)
-            RankRow(section: Section.market, rank: 0, title: it['name'] as String, meta: it['meta'] as String),
           const SizedBox(height: 24),
           Text('축산물 시세', style: AppTheme.displaySerif(size: 16)),
           const SizedBox(height: 8),
@@ -138,7 +148,14 @@ Widget moneyScreen(ApiClient api) => SectionScreen(
         final stats = (data['stats'] as List).cast<Map<String, dynamic>>();
         final deposits = (data['deposits'] as List).cast<Map<String, dynamic>>();
         return [
-          HeroCard(section: Section.money, title: hero['label'] as String, meta: '${hero['value']}'),
+          ChartCard(
+            section: Section.money,
+            label: hero['label'] as String,
+            value: '${hero['value']}',
+            change: hero['change'] as String,
+            series: (hero['series'] as List).map((e) => (e as num).toDouble()).toList(),
+            showHeader: false,
+          ),
           const SizedBox(height: 16),
           _statGrid(stats),
           const SizedBox(height: 16),
@@ -162,6 +179,7 @@ Widget aiScreen(ApiClient api) => SectionScreen(
             title: article['title'] as String,
             highlight: article['highlight'] as String?,
             meta: article['meta'] as String?,
+            showHeader: false,
           ),
           const SizedBox(height: 16),
           Text('이번 주 인기 논문', style: AppTheme.displaySerif(size: 16)),

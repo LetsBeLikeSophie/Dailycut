@@ -11,6 +11,9 @@ TourAPI/ECOS 호출로 교체하면 됨.
 
 from __future__ import annotations
 
+import random
+from datetime import date, timedelta
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -34,19 +37,43 @@ def health():
 # 제철 과일/채소를 캡션 한 줄에서 카드로 승격하고, 축산물/생필품/전통시장
 # 세 카테고리를 추가함. 각 TODO가 실제 연동할 공공 API.
 #
+# 2026-09-29(2차): "전주 대비 -18%" 같은 단일 숫자보다 "지금 제철인 게
+# 뭔지"가 장보기 의사결정에 더 도움된다는 피드백 — 제철 목록을 화면
+# 제일 위(hero 자리)로 올리고, 가격은 텍스트 대신 추이 그래프(ChartCard)
+# 로 보여주도록 price_trend를 추가함. 지금은 매일 실제로 값을 저장하는
+# 파이프라인이 없어서 결정론적 시드로 그럴듯한 가짜 14일치를 만들어
+# 둠(_mock_daily_series) — KAMIS 연동 후엔 진짜 스케줄러가 매일 스냅샷을
+# DB에 쌓고 그걸 그대로 반환하면 됨(기획 문서 "다음 할 일"의 "매일 저장해서
+# 주간·월간 추이" 항목과 같은 방향). "쌓아서 인사이트에 활용"까지 하려면
+# price_history 테이블 + 매일 스냅샷 배치가 별도로 필요함 — 아직 없음.
+#
 # TODO: KAMIS 농산물유통정보 (https://www.kamis.or.kr/customer/reference/openapi_list.do)
 # TODO: 축산물품질평가원 축산물유통정보 (계란·돼지고기·한우 — KAMIS는 농산물만 다룸)
 # TODO: 통계청 KOSIS 소비자물가지수 (세제·휴지 등 공산품 — 월별 갱신)
 # TODO: 소상공인시장진흥공단 전통시장 현황 (위치·휴장일)
+# TODO: price_history 테이블 + 매일 스냅샷 배치 (진짜 추이 그래프·인사이트용)
+def _mock_daily_series(item: str, base: int, days: int = 14) -> list[dict]:
+    rng = random.Random(hash(item) % 10_000)
+    today = date.today()
+    values, v = [], float(base)
+    for _ in range(days):
+        v *= 1 + rng.uniform(-0.035, 0.035)
+        values.append(round(v))
+    return [
+        {"date": (today - timedelta(days=days - 1 - i)).isoformat(), "price": p}
+        for i, p in enumerate(values)
+    ]
+
+
 @app.get("/market")
 def market():
+    trend = _mock_daily_series("배추", 2650)
     return {
-        "hero": {
-            "theme": "market",
-            "title": "이번 주 가장 많이 내린 품목",
-            "highlight": "배추",
-            "meta": "전주 대비 -18%",
-            "figure": "2,400원/포기",
+        "price_trend": {
+            "item": "배추",
+            "unit": "원/포기",
+            "series": trend,
+            "change_pct": round((trend[-1]["price"] - trend[0]["price"]) / trend[0]["price"] * 100, 1),
         },
         "items": [
             {"label": "배추", "value": "2,400원", "change": "down"},
@@ -137,10 +164,17 @@ def ai():
 def today():
     """투데이(홈) — 섹션별 대표 카드 1개씩만 모아서 반환."""
     m, c, mo, a = market(), culture(), money(), ai()
+    season_top = m["in_season"][0]
+    market_card = {
+        "theme": "market",
+        "title": "지금 제철",
+        "highlight": season_top["name"],
+        "meta": season_top["meta"],
+    }
     return {
         "headline": "오늘 한 줄 요약(스텁)",
         "cards": [
-            {"section": "market", **m["hero"]},
+            {"section": "market", **market_card},
             {"section": "culture", **c["hero"]},
             {"section": "money", **mo["hero"]},
             {"section": "ai", **a["weekly_article"]},
