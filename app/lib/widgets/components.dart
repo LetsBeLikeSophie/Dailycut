@@ -200,6 +200,8 @@ class WeatherHero extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = sectionThemes[section]!;
     final today = data['today'] as Map<String, dynamic>;
+    final hourly = (data['hourly'] as List).cast<Map<String, dynamic>>();
+    final weekly = (data['weekly'] as List).cast<Map<String, dynamic>>();
     final goodFor = (data['good_for'] as List).cast<Map<String, dynamic>>();
     final air = data['air_quality'] as Map<String, dynamic>;
     return _CardShell(
@@ -230,10 +232,79 @@ class WeatherHero extends StatelessWidget {
             '체감 ${today['feels_like']}° · 최고 ${today['high']}° · 최저 ${today['low']}°',
             style: const TextStyle(color: AppColors.inkSoft, fontSize: 12),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 14),
+          // 2026-09-29: "한국 날씨는 변덕스러우니 네이버처럼 자세히" 요청 —
+          // 오늘 한 줄 요약만으론 부족해서 시간대별 가로 스크롤 스트립을 추가함.
+          SizedBox(
+            height: 64,
+            child: ListView.separated(
+              scrollDirection: Axis.horizontal,
+              itemCount: hourly.length,
+              separatorBuilder: (context, i) => const SizedBox(width: 16),
+              itemBuilder: (context, i) {
+                final h = hourly[i];
+                final pop = h['pop'] as int;
+                return Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(h['time'] as String, style: const TextStyle(fontSize: 11, color: AppColors.inkSoft)),
+                    const SizedBox(height: 6),
+                    Text(
+                      '${h['temp']}°',
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        fontFeatures: [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      pop > 0 ? '$pop%' : '',
+                      style: TextStyle(fontSize: 10, color: pop > 0 ? t.color : Colors.transparent),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+          const SizedBox(height: 14),
           _Highlight(text: data['outfit'] as String, color: t.highlight),
           const SizedBox(height: 10),
           Text(data['weekend'] as String, style: const TextStyle(fontSize: 12, color: AppColors.inkSoft)),
+          const SizedBox(height: 14),
+          for (final w in weekly)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 4),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 36,
+                    child: Text(w['day'] as String, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                  ),
+                  SizedBox(
+                    width: 40,
+                    child: Text(w['date'] as String, style: const TextStyle(fontSize: 11, color: AppColors.inkSoft)),
+                  ),
+                  Expanded(
+                    child: Text(w['condition'] as String, style: const TextStyle(fontSize: 12)),
+                  ),
+                  if ((w['pop'] as int) > 0)
+                    Text('${w['pop']}%', style: TextStyle(fontSize: 11, color: t.color)),
+                  const SizedBox(width: 10),
+                  SizedBox(
+                    width: 70,
+                    child: Text(
+                      '${w['low']}° / ${w['high']}°',
+                      textAlign: TextAlign.right,
+                      style: const TextStyle(
+                        fontSize: 12,
+                        fontFeatures: [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           const SizedBox(height: 10),
           Wrap(
             spacing: 16,

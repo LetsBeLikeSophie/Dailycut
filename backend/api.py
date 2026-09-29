@@ -12,7 +12,7 @@ TourAPI/ECOS 호출로 교체하면 됨.
 from __future__ import annotations
 
 import random
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -37,17 +37,63 @@ def health():
 # 실내 추천처럼 다른 섹션도 같이 쓸 "공통" 데이터라서 /market에 얹지 않고
 # 독립 엔드포인트로 뺌.
 #
-# TODO: 기상청 단기예보(오늘)·중기예보(주말) API
+# 2026-09-29(2차): "한국 날씨는 변덕스러우니 네이버 날씨처럼 자세히"
+# 요청 — 오늘 하루 요약만으론 부족해서 시간대별(hourly)·주간(weekly)
+# 예보를 추가함. (실시간 지역별 채팅 같은 "날씨톡" 기능은 웹소켓·채팅방
+# 관리가 필요한 완전히 다른 스코프라 이번엔 보류하기로 함 — 필요해지면
+# 별도로 설계.)
+#
+# TODO: 기상청 단기예보(오늘·시간대별)·중기예보(주간) API
 #   (https://www.data.go.kr/data/15084084/openapi.do,
 #    https://www.data.go.kr/data/15059468/openapi.do)
 # TODO: 에어코리아 대기질 실시간 조회 API (미세먼지)
 #   (https://www.data.go.kr/data/15109350/openapi.do)
 # 옷차림 추천 / 빨래·세차 좋은 날은 API가 따로 없음 — 기온·강수 확률로
 # 자체 규칙(rule-based)을 만들면 됨(AI 호출 없이도 충분).
+def _mock_hourly(base_temp: int, hours: int = 8) -> list[dict]:
+    rng = random.Random(1)
+    now = datetime.now()
+    slots = []
+    for i in range(hours):
+        t = now + timedelta(hours=i * 3)
+        drift = round(4 * (0.5 - abs((t.hour - 15) / 24)))
+        slots.append(
+            {
+                "time": t.strftime("%H시"),
+                "temp": base_temp + drift + rng.randint(-1, 1),
+                "condition": rng.choice(["맑음", "맑음", "구름 조금", "흐림"]),
+                "pop": rng.choice([0, 0, 10, 20, 30]),
+            }
+        )
+    return slots
+
+
+def _mock_weekly(base_high: int, base_low: int, days: int = 6) -> list[dict]:
+    rng = random.Random(2)
+    weekday_names = ["월", "화", "수", "목", "금", "토", "일"]
+    today = date.today()
+    out = []
+    for i in range(1, days + 1):
+        d = today + timedelta(days=i)
+        out.append(
+            {
+                "day": weekday_names[d.weekday()],
+                "date": f"{d.month}/{d.day}",
+                "high": base_high + rng.randint(-3, 3),
+                "low": base_low + rng.randint(-3, 2),
+                "condition": rng.choice(["맑음", "구름 많음", "흐림", "비"]),
+                "pop": rng.choice([0, 10, 30, 60, 80]),
+            }
+        )
+    return out
+
+
 @app.get("/weather")
 def weather():
     return {
         "today": {"temp": 19, "feels_like": 17, "condition": "맑음", "high": 22, "low": 14},
+        "hourly": _mock_hourly(19),
+        "weekly": _mock_weekly(22, 14),
         "weekend": "토요일은 흐리고 일요일은 맑아요 — 나들이는 일요일 추천",
         "outfit": "가벼운 니트에 자켓 하나 걸치면 딱 좋아요",
         "good_for": [
