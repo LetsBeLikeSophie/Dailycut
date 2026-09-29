@@ -81,7 +81,18 @@ class AppTheme {
     );
   }
 
-  /// 섹션 대제목에만 쓰는 세리프(Instrument Serif).
+  /// 섹션 대제목(생활·문화·머니·AI, SectionHeader)에만 쓰는 세리프
+  /// (Instrument Serif) — "나머지는 Noto Sans KR"이 v6 디자인 규칙.
   static TextStyle displaySerif({double size = 22}) =>
       GoogleFonts.instrumentSerif(fontSize: size, color: AppColors.ink);
+
+  /// 2026-09-29: displaySerif를 "축산물 시세"/"예·적금 금리 순위" 같은
+  /// 화면 안 소제목에도 갖다 써서 "세리프는 섹션 대제목에만" 규칙을
+  /// 어기고 있었음(직접 확인해서 발견) — 소제목은 이 스타일(Noto Sans
+  /// KR 볼드)로 바꿔서 분리함.
+  static const TextStyle subheading = TextStyle(
+    fontSize: 16,
+    fontWeight: FontWeight.w700,
+    color: AppColors.ink,
+  );
 }

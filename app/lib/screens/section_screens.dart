@@ -116,15 +116,15 @@ Widget marketScreen(ApiClient api) => SectionScreen(
           const SizedBox(height: 16),
           _statGrid(items),
           const SizedBox(height: 24),
-          Text('축산물 시세', style: AppTheme.displaySerif(size: 16)),
+          Text('축산물 시세', style: AppTheme.subheading),
           const SizedBox(height: 8),
           _statGrid(livestock),
           const SizedBox(height: 24),
-          Text('생필품 물가지수', style: AppTheme.displaySerif(size: 16)),
+          Text('생필품 물가지수', style: AppTheme.subheading),
           const SizedBox(height: 8),
           _statGrid(essentials),
           const SizedBox(height: 24),
-          Text('우리 동네 전통시장', style: AppTheme.displaySerif(size: 16)),
+          Text('우리 동네 전통시장', style: AppTheme.subheading),
           for (final it in marketsNearby)
             RankRow(section: Section.market, rank: 0, title: it['title'] as String, meta: it['meta'] as String),
         ];
@@ -144,10 +144,10 @@ Widget cultureScreen(ApiClient api) => SectionScreen(
           for (final it in boxOffice)
             RankRow(section: Section.culture, rank: it['rank'] as int, title: it['title'] as String, meta: it['meta'] as String),
           const SizedBox(height: 16),
-          Text('이번 주 개막 공연', style: AppTheme.displaySerif(size: 16)),
+          Text('이번 주 개막 공연', style: AppTheme.subheading),
           for (final it in performances) RankRow(section: Section.culture, rank: 0, title: it['title'] as String, meta: it['meta'] as String),
           const SizedBox(height: 16),
-          Text('주말 축제', style: AppTheme.displaySerif(size: 16)),
+          Text('주말 축제', style: AppTheme.subheading),
           for (final it in festivals) RankRow(section: Section.culture, rank: 0, title: it['title'] as String, meta: it['meta'] as String),
           const SizedBox(height: 24),
           // 2026-09-29: 국내 3대 차트(멜론/지니/벅스)·가온(써클차트) 전부
@@ -155,11 +155,11 @@ Widget cultureScreen(ApiClient api) => SectionScreen(
           // 공식 API가 있는 Spotify·유튜브만 근사치로 넣고, "국내 차트"가
           // 아니라는 걸 라벨에서 명확히 함(Spotify는 국내 점유율이 낮아서
           // 실제 국내 인기 순위와 차이 날 수 있음).
-          Text('오늘의 음악 (Spotify 기준)', style: AppTheme.displaySerif(size: 16)),
+          Text('오늘의 음악 (Spotify 기준)', style: AppTheme.subheading),
           for (final it in spotifyTop)
             RankRow(section: Section.culture, rank: it['rank'] as int, title: it['title'] as String, meta: it['meta'] as String),
           const SizedBox(height: 16),
-          Text('유튜브 인기 급상승 음악', style: AppTheme.displaySerif(size: 16)),
+          Text('유튜브 인기 급상승 음악', style: AppTheme.subheading),
           for (final it in youtubeTrending)
             RankRow(section: Section.culture, rank: it['rank'] as int, title: it['title'] as String, meta: it['meta'] as String),
         ];
@@ -185,7 +185,7 @@ Widget moneyScreen(ApiClient api) => SectionScreen(
           const SizedBox(height: 16),
           _statGrid(stats),
           const SizedBox(height: 16),
-          Text('예·적금 금리 순위', style: AppTheme.displaySerif(size: 16)),
+          Text('예·적금 금리 순위', style: AppTheme.subheading),
           for (final it in deposits)
             RankRow(section: Section.money, rank: it['rank'] as int, title: it['title'] as String, meta: it['meta'] as String),
         ];
@@ -208,7 +208,7 @@ Widget aiScreen(ApiClient api) => SectionScreen(
             showHeader: false,
           ),
           const SizedBox(height: 16),
-          Text('이번 주 인기 논문', style: AppTheme.displaySerif(size: 16)),
+          Text('이번 주 인기 논문', style: AppTheme.subheading),
           for (final it in papers) RankRow(section: Section.ai, rank: 0, title: it['title'] as String, meta: it['meta'] as String),
           const SizedBox(height: 16),
           _statGrid(models),
