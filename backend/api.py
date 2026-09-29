@@ -193,6 +193,30 @@ def culture():
         ],
         "performances": [{"title": "공연 A", "meta": "이번 주 개막"}],
         "festivals": [{"title": "축제 A", "meta": "이번 주말 · OO시"}],
+        # 2026-09-29: "음악 순위도 넣을 수 있나" 질문 — 멜론/지니/벅스/
+        # 가온(써클차트) 전부 공식 오픈 API가 없어서(스크래핑밖에 방법이
+        # 없는데 이용약관 위반 소지가 있어 지금까지의 "공식 API만" 원칙에
+        # 안 맞음) 제외하고, 공식 API가 있는 두 곳만 근사치로 넣기로 함.
+        # 주의: Spotify는 국내 점유율이 멜론보다 훨씬 낮아서 "한국 실제
+        # 인기 순위"랑은 차이가 날 수 있음 — "국내 차트"가 아니라
+        # "Spotify 기준"이라고 라벨을 명확히 해야 함(UI에서 이미 그렇게
+        # 표시 중, spotify_top의 title 필드가 "Spotify 기준" 포함).
+        #
+        # TODO: Spotify Web API — Client Credentials 플로우로 토큰 받고
+        #   "Top 50 - South Korea" 공개 플레이리스트(37i9dQZEVXbNxXF4SkHj9F)
+        #   조회 (https://developer.spotify.com/documentation/web-api)
+        # TODO: YouTube Data API v3 — videos.list(chart=mostPopular,
+        #   regionCode=KR, videoCategoryId=10) 로 인기 급상승 음악
+        #   (https://developers.google.com/youtube/v3/docs/videos/list)
+        "spotify_top": [
+            {"rank": 1, "title": "곡 제목 A", "meta": "아티스트 A"},
+            {"rank": 2, "title": "곡 제목 B", "meta": "아티스트 B"},
+            {"rank": 3, "title": "곡 제목 C", "meta": "아티스트 C"},
+        ],
+        "youtube_trending": [
+            {"rank": 1, "title": "뮤직비디오 제목 A", "meta": "채널 A"},
+            {"rank": 2, "title": "뮤직비디오 제목 B", "meta": "채널 B"},
+        ],
     }
 
 

@@ -138,6 +138,8 @@ Widget cultureScreen(ApiClient api) => SectionScreen(
         final boxOffice = (data['box_office'] as List).cast<Map<String, dynamic>>();
         final performances = (data['performances'] as List).cast<Map<String, dynamic>>();
         final festivals = (data['festivals'] as List).cast<Map<String, dynamic>>();
+        final spotifyTop = (data['spotify_top'] as List).cast<Map<String, dynamic>>();
+        final youtubeTrending = (data['youtube_trending'] as List).cast<Map<String, dynamic>>();
         return [
           for (final it in boxOffice)
             RankRow(section: Section.culture, rank: it['rank'] as int, title: it['title'] as String, meta: it['meta'] as String),
@@ -147,6 +149,19 @@ Widget cultureScreen(ApiClient api) => SectionScreen(
           const SizedBox(height: 16),
           Text('주말 축제', style: AppTheme.displaySerif(size: 16)),
           for (final it in festivals) RankRow(section: Section.culture, rank: 0, title: it['title'] as String, meta: it['meta'] as String),
+          const SizedBox(height: 24),
+          // 2026-09-29: 국내 3대 차트(멜론/지니/벅스)·가온(써클차트) 전부
+          // 공식 오픈 API가 없어서 못 넣음(스크래핑은 이용약관 위반 소지) —
+          // 공식 API가 있는 Spotify·유튜브만 근사치로 넣고, "국내 차트"가
+          // 아니라는 걸 라벨에서 명확히 함(Spotify는 국내 점유율이 낮아서
+          // 실제 국내 인기 순위와 차이 날 수 있음).
+          Text('오늘의 음악 (Spotify 기준)', style: AppTheme.displaySerif(size: 16)),
+          for (final it in spotifyTop)
+            RankRow(section: Section.culture, rank: it['rank'] as int, title: it['title'] as String, meta: it['meta'] as String),
+          const SizedBox(height: 16),
+          Text('유튜브 인기 급상승 음악', style: AppTheme.displaySerif(size: 16)),
+          for (final it in youtubeTrending)
+            RankRow(section: Section.culture, rank: it['rank'] as int, title: it['title'] as String, meta: it['meta'] as String),
         ];
       },
     );
