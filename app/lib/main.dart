@@ -33,7 +33,7 @@ class _RootShellState extends State<RootShell> {
   final _api = ApiClient();
   int _index = 0;
 
-  static const _tabs = ['투데이', '시세', '문화', '머니', 'AI'];
+  static const _tabs = ['투데이', '생활', '문화', '머니', 'AI'];
 
   @override
   Widget build(BuildContext context) {

@@ -32,6 +32,32 @@ def health():
     return {"status": "ok"}
 
 
+# 2026-09-29: 기획 문서에 "생활" 섹션 확정 내용이 추가되면서 날씨가 제일
+# 먼저 나옴 — 축제가 맑은 날 위주로 뜨는 것(문화 섹션), 미세먼지 나쁜 날
+# 실내 추천처럼 다른 섹션도 같이 쓸 "공통" 데이터라서 /market에 얹지 않고
+# 독립 엔드포인트로 뺌.
+#
+# TODO: 기상청 단기예보(오늘)·중기예보(주말) API
+#   (https://www.data.go.kr/data/15084084/openapi.do,
+#    https://www.data.go.kr/data/15059468/openapi.do)
+# TODO: 에어코리아 대기질 실시간 조회 API (미세먼지)
+#   (https://www.data.go.kr/data/15109350/openapi.do)
+# 옷차림 추천 / 빨래·세차 좋은 날은 API가 따로 없음 — 기온·강수 확률로
+# 자체 규칙(rule-based)을 만들면 됨(AI 호출 없이도 충분).
+@app.get("/weather")
+def weather():
+    return {
+        "today": {"temp": 19, "feels_like": 17, "condition": "맑음", "high": 22, "low": 14},
+        "weekend": "토요일은 흐리고 일요일은 맑아요 — 나들이는 일요일 추천",
+        "outfit": "가벼운 니트에 자켓 하나 걸치면 딱 좋아요",
+        "good_for": [
+            {"label": "빨래", "good": True},
+            {"label": "세차", "good": False},
+        ],
+        "air_quality": {"pm10": "보통", "pm25": "좋음"},
+    }
+
+
 # 2026-09-29: 처음엔 "시세"를 품목 가격 순위만 보여주는 좁은 지표로
 # 잡았는데, "주부가 장 볼 때 필요한 생활 물가" 전체로 넓히자는 피드백으로
 # 제철 과일/채소를 캡션 한 줄에서 카드로 승격하고, 축산물/생필품/전통시장

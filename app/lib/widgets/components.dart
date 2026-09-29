@@ -185,6 +185,81 @@ class HeroCard extends StatelessWidget {
   }
 }
 
+/// 오늘 날씨 + 옷차림 + 빨래/세차하기 좋은 날 + 미세먼지를 한 카드로.
+/// 2026-09-29: 기획 문서에 "생활" 섹션이 확정되며 날씨가 제일 먼저
+/// 나오는 항목으로 정해짐 — 축제(문화 섹션)가 맑은 날 위주로 뜨는 것처럼
+/// 다른 섹션도 같이 쓸 "공통" 데이터라 구현 우선순위를 여기부터 잡음.
+/// 화면 맨 위, 제철보다도 앞에 옴(아침에 제일 먼저 확인하는 정보라서).
+class WeatherHero extends StatelessWidget {
+  const WeatherHero({super.key, required this.section, required this.data});
+
+  final Section section;
+  final Map<String, dynamic> data;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = sectionThemes[section]!;
+    final today = data['today'] as Map<String, dynamic>;
+    final goodFor = (data['good_for'] as List).cast<Map<String, dynamic>>();
+    final air = data['air_quality'] as Map<String, dynamic>;
+    return _CardShell(
+      emphasized: true,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text('오늘 날씨', style: const TextStyle(color: AppColors.inkSoft, fontSize: 12)),
+          const SizedBox(height: 6),
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              Text(
+                '${today['temp']}°',
+                style: const TextStyle(
+                  fontSize: 32,
+                  fontWeight: FontWeight.w700,
+                  fontFeatures: [FontFeature.tabularFigures()],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Text(today['condition'] as String, style: const TextStyle(fontSize: 15)),
+            ],
+          ),
+          const SizedBox(height: 2),
+          Text(
+            '체감 ${today['feels_like']}° · 최고 ${today['high']}° · 최저 ${today['low']}°',
+            style: const TextStyle(color: AppColors.inkSoft, fontSize: 12),
+          ),
+          const SizedBox(height: 10),
+          _Highlight(text: data['outfit'] as String, color: t.highlight),
+          const SizedBox(height: 10),
+          Text(data['weekend'] as String, style: const TextStyle(fontSize: 12, color: AppColors.inkSoft)),
+          const SizedBox(height: 10),
+          Wrap(
+            spacing: 16,
+            runSpacing: 6,
+            children: [
+              for (final g in goodFor)
+                Text(
+                  '${g['good'] == true ? '✓' : '✕'} ${g['label']}하기 ${g['good'] == true ? '좋은' : '별로인'} 날',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: g['good'] == true ? t.color : AppColors.inkSoft,
+                    fontWeight: g['good'] == true ? FontWeight.w600 : FontWeight.normal,
+                  ),
+                ),
+              Text(
+                '미세먼지 ${air['pm10']} · 초미세먼지 ${air['pm25']}',
+                style: const TextStyle(fontSize: 12, color: AppColors.inkSoft),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 /// "지금 제철인 것들"을 강조된 카드 하나로 모아 보여줌. 2026-09-29:
 /// "가격 순위보다 지금 뭐가 제철인지가 장보기 결정에 더 중요하다"는
 /// 피드백으로, 화면 맨 위(hero 자리)에 오도록 만듦 — 제철 = 싸고

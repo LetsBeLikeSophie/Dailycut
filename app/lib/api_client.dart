@@ -14,6 +14,7 @@ class ApiClient {
   final String baseUrl;
 
   Future<Map<String, dynamic>> today() => _getJson('/today');
+  Future<Map<String, dynamic>> weather() => _getJson('/weather');
   Future<Map<String, dynamic>> market() => _getJson('/market');
   Future<Map<String, dynamic>> culture() => _getJson('/culture');
   Future<Map<String, dynamic>> money() => _getJson('/money');

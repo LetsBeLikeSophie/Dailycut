@@ -20,9 +20,13 @@ class SectionTheme {
   final String shape; // ○ △ □ ✳
 }
 
+// 2026-09-29: 기획 문서 결정 — "시세" 섹션을 "생활(Living)"로 넓힘(날씨,
+// 미세먼지, 장보기 물가, 동네 최저가 주유소, 식품 회수 알림 등). 색(노랑)과
+// 도형(○)은 그대로 두고 라벨만 바꿈 — enum 이름(market)은 코드 전체에 이미
+// 퍼져있어서 안 바꿈, 화면에 보이는 한글 라벨만 의미에 맞게 갱신.
 const sectionThemes = <Section, SectionTheme>{
   Section.market: SectionTheme(
-    label: '시세',
+    label: '생활',
     color: Color(0xFFE0A81E),
     highlight: Color(0xFFFCE9A8),
     shape: '○',

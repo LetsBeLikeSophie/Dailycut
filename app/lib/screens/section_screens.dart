@@ -74,10 +74,19 @@ Widget _statGrid(List<Map<String, dynamic>> items) => GridView.count(
 /// 2026-09-29(2차): "제철인 게 뭔지가 가격 순위보다 결정에 더 도움된다"는
 /// 피드백으로 SeasonalHero를 화면 맨 위로 올리고, "전주 대비 -18%" 텍스트
 /// 대신 ChartCard로 실제 가격 추이를 보여줌.
+/// 2026-09-29(3차): 기획 문서에 "생활" 섹션이 확정되며 날씨가 제일 먼저
+/// 나오는 항목으로 정해짐 — WeatherHero를 화면 맨 위(제철보다도 위)에 둠.
+/// market()/weather() 두 엔드포인트를 Future.wait로 같이 받아서 한 맵으로
+/// 합침 — SectionScreen은 fetch 하나만 받게 설계돼 있어서 구조를 안 바꾸고
+/// 이렇게 조합함.
 Widget marketScreen(ApiClient api) => SectionScreen(
       section: Section.market,
-      fetch: api.market,
+      fetch: () async {
+        final results = await Future.wait([api.market(), api.weather()]);
+        return {...results[0], 'weather': results[1]};
+      },
       contentBuilder: (context, data) {
+        final weather = data['weather'] as Map<String, dynamic>;
         final trend = data['price_trend'] as Map<String, dynamic>;
         final trendSeries = (trend['series'] as List)
             .cast<Map<String, dynamic>>()
@@ -92,6 +101,8 @@ Widget marketScreen(ApiClient api) => SectionScreen(
         final essentials = (data['essentials'] as List).cast<Map<String, dynamic>>();
         final marketsNearby = (data['markets_nearby'] as List).cast<Map<String, dynamic>>();
         return [
+          WeatherHero(section: Section.market, data: weather),
+          const SizedBox(height: 16),
           SeasonalHero(section: Section.market, items: season),
           const SizedBox(height: 16),
           ChartCard(
