@@ -55,15 +55,6 @@ class _SectionScreenState extends State<SectionScreen> {
   }
 }
 
-/// 2026-09-30: "생활에 날씨가 통째로 들어있는 게 이상하다, 날씨로 따로
-/// 빼서 첫 화면으로" 요청 — 독립 섹션(Section.weather)으로 뺌. 기존에
-/// 만들어둔 WeatherHero를 그대로 재사용(데이터 모양이 똑같음).
-Widget weatherScreen(ApiClient api) => SectionScreen(
-      section: Section.weather,
-      fetch: api.weather,
-      contentBuilder: (context, data) => [WeatherHero(section: Section.weather, data: data)],
-    );
-
 Widget _statGrid(List<Map<String, dynamic>> items) => GridView.count(
       crossAxisCount: 2,
       shrinkWrap: true,
@@ -84,8 +75,8 @@ Widget _statGrid(List<Map<String, dynamic>> items) => GridView.count(
 /// 피드백으로 SeasonalHero를 화면 맨 위로 올리고, "전주 대비 -18%" 텍스트
 /// 대신 ChartCard로 실제 가격 추이를 보여줌.
 /// 2026-09-30: "생활에 날씨가 통째로 들어있는 게 이상하다"는 피드백으로
-/// 날씨를 별도 섹션(weatherScreen)으로 완전히 분리함 — 여기선 다시
-/// market()만 부름. 제철도 이름+짧은 문구 나열 대신 월별 간트차트
+/// 날씨를 빼서 투데이 카드로만 남김(전용 탭/화면은 안 만듦) — 여기선
+/// 다시 market()만 부름. 제철도 이름+짧은 문구 나열 대신 월별 간트차트
 /// (SeasonalGantt)로 바꿈.
 Widget marketScreen(ApiClient api) => SectionScreen(
       section: Section.market,

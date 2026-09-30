@@ -33,14 +33,14 @@ class _RootShellState extends State<RootShell> {
   final _api = ApiClient();
   int _index = 0;
 
-  // 2026-09-30: "날씨를 생활에서 완전히 빼서 첫 화면으로" 요청 —
-  // 날씨를 맨 앞 탭으로 두고 투데이가 그다음으로 밀림.
-  static const _tabs = ['날씨', '투데이', '생활', '문화', '머니', 'AI'];
+  // 2026-09-30: 날씨를 생활에서 빼되, 별도 탭/전용 화면까지는 필요 없고
+  // 투데이 카드로만 있으면 충분하다는 피드백 — 탭은 원래 5개로 되돌림
+  // (Section.weather 자체는 투데이 카드 테마용으로 theme.dart에 남겨둠).
+  static const _tabs = ['투데이', '생활', '문화', '머니', 'AI'];
 
   @override
   Widget build(BuildContext context) {
     final screens = [
-      weatherScreen(_api),
       TodayScreen(api: _api),
       marketScreen(_api),
       cultureScreen(_api),
