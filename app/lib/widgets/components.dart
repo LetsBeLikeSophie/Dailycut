@@ -15,7 +15,7 @@ class SectionHeader extends StatelessWidget {
     final t = sectionThemes[section]!;
     return Row(
       children: [
-        Text(t.shape, style: TextStyle(color: t.color, fontSize: 18)),
+        Image.asset(t.shapeAsset, width: 20, height: 20),
         const SizedBox(width: 8),
         Text(t.label, style: AppTheme.displaySerif()),
         const Spacer(),
@@ -36,17 +36,21 @@ class SectionDivider extends StatelessWidget {
 }
 
 class _CardShell extends StatelessWidget {
-  const _CardShell({required this.child, this.emphasized = false});
+  const _CardShell({required this.child, this.emphasized = false, this.borderColor});
 
   final Widget child;
   final bool emphasized;
+  // 2026-09-30: "화면마다 메인인 카드는 테두리를 테마색으로" 요청 — hero류
+  // (HeroCard/ChartCard/WeatherHero/SeasonalHero)만 자기 섹션 색을 넘기고,
+  // StatTile 같은 보조 카드는 안 넘겨서 계속 중립 회색(AppColors.line)을 씀.
+  final Color? borderColor;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        border: Border.all(color: AppColors.line, width: emphasized ? 1.5 : 1),
+        border: Border.all(color: borderColor ?? AppColors.line, width: emphasized ? 1.5 : 1),
       ),
       child: child,
     );
@@ -127,7 +131,7 @@ class RankRow extends StatelessWidget {
                       fontFeatures: const [FontFeature.tabularFigures()],
                     ),
                   )
-                : Text(t.shape, style: TextStyle(color: t.color, fontSize: 12)),
+                : Image.asset(t.shapeAsset, width: 14, height: 14),
           ),
           Expanded(child: Text(title, style: const TextStyle(fontSize: 14))),
           Text(meta, style: const TextStyle(color: AppColors.inkSoft, fontSize: 12)),
@@ -163,6 +167,7 @@ class HeroCard extends StatelessWidget {
     final t = sectionThemes[section]!;
     return _CardShell(
       emphasized: true,
+      borderColor: t.color,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -206,6 +211,7 @@ class WeatherHero extends StatelessWidget {
     final air = data['air_quality'] as Map<String, dynamic>;
     return _CardShell(
       emphasized: true,
+      borderColor: t.color,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -347,6 +353,7 @@ class SeasonalHero extends StatelessWidget {
     final t = sectionThemes[section]!;
     return _CardShell(
       emphasized: true,
+      borderColor: t.color,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -415,6 +422,7 @@ class ChartCard extends StatelessWidget {
     final t = sectionThemes[section]!;
     return _CardShell(
       emphasized: true,
+      borderColor: t.color,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

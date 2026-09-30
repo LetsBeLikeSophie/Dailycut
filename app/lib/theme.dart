@@ -12,42 +12,55 @@ class SectionTheme {
     required this.color,
     required this.highlight,
     required this.shape,
+    required this.shapeAsset,
   });
 
   final String label;
   final Color color;
   final Color highlight;
-  final String shape; // ○ △ □ ✳
+  final String shape; // ○ △ □ ✳ — 더 이상 화면에 안 쓰지만(비정형 도형
+  // 이미지로 교체됨) 참고/디버그용으로 남겨둠.
+  final String shapeAsset; // assets/shapes/*.png, 섹션 색으로 이미 리컬러됨.
 }
 
 // 2026-09-29: 기획 문서 결정 — "시세" 섹션을 "생활(Living)"로 넓힘(날씨,
 // 미세먼지, 장보기 물가, 동네 최저가 주유소, 식품 회수 알림 등). 색(노랑)과
 // 도형(○)은 그대로 두고 라벨만 바꿈 — enum 이름(market)은 코드 전체에 이미
 // 퍼져있어서 안 바꿈, 화면에 보이는 한글 라벨만 의미에 맞게 갱신.
+//
+// 2026-09-30: 텍스트 글리프(○△□✳) 대신 사용자가 가져온 비정형(organic
+// blob) 도형 이미지로 교체함 — 원래 도형과 최대한 비슷한 걸로 매칭
+// (원→circle blob, 삼각→triangle blob, 사각→cross blob, ✳→star blob),
+// 각 PNG는 섹션 테마 색으로 이미 리컬러돼 있어서 그대로 그리면 됨(추가
+// 틴트 불필요).
 const sectionThemes = <Section, SectionTheme>{
   Section.market: SectionTheme(
     label: '생활',
     color: Color(0xFFE0A81E),
     highlight: Color(0xFFFCE9A8),
     shape: '○',
+    shapeAsset: 'assets/shapes/shape_market.png',
   ),
   Section.culture: SectionTheme(
     label: '문화',
     color: Color(0xFFD0452E),
     highlight: Color(0xFFFAD6CC),
     shape: '△',
+    shapeAsset: 'assets/shapes/shape_culture.png',
   ),
   Section.money: SectionTheme(
     label: '머니',
     color: Color(0xFF2F42B0),
     highlight: Color(0xFFD9DFFA),
     shape: '□',
+    shapeAsset: 'assets/shapes/shape_money.png',
   ),
   Section.ai: SectionTheme(
     label: 'AI',
     color: Color(0xFF191919),
     highlight: Color(0xFFE5F7A3),
     shape: '✳',
+    shapeAsset: 'assets/shapes/shape_ai.png',
   ),
 };
 
