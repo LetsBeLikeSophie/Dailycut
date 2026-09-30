@@ -46,11 +46,12 @@ class _TodayScreenState extends State<TodayScreen> {
         return ListView(
           padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
           children: [
-            // "섹션 대제목에만 세리프" 규칙 — 이 헤드라인은 생활/문화/머니/AI
-            // 중 하나가 아니라서 세리프 대신 Noto Sans KR 볼드로 씀.
+            // 2026-09-30: "세리프를 좀 더 써보자"는 요청으로, 대제목뿐
+            // 아니라 이런 "읽는 문장"류 헤드라인도 세리프로 넓힘(displaySerif가
+            // Noto Serif KR로 바뀌면서 한글도 실제로 세리프가 적용됨).
             Text(
               data['headline'] as String,
-              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700, color: AppColors.ink),
+              style: AppTheme.displaySerif(size: 24, fontWeight: FontWeight.w700),
             ),
             const SizedBox(height: 20),
             for (final c in cards) ...[

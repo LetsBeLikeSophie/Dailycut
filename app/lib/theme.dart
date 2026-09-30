@@ -106,10 +106,24 @@ class AppTheme {
     );
   }
 
-  /// 섹션 대제목(생활·문화·머니·AI, SectionHeader)에만 쓰는 세리프
-  /// (Instrument Serif) — "나머지는 Noto Sans KR"이 v6 디자인 규칙.
-  static TextStyle displaySerif({double size = 22, double? letterSpacing}) =>
-      GoogleFonts.instrumentSerif(fontSize: size, color: AppColors.ink, letterSpacing: letterSpacing);
+  /// 2026-09-30: 원래 Instrument Serif를 썼는데, 구글 폰트 공식
+  /// METADATA(subsets: latin/latin-ext뿐, korean 없음)를 확인해보니
+  /// 한글 글리프가 아예 없는 폰트였음 — "생활"/"문화"/"머니"처럼 한글
+  /// 라벨은 세리프가 적용된 적이 없고 폴백 폰트로 조용히 대체돼 그려지고
+  /// 있었음(영문인 "AI"만 실제로 세리프였음). 이슈팝이 이미 검증해서 쓰고
+  /// 있는 Noto Serif KR(한글 지원)로 교체함.
+  ///
+  /// 적용 범위: 대제목(SectionHeader) + "읽는 문장"류(투데이 헤드라인,
+  /// HeroCard 타이틀, 날씨 옷차림 한 줄) — 가격·순위·달력처럼 숫자/표
+  /// 형태 UI는 스캔하기 쉬운 산세리프로 남김(전부 세리프로 바꾸면 오히려
+  /// 읽기 불편하다는 피드백 반영).
+  static TextStyle displaySerif({double size = 22, double? letterSpacing, FontWeight? fontWeight}) =>
+      GoogleFonts.notoSerifKr(
+        fontSize: size,
+        color: AppColors.ink,
+        letterSpacing: letterSpacing,
+        fontWeight: fontWeight,
+      );
 
   /// 2026-09-29: displaySerif를 "축산물 시세"/"예·적금 금리 순위" 같은
   /// 화면 안 소제목에도 갖다 써서 "세리프는 섹션 대제목에만" 규칙을

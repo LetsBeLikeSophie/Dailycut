@@ -190,7 +190,7 @@ class HeroCard extends StatelessWidget {
             SectionHeader(section: section),
             const SizedBox(height: 12),
           ],
-          Text(title, style: const TextStyle(fontSize: 15)),
+          Text(title, style: AppTheme.displaySerif(size: 15)),
           if (highlight != null) ...[
             const SizedBox(height: 6),
             _Highlight(text: highlight!, color: t.highlight),
@@ -287,7 +287,9 @@ class WeatherHero extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       pop > 0 ? '$pop%' : '',
-                      style: TextStyle(fontSize: 10, color: pop > 0 ? t.color : Colors.transparent),
+                      // 2026-09-30: "제일 작은 글씨가 너무 작다"는 피드백 —
+                      // 10px는 업계 최소 권장선(11~12px)보다 작아서 11로 올림.
+                      style: TextStyle(fontSize: 11, color: pop > 0 ? t.color : Colors.transparent),
                     ),
                   ],
                 );
@@ -295,7 +297,11 @@ class WeatherHero extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 14),
-          _Highlight(text: data['outfit'] as String, color: t.highlight),
+          _Highlight(
+            text: data['outfit'] as String,
+            color: t.highlight,
+            style: AppTheme.displaySerif(size: 20, fontWeight: FontWeight.w700),
+          ),
           const SizedBox(height: 10),
           Text(data['weekend'] as String, style: const TextStyle(fontSize: 12, color: AppColors.inkSoft)),
           const SizedBox(height: 14),
