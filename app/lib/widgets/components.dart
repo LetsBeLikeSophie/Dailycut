@@ -230,6 +230,12 @@ class WeatherHero extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // 2026-09-30: 날씨 전용 탭/화면을 안 만들기로 하면서, 투데이에서
+          // 이 카드가 "날씨" 섹션임을 알려줄 곳이 여기뿐이라 항상 헤더를
+          // 보여줌(다른 HeroCard/ChartCard처럼 showHeader로 끄는 경우가
+          // 없음 — WeatherHero는 이제 투데이에서만 쓰임).
+          SectionHeader(section: section),
+          const SizedBox(height: 12),
           Text('오늘 날씨', style: const TextStyle(color: AppColors.inkSoft, fontSize: 12)),
           const SizedBox(height: 6),
           Row(
