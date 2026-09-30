@@ -153,11 +153,14 @@ def market():
             {"label": "대파", "value": "3,200원", "change": "flat"},
             {"label": "양파", "value": "2,100원", "change": "up"},
         ],
+        # 2026-09-30: "제철이 언제부터 언제까지인지 월별 간트차트로"
+        # 요청 — 자유 텍스트(meta) 대신 시작·끝 월(1~12)로 바꿔서
+        # 프론트(SeasonalGantt)가 직접 막대를 그리게 함.
         "in_season": [
-            {"name": "배추", "meta": "김장철 성수품"},
-            {"name": "무", "meta": "김장철 성수품"},
-            {"name": "단감", "meta": "10~11월 제철"},
-            {"name": "고구마", "meta": "9~11월 제철"},
+            {"name": "배추", "start_month": 10, "end_month": 12},
+            {"name": "무", "start_month": 10, "end_month": 12},
+            {"name": "단감", "start_month": 10, "end_month": 11},
+            {"name": "고구마", "start_month": 9, "end_month": 11},
         ],
         "livestock": [
             {"label": "계란(특란 30구)", "value": "6,900원", "change": "flat"},
@@ -258,18 +261,27 @@ def ai():
 
 @app.get("/today")
 def today():
-    """투데이(홈) — 섹션별 대표 카드 1개씩만 모아서 반환."""
-    m, c, mo, a = market(), culture(), money(), ai()
+    """투데이(홈) — 섹션별 대표 카드 1개씩만 모아서 반환.
+    2026-09-30: 날씨가 독립 섹션으로 빠지면서 투데이 카드 목록에도
+    다른 섹션들과 동등하게 날씨 카드를 추가함(맨 앞)."""
+    w, m, c, mo, a = weather(), market(), culture(), money(), ai()
     season_top = m["in_season"][0]
+    weather_card = {
+        "theme": "weather",
+        "title": "오늘 날씨",
+        "highlight": f"{w['today']['temp']}° {w['today']['condition']}",
+        "meta": f"체감 {w['today']['feels_like']}°",
+    }
     market_card = {
         "theme": "market",
         "title": "지금 제철",
         "highlight": season_top["name"],
-        "meta": season_top["meta"],
+        "meta": f"{season_top['start_month']}~{season_top['end_month']}월 제철",
     }
     return {
         "headline": "오늘 한 줄 요약(스텁)",
         "cards": [
+            {"section": "weather", **weather_card},
             {"section": "market", **market_card},
             {"section": "culture", **c["hero"]},
             {"section": "money", **mo["hero"]},

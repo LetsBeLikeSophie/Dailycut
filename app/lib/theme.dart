@@ -4,7 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 /// 기획 문서 "디자인 방향 v6" 표 그대로 옮긴 토큰.
 /// https://claude.ai/artifact/U8h2Ukqj5FfBkLaPGVgtBZ
 
-enum Section { market, culture, money, ai }
+enum Section { weather, market, culture, money, ai }
 
 class SectionTheme {
   const SectionTheme({
@@ -34,6 +34,18 @@ class SectionTheme {
 // 각 PNG는 섹션 테마 색으로 이미 리컬러돼 있어서 그대로 그리면 됨(추가
 // 틴트 불필요).
 const sectionThemes = <Section, SectionTheme>{
+  // 2026-09-30: "생활에 날씨가 통째로 들어있는 게 이상하다"는 피드백 —
+  // 날씨를 생활에서 완전히 분리해서 독립 섹션으로 만듦(첫 화면으로
+  // 옮김, main.dart 탭 순서 참고). 기존 4색과 안 겹치는 새 색(주황)을
+  // 새로 고름 — 기획 문서엔 원래 없던 다섯 번째 섹션이라 색·도형 둘 다
+  // 이번에 새로 정함.
+  Section.weather: SectionTheme(
+    label: '날씨',
+    color: Color(0xFFE08A3E),
+    highlight: Color(0xFFF7D9BA),
+    shape: '☁',
+    shapeAsset: 'assets/shapes/shape_weather.png',
+  ),
   Section.market: SectionTheme(
     label: '생활',
     color: Color(0xFFE0A81E),

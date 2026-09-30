@@ -127,8 +127,10 @@ class RankRow extends StatelessWidget {
           SizedBox(
             width: 24,
             // rank가 없는 목록(제철 품목, 전통시장 등)은 0을 넘겨서 숫자
-            // 대신 도형 글리프만 작게 보여줌 — 숫자 "0"이 그대로 찍히던
-            // 문제 수정(2026-09-29).
+            // 대신 작은 점만 보여줌 — 숫자 "0"이 그대로 찍히던 문제 수정
+            // (2026-09-29). 2026-09-30: 비정형 도형 이미지를 여기(14px)
+            // 처럼 작게 쓰니 뭉개져 보인다는 피드백 — 도형은 대제목에만
+            // 쓰고, 여기는 그냥 작은 색 점으로 되돌림.
             child: rank > 0
                 ? Text(
                     '$rank',
@@ -138,7 +140,13 @@ class RankRow extends StatelessWidget {
                       fontFeatures: const [FontFeature.tabularFigures()],
                     ),
                   )
-                : Image.asset(t.shapeAsset, width: 14, height: 14),
+                : Center(
+                    child: Container(
+                      width: 6,
+                      height: 6,
+                      decoration: BoxDecoration(color: t.color, shape: BoxShape.circle),
+                    ),
+                  ),
           ),
           Expanded(child: Text(title, style: const TextStyle(fontSize: 14))),
           Text(meta, style: const TextStyle(color: AppColors.inkSoft, fontSize: 12)),
@@ -344,52 +352,81 @@ class WeatherHero extends StatelessWidget {
   }
 }
 
-/// "지금 제철인 것들"을 강조된 카드 하나로 모아 보여줌. 2026-09-29:
-/// "가격 순위보다 지금 뭐가 제철인지가 장보기 결정에 더 중요하다"는
-/// 피드백으로, 화면 맨 위(hero 자리)에 오도록 만듦 — 제철 = 싸고
-/// 품질 좋은 시기라는 걸 한눈에 보여주는 게 목적이라 가격 숫자는 안 넣고
-/// 품목명 + 제철 시기만 나열함.
-class SeasonalHero extends StatelessWidget {
-  const SeasonalHero({super.key, required this.section, required this.items});
+/// 2026-09-30: "제철이 언제부터 언제까지인지 월 단위 간트차트처럼
+/// 보여달라"는 요청으로 SeasonalHero(품목명+짧은 문구 나열)를 대체함 —
+/// 당월 기준 앞뒤 2개월(총 5개월)을 열로 두고, 품목별로 제철에 해당하는
+/// 달만 칸을 채워서 시작~끝을 한눈에 보여줌. 가로로 길게 안 늘어나도
+/// 되게 폭을 고정폭 5칸으로 좁혀서 폰 화면에 맞춤.
+class SeasonalGantt extends StatelessWidget {
+  const SeasonalGantt({super.key, required this.section, required this.items});
 
   final Section section;
-  final List<({String name, String meta})> items;
+  final List<({String name, int startMonth, int endMonth})> items;
+
+  static const _monthsAround = 2;
+
+  bool _inSeason(int month, int start, int end) {
+    if (start <= end) return month >= start && month <= end;
+    return month >= start || month <= end; // 연말~연초로 걸치는 경우
+  }
 
   @override
   Widget build(BuildContext context) {
     final t = sectionThemes[section]!;
+    final now = DateTime.now().month;
+    final months = [
+      for (var i = -_monthsAround; i <= _monthsAround; i++) ((now - 1 + i) % 12 + 12) % 12 + 1,
+    ];
+
     return _CardShell(
       emphasized: true,
       borderColor: t.color,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('지금 제철', style: const TextStyle(color: AppColors.inkSoft, fontSize: 12)),
-          const SizedBox(height: 6),
-          _Highlight(text: items.first.name, color: t.highlight),
-          const SizedBox(height: 4),
-          Text(items.first.meta, style: const TextStyle(color: AppColors.inkSoft, fontSize: 12)),
-          if (items.length > 1) ...[
-            const SizedBox(height: 12),
-            Wrap(
-              spacing: 16,
-              runSpacing: 6,
-              children: [
-                for (final it in items.skip(1))
-                  Text.rich(
-                    TextSpan(
-                      children: [
-                        TextSpan(text: it.name, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w600)),
-                        TextSpan(
-                          text: '  ${it.meta}',
-                          style: const TextStyle(fontSize: 11, color: AppColors.inkSoft),
-                        ),
-                      ],
+          Text('제철 캘린더', style: const TextStyle(color: AppColors.inkSoft, fontSize: 12)),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              const SizedBox(width: 52),
+              for (final m in months)
+                Expanded(
+                  child: Center(
+                    child: Text(
+                      '$m월',
+                      style: TextStyle(
+                        fontSize: 11,
+                        fontWeight: m == now ? FontWeight.w800 : FontWeight.w400,
+                        color: m == now ? t.color : AppColors.inkSoft,
+                      ),
                     ),
                   ),
-              ],
+                ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          for (final it in items)
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 3),
+              child: Row(
+                children: [
+                  SizedBox(
+                    width: 52,
+                    child: Text(it.name, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
+                  ),
+                  for (final m in months)
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 1.5),
+                        child: Container(
+                          height: 16,
+                          color: _inSeason(m, it.startMonth, it.endMonth) ? t.color : AppColors.line,
+                        ),
+                      ),
+                    ),
+                ],
+              ),
             ),
-          ],
         ],
       ),
     );

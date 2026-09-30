@@ -33,11 +33,14 @@ class _RootShellState extends State<RootShell> {
   final _api = ApiClient();
   int _index = 0;
 
-  static const _tabs = ['투데이', '생활', '문화', '머니', 'AI'];
+  // 2026-09-30: "날씨를 생활에서 완전히 빼서 첫 화면으로" 요청 —
+  // 날씨를 맨 앞 탭으로 두고 투데이가 그다음으로 밀림.
+  static const _tabs = ['날씨', '투데이', '생활', '문화', '머니', 'AI'];
 
   @override
   Widget build(BuildContext context) {
     final screens = [
+      weatherScreen(_api),
       TodayScreen(api: _api),
       marketScreen(_api),
       cultureScreen(_api),
