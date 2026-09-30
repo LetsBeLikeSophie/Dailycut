@@ -15,9 +15,16 @@ class SectionHeader extends StatelessWidget {
     final t = sectionThemes[section]!;
     return Row(
       children: [
-        Image.asset(t.shapeAsset, width: 20, height: 20),
+        Image.asset(t.shapeAsset, width: 24, height: 24),
         const SizedBox(width: 8),
-        Text(t.label, style: AppTheme.displaySerif()),
+        // 2026-09-30: "제목에 힘이 없다"는 피드백 — 옵션 비교에서 고른
+        // 1+2 조합(형광펜 + 확대·자간 좁힘) 적용. 기존 본문 강조에 쓰던
+        // _Highlight를 재사용해서 새 장식을 안 늘림.
+        _Highlight(
+          text: t.label,
+          color: t.highlight,
+          style: AppTheme.displaySerif(size: 30, letterSpacing: -0.3),
+        ),
         const Spacer(),
         if (link != null)
           Text(link!, style: const TextStyle(color: AppColors.inkSoft, fontSize: 12)),
@@ -510,10 +517,13 @@ class _LineChartPainter extends CustomPainter {
 }
 
 class _Highlight extends StatelessWidget {
-  const _Highlight({required this.text, required this.color});
+  const _Highlight({required this.text, required this.color, this.style});
 
   final String text;
   final Color color;
+  // 2026-09-30: SectionHeader 타이틀에도 재사용하려고 폰트 스타일을
+  // 바꿀 수 있게 함(기본값은 기존 본문 강조 스타일 그대로 유지).
+  final TextStyle? style;
 
   @override
   Widget build(BuildContext context) {
@@ -528,7 +538,7 @@ class _Highlight extends StatelessWidget {
         ),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 2),
-          child: Text(text, style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
+          child: Text(text, style: style ?? const TextStyle(fontSize: 20, fontWeight: FontWeight.w800)),
         ),
       ],
     );

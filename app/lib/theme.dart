@@ -96,8 +96,8 @@ class AppTheme {
 
   /// 섹션 대제목(생활·문화·머니·AI, SectionHeader)에만 쓰는 세리프
   /// (Instrument Serif) — "나머지는 Noto Sans KR"이 v6 디자인 규칙.
-  static TextStyle displaySerif({double size = 22}) =>
-      GoogleFonts.instrumentSerif(fontSize: size, color: AppColors.ink);
+  static TextStyle displaySerif({double size = 22, double? letterSpacing}) =>
+      GoogleFonts.instrumentSerif(fontSize: size, color: AppColors.ink, letterSpacing: letterSpacing);
 
   /// 2026-09-29: displaySerif를 "축산물 시세"/"예·적금 금리 순위" 같은
   /// 화면 안 소제목에도 갖다 써서 "세리프는 섹션 대제목에만" 규칙을
