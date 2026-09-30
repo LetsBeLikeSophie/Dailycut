@@ -33,6 +33,34 @@
   - `lib/api_client.dart` — 백엔드 클라이언트. 기본 `http://127.0.0.1:8010`,
     `--dart-define=API_BASE_URL=...`로 오버라이드(이슈팝과 같은 패턴).
 
+## 배포 (2026-09-30)
+
+이슈팝과 같은 서버(Oracle Cloud, 168.110.25.49)에 얹음 — GitHub repo(코드)와
+배포 서버는 별개: 이 저장소는 `github.com/LetsBeLikeSophie/Dailycut`에 SSH로
+푸시, 서버 배포는 아래처럼 별도로 함(포트폴리오의 다른 프로젝트 — Cortex 등 —
+와 같은 패턴, `itssophie.dev` 서브패스 방식).
+
+- **웹**: https://itssophie.dev/dailycut/ — 정적 파일을 `/var/www/dailycut-app/`에
+  올림. `flutter build web --release --base-href /dailycut/
+  --dart-define=API_BASE_URL=https://itssophie.dev/dailycut-api`로 빌드(Git
+  Bash에서는 `MSYS_NO_PATHCONV=1`을 꼭 붙여야 함 — 안 붙이면 `/dailycut/`가
+  `C:/Program Files/Git/dailycut/`로 잘못 치환돼서 빌드가 실패함).
+- **API**: https://itssophie.dev/dailycut-api/ — `/home/ubuntu/dailycut-backend/`
+  에서 systemd 서비스 `dailycut-api`(포트 8011, 127.0.0.1 바인딩, nginx가
+  `/dailycut-api/` → `http://127.0.0.1:8011/`로 프록시)로 상시 실행. 코드
+  갱신 시: `scp backend/api.py`로 덮어쓰고 `sudo systemctl restart
+  dailycut-api`.
+- **nginx**: `/etc/nginx/sites-available/itssophie.dev`에 `/dailycut/`,
+  `/dailycut-api/` location 블록 추가함(Cortex 항목 바로 아래). 수정 전 항상
+  백업(`sudo cp ... .bak-$(date +%Y%m%d%H%M%S)`) 후 `sudo nginx -t`로 검증하고
+  `sudo systemctl reload nginx`.
+- **포트폴리오 카드**: `C:\Projects\dailycut`와는 별개 저장소인
+  `C:\Projects\portfolio`(github.com/LetsBeLikeSophie/portfolio, 기본 브랜치
+  `main`)의 `index.html`에 Dailycut 카드를 추가함(Cortex처럼 "🚧 개발 중"
+  태그 — 아직 전부 스텁 데이터라서 "Live"라고 하기엔 이름). 카드 갱신 시 그
+  저장소에서 커밋+푸시하고, `/var/www/portfolio/index.html`로도 따로 scp해야
+  실제 사이트에 반영됨(포트폴리오 자체 README의 "배포" 항목 참고).
+
 ## 지금 상태 (2026-09-29)
 
 뼈대만 있음 — 백엔드는 전부 스텁 데이터, 실제 공공 API 연동 안 됨. Flutter는
