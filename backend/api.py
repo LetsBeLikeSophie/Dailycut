@@ -278,12 +278,22 @@ def today():
         "highlight": season_top["name"],
         "meta": f"{season_top['start_month']}~{season_top['end_month']}월 제철",
     }
+    # 2026-10-05: culture()["hero"]엔 title/poster/rank/stat_label/stat만
+    # 있고 투데이 HeroCard가 쓰는 highlight/meta가 없어서, 투데이의 문화
+    # 카드가 지금까지 제목만 뜨고 "182만 명" 같은 수치는 안 보였음(PosterCard
+    # 작업하면서 발견) — highlight/meta로 매핑해서 채움.
+    culture_card = {
+        "theme": "culture",
+        "title": c["hero"]["title"],
+        "highlight": f"{c['hero']['rank']}위",
+        "meta": f"{c['hero']['stat_label']} {c['hero']['stat']}",
+    }
     return {
         "headline": "오늘 한 줄 요약(스텁)",
         "cards": [
             {"section": "weather", **weather_card},
             {"section": "market", **market_card},
-            {"section": "culture", **c["hero"]},
+            {"section": "culture", **culture_card},
             {"section": "money", **mo["hero"]},
             {"section": "ai", **a["weekly_article"]},
         ],

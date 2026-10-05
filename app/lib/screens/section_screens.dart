@@ -124,16 +124,34 @@ Widget marketScreen(ApiClient api) => SectionScreen(
       },
     );
 
+/// 2026-10-05: "문화도 메인 영역 하나" 요청 — 원래부터 있던 culture()의
+/// hero(박스오피스 1위)를 PosterCard로 처음 씀. 1위는 PosterCard가
+/// 보여주니 아래 순위 목록에서는 2위부터만 보여줌(기획 문서 "화면 구성"
+/// 표의 "대표 카드: 1위 포스터 / 그 아래: 2·3위"와 같은 구조).
 Widget cultureScreen(ApiClient api) => SectionScreen(
       section: Section.culture,
       fetch: api.culture,
       contentBuilder: (context, data) {
-        final boxOffice = (data['box_office'] as List).cast<Map<String, dynamic>>();
+        final hero = data['hero'] as Map<String, dynamic>;
+        final boxOffice = (data['box_office'] as List)
+            .cast<Map<String, dynamic>>()
+            .where((it) => it['rank'] != 1)
+            .toList();
         final performances = (data['performances'] as List).cast<Map<String, dynamic>>();
         final festivals = (data['festivals'] as List).cast<Map<String, dynamic>>();
         final spotifyTop = (data['spotify_top'] as List).cast<Map<String, dynamic>>();
         final youtubeTrending = (data['youtube_trending'] as List).cast<Map<String, dynamic>>();
         return [
+          PosterCard(
+            section: Section.culture,
+            title: hero['title'] as String,
+            rank: hero['rank'] as int,
+            statLabel: hero['stat_label'] as String,
+            stat: hero['stat'] as String,
+            poster: hero['poster'] as String?,
+            showHeader: false,
+          ),
+          const SizedBox(height: 16),
           for (final it in boxOffice)
             RankRow(section: Section.culture, rank: it['rank'] as int, title: it['title'] as String, meta: it['meta'] as String),
           const SizedBox(height: 16),

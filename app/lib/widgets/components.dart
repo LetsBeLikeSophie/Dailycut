@@ -205,6 +205,97 @@ class HeroCard extends StatelessWidget {
   }
 }
 
+/// 2026-10-05: "문화도 메인 영역 하나 있으면 좋겠다" 요청 — 기획 문서
+/// 컴포넌트 표에 원래 있던 PosterCard(포스터+순위+누적 수치)를 이제야
+/// 만듦. 백엔드 culture()의 hero 필드(박스오피스 1위)는 처음부터 있었는데
+/// 화면에서 한 번도 안 썼던 걸 여기서 씀. 포스터 이미지는 아직 없어서
+/// (KOBIS엔 포스터가 없음 — 기획 문서 "열린 질문", KMDb 등 별도 소스
+/// 필요) null이면 섹션 도형을 넣은 자리표시자로 대신함.
+class PosterCard extends StatelessWidget {
+  const PosterCard({
+    super.key,
+    required this.section,
+    required this.title,
+    required this.rank,
+    required this.statLabel,
+    required this.stat,
+    this.poster,
+    this.showHeader = true,
+  });
+
+  final Section section;
+  final String title;
+  final int rank;
+  final String statLabel;
+  final String stat;
+  final String? poster;
+  final bool showHeader;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = sectionThemes[section]!;
+    return _CardShell(
+      emphasized: true,
+      borderColor: t.color,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (showHeader) ...[
+            SectionHeader(section: section),
+            const SizedBox(height: 12),
+          ],
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              SizedBox(
+                width: 72,
+                child: AspectRatio(
+                  aspectRatio: 2 / 3,
+                  child: poster != null
+                      ? Image.network(poster!, fit: BoxFit.cover)
+                      : DecoratedBox(
+                          decoration: BoxDecoration(color: t.highlight),
+                          child: Center(child: Image.asset(t.shapeAsset, width: 28, height: 28)),
+                        ),
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '$rank위',
+                      style: TextStyle(
+                        color: t.color,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(title, style: AppTheme.displaySerif(size: 18)),
+                    const SizedBox(height: 8),
+                    Text(statLabel, style: const TextStyle(color: AppColors.inkSoft, fontSize: 11)),
+                    Text(
+                      stat,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        fontFeatures: [FontFeature.tabularFigures()],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 /// 오늘 날씨 + 옷차림 + 빨래/세차하기 좋은 날 + 미세먼지를 한 카드로.
 /// 2026-09-29: 기획 문서에 "생활" 섹션이 확정되며 날씨가 제일 먼저
 /// 나오는 항목으로 정해짐 — 축제(문화 섹션)가 맑은 날 위주로 뜨는 것처럼
