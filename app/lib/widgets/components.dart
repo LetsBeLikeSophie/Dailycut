@@ -54,10 +54,13 @@ class _CardShell extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 2026-10-06: "테두리가 촌스럽다, 더 얇게" 피드백 — 색+두께가 같이
+    // 진하면 스티커/뱃지처럼 보여서 흔한 느낌이 남. 얇은 헤어라인으로
+    // 바꿔서 절제된 에디토리얼 톤에 가깝게 함.
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        border: Border.all(color: borderColor ?? AppColors.line, width: emphasized ? 1.5 : 1),
+        border: Border.all(color: borderColor ?? AppColors.line, width: emphasized ? 1.0 : 0.75),
       ),
       child: child,
     );
