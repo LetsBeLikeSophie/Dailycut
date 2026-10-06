@@ -91,6 +91,11 @@ def _mock_weekly(base_high: int, base_low: int, days: int = 6) -> list[dict]:
 @app.get("/weather")
 def weather():
     return {
+        # 2026-10-06: "출처 표시가 하나도 없다"는 지적 — 기획 문서 원칙
+        # ("모든 데이터 카드에는 출처를 표시")을 처음 반영함. 지금은 TODO
+        # 상태라 실제 기상청 연동 전이지만, 나중에 실제 소스로 자연스럽게
+        # 바뀌게 문자열 하나로 빼둠.
+        "source": "기상청",
         "today": {"temp": 19, "feels_like": 17, "condition": "맑음", "high": 22, "low": 14},
         "hourly": _mock_hourly(19),
         "weekly": _mock_weekly(22, 14),
@@ -141,6 +146,7 @@ def _mock_daily_series(item: str, base: int, days: int = 14) -> list[dict]:
 def market():
     trend = _mock_daily_series("배추", 2650)
     return {
+        "source": "KAMIS 농산물유통정보",
         "price_trend": {
             "item": "배추",
             "unit": "원/포기",
@@ -188,6 +194,7 @@ def culture():
             "rank": 1,
             "stat_label": "누적 관객",
             "stat": "182만 명",
+            "source": "KOBIS 영화관입장권통합전산망",
         },
         "box_office": [
             {"rank": 1, "title": "영화 A", "meta": "182만 명"},
@@ -233,6 +240,7 @@ def money():
             "value": 1350.2,
             "change": "up",
             "series": [1342.1, 1345.0, 1348.5, 1350.2],
+            "source": "한국은행 ECOS",
         },
         "stats": [
             {"label": "기준금리", "value": "3.50%", "change": "flat"},

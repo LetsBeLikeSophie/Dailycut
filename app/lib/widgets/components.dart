@@ -4,6 +4,23 @@ import '../theme.dart';
 /// 기획 문서 "컴포넌트" 표의 부품들. 화면은 이 조합으로만 만들고,
 /// 색을 바꾸려면 SectionTheme 표만 고치면 되게 함.
 
+/// 2026-10-06: "출처 표시가 하나도 없다"는 피드백 — 기획 문서 원칙
+/// ("모든 데이터 카드에는 출처를 표시")을 처음 반영함. 메인 카드(PosterCard/
+/// WeatherHero/ChartCard) 하단에 공통으로 붙이는 작은 캡션.
+class SourceTag extends StatelessWidget {
+  const SourceTag({super.key, required this.source});
+
+  final String source;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 10),
+      child: Text('출처: $source', style: const TextStyle(fontSize: 11, color: AppColors.inkSoft)),
+    );
+  }
+}
+
 class SectionHeader extends StatelessWidget {
   const SectionHeader({super.key, required this.section, this.link});
 
@@ -223,6 +240,7 @@ class PosterCard extends StatelessWidget {
     required this.statLabel,
     required this.stat,
     this.poster,
+    this.source,
     this.showHeader = true,
   });
 
@@ -232,6 +250,7 @@ class PosterCard extends StatelessWidget {
   final String statLabel;
   final String stat;
   final String? poster;
+  final String? source;
   final bool showHeader;
 
   @override
@@ -293,6 +312,7 @@ class PosterCard extends StatelessWidget {
               ),
             ],
           ),
+          if (source != null) SourceTag(source: source!),
         ],
       ),
     );
@@ -397,7 +417,10 @@ class WeatherHero extends StatelessWidget {
             style: AppTheme.displaySerif(size: 20, fontWeight: FontWeight.w700),
           ),
           const SizedBox(height: 10),
-          Text(data['weekend'] as String, style: const TextStyle(fontSize: 12, color: AppColors.inkSoft)),
+          Text(
+            data['weekend'] as String,
+            style: const TextStyle(fontSize: 12, color: AppColors.inkSoft, height: 1.5),
+          ),
           const SizedBox(height: 14),
           for (final w in weekly)
             Padding(
@@ -452,6 +475,7 @@ class WeatherHero extends StatelessWidget {
               ),
             ],
           ),
+          if (data['source'] != null) SourceTag(source: data['source'] as String),
         ],
       ),
     );
@@ -551,6 +575,7 @@ class ChartCard extends StatelessWidget {
     required this.value,
     required this.change,
     required this.series,
+    this.source,
     this.showHeader = true,
   });
 
@@ -559,6 +584,7 @@ class ChartCard extends StatelessWidget {
   final String value;
   final String change; // up / down / flat
   final List<double> series;
+  final String? source;
   final bool showHeader;
 
   Color get _changeColor => switch (change) {
@@ -607,6 +633,7 @@ class ChartCard extends StatelessWidget {
             width: double.infinity,
             child: CustomPaint(painter: _LineChartPainter(series: series, color: t.color)),
           ),
+          if (source != null) SourceTag(source: source!),
         ],
       ),
     );

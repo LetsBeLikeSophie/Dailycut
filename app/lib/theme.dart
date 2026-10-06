@@ -117,12 +117,22 @@ class AppTheme {
   /// HeroCard 타이틀, 날씨 옷차림 한 줄) — 가격·순위·달력처럼 숫자/표
   /// 형태 UI는 스캔하기 쉬운 산세리프로 남김(전부 세리프로 바꾸면 오히려
   /// 읽기 불편하다는 피드백 반영).
-  static TextStyle displaySerif({double size = 22, double? letterSpacing, FontWeight? fontWeight}) =>
+  /// 2026-10-06: "30대 이상 타게팅이면 여백이 더 편하게 느껴진다"는
+  /// 피드백 — 세리프로 읽는 문장류는 기본 줄간격(height)이 너무 빽빽해서
+  /// 1.4배로 넉넉하게 줌(한 줄짜리 제목엔 영향 없고, 두 줄 넘어가는
+  /// 문장에서만 체감됨). 필요하면 height: 1.0으로 꺼서 쓸 수 있음.
+  static TextStyle displaySerif({
+    double size = 22,
+    double? letterSpacing,
+    FontWeight? fontWeight,
+    double height = 1.4,
+  }) =>
       GoogleFonts.notoSerifKr(
         fontSize: size,
         color: AppColors.ink,
         letterSpacing: letterSpacing,
         fontWeight: fontWeight,
+        height: height,
       );
 
   /// 2026-09-29: displaySerif를 "축산물 시세"/"예·적금 금리 순위" 같은
