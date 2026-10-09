@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import '../theme.dart';
 
@@ -21,31 +23,165 @@ class SourceTag extends StatelessWidget {
   }
 }
 
-class SectionHeader extends StatelessWidget {
-  const SectionHeader({super.key, required this.section, this.link});
+/// 2026-10-10: 카드 실험 비교에서 고른 "테두리 없음 + 비비드 헤더 블록"
+/// (1번) — 메인 카드의 윗부분이 섹션 색 블록이고 그 안에 도형(onColor로
+/// 틴트)+섹션명(세리프)이 들어감. 예전 SectionHeader(페이지 맨 위 제목)를
+/// 대체함: 각 섹션 화면의 첫 메인 카드가 곧 그 페이지의 제목 역할을 함.
+class _VividHeader extends StatelessWidget {
+  const _VividHeader({required this.section});
 
   final Section section;
-  final String? link;
 
   @override
   Widget build(BuildContext context) {
     final t = sectionThemes[section]!;
-    return Row(
+    return Container(
+      color: t.color,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      child: Row(
+        children: [
+          Image.asset(t.shapeAsset, width: 22, height: 22, color: t.onColor, colorBlendMode: BlendMode.srcIn),
+          const SizedBox(width: 10),
+          Text(
+            t.label,
+            style: AppTheme.displaySerif(size: 22, fontWeight: FontWeight.w700, letterSpacing: -0.2, height: 1.2)
+                .copyWith(color: t.onColor),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// 메인(hero) 카드 공통 틀 — 테두리 없음. 헤더가 있으면 섹션 색 블록 + 흰
+/// 본문, 헤더가 없는 보조 메인 카드(예: 생활의 가격 추이)는 경계가 없어
+/// 허공에 뜨지 않게 섹션 틴트색을 옅게 깔아서 구분함.
+class _HeroShell extends StatelessWidget {
+  const _HeroShell({required this.section, required this.child, this.showHeader = true});
+
+  final Section section;
+  final Widget child;
+  final bool showHeader;
+
+  @override
+  Widget build(BuildContext context) {
+    final t = sectionThemes[section]!;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Image.asset(t.shapeAsset, width: 24, height: 24),
-        const SizedBox(width: 8),
-        // 2026-09-30: "제목에 힘이 없다"는 피드백 — 옵션 비교에서 고른
-        // 1+2 조합(형광펜 + 확대·자간 좁힘) 적용. 기존 본문 강조에 쓰던
-        // _Highlight를 재사용해서 새 장식을 안 늘림.
-        _Highlight(
-          text: t.label,
-          color: t.highlight,
-          style: AppTheme.displaySerif(size: 30, letterSpacing: -0.3),
+        if (showHeader) _VividHeader(section: section),
+        Container(
+          color: showHeader ? AppColors.background : t.highlight.withValues(alpha: 0.35),
+          padding: const EdgeInsets.all(16),
+          child: child,
         ),
-        const Spacer(),
-        if (link != null)
-          Text(link!, style: const TextStyle(color: AppColors.inkSoft, fontSize: 12)),
       ],
+    );
+  }
+}
+
+/// 메인 카드 앞/뒷면. back이 있으면 카드를 눌러서 뒤집을 수 있고(세로축
+/// 3D 회전), 앞면 아래에 "↻ 눌러서 ..." 힌트가 붙음. 각 면은 같은 _HeroShell
+/// (헤더 포함)로 감싸서 뒷면도 같은 카드처럼 보임. 면마다 높이가 달라도
+/// 되게 회전이 90도(옆에서 봐서 폭이 0에 가까운 순간)일 때만 면을 바꿈.
+class _FlippableHero extends StatelessWidget {
+  const _FlippableHero({
+    required this.section,
+    required this.front,
+    this.back,
+    this.backHint,
+    this.showHeader = true,
+  });
+
+  final Section section;
+  final Widget front;
+  final Widget? back;
+  final String? backHint;
+  final bool showHeader;
+
+  @override
+  Widget build(BuildContext context) {
+    if (back == null) {
+      return _HeroShell(section: section, showHeader: showHeader, child: front);
+    }
+    Widget hint(String text) => Padding(
+          padding: const EdgeInsets.only(top: 12),
+          child: Text(text, style: const TextStyle(fontSize: 11, color: AppColors.inkSoft)),
+        );
+    return FlipCard(
+      front: _HeroShell(
+        section: section,
+        showHeader: showHeader,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [front, hint('↻ ${backHint ?? '눌러서 더 보기'}')],
+        ),
+      ),
+      back: _HeroShell(
+        section: section,
+        showHeader: showHeader,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [back!, hint('↻ 눌러서 앞면으로')],
+        ),
+      ),
+    );
+  }
+}
+
+class FlipCard extends StatefulWidget {
+  const FlipCard({super.key, required this.front, required this.back});
+
+  final Widget front;
+  final Widget back;
+
+  @override
+  State<FlipCard> createState() => _FlipCardState();
+}
+
+class _FlipCardState extends State<FlipCard> with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 550),
+  );
+  late final Animation<double> _curve = CurvedAnimation(parent: _controller, curve: Curves.easeInOutCubic);
+  bool _showingBack = false;
+
+  void _toggle() {
+    if (_showingBack) {
+      _controller.reverse();
+    } else {
+      _controller.forward();
+    }
+    _showingBack = !_showingBack;
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: _toggle,
+      child: AnimatedBuilder(
+        animation: _curve,
+        builder: (context, _) {
+          final angle = _curve.value * math.pi;
+          final isBack = angle > math.pi / 2;
+          final transform = Matrix4.identity()
+            ..setEntry(3, 2, 0.0012)
+            ..rotateY(isBack ? angle - math.pi : angle);
+          return Transform(
+            transform: transform,
+            alignment: Alignment.center,
+            child: isBack ? widget.back : widget.front,
+          );
+        },
+      ),
     );
   }
 }
@@ -59,26 +195,18 @@ class SectionDivider extends StatelessWidget {
   }
 }
 
+/// 보조 카드(StatTile)용 헤어라인 틀. 메인 카드는 _HeroShell을 씀.
 class _CardShell extends StatelessWidget {
-  const _CardShell({required this.child, this.emphasized = false, this.borderColor});
+  const _CardShell({required this.child});
 
   final Widget child;
-  final bool emphasized;
-  // 2026-09-30: "화면마다 메인인 카드는 테두리를 테마색으로" 요청 — hero류
-  // (HeroCard/ChartCard/WeatherHero/SeasonalHero)만 자기 섹션 색을 넘기고,
-  // StatTile 같은 보조 카드는 안 넘겨서 계속 중립 회색(AppColors.line)을 씀.
-  final Color? borderColor;
 
   @override
   Widget build(BuildContext context) {
-    // 2026-10-06: "테두리가 촌스럽다, 더 얇게" 피드백 — 색+두께가 같이
-    // 진하면 스티커/뱃지처럼 보여서 흔한 느낌이 남. 얇은 헤어라인으로
-    // 바꿔서 절제된 에디토리얼 톤에 가깝게 함.
+    // 2026-10-06: "테두리가 촌스럽다, 더 얇게" 피드백 — 얇은 헤어라인.
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        border: Border.all(color: borderColor ?? AppColors.line, width: emphasized ? 1.0 : 0.75),
-      ),
+      decoration: BoxDecoration(border: Border.all(color: AppColors.line, width: 0.75)),
       child: child,
     );
   }
@@ -200,16 +328,12 @@ class HeroCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = sectionThemes[section]!;
-    return _CardShell(
-      emphasized: true,
-      borderColor: t.color,
+    return _HeroShell(
+      section: section,
+      showHeader: showHeader,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (showHeader) ...[
-            SectionHeader(section: section),
-            const SizedBox(height: 12),
-          ],
           Text(title, style: AppTheme.displaySerif(size: 15)),
           if (highlight != null) ...[
             const SizedBox(height: 6),
@@ -241,6 +365,8 @@ class PosterCard extends StatelessWidget {
     required this.stat,
     this.poster,
     this.source,
+    this.back,
+    this.backHint,
     this.showHeader = true,
   });
 
@@ -251,21 +377,21 @@ class PosterCard extends StatelessWidget {
   final String stat;
   final String? poster;
   final String? source;
+  final Widget? back;
+  final String? backHint;
   final bool showHeader;
 
   @override
   Widget build(BuildContext context) {
     final t = sectionThemes[section]!;
-    return _CardShell(
-      emphasized: true,
-      borderColor: t.color,
-      child: Column(
+    return _FlippableHero(
+      section: section,
+      showHeader: showHeader,
+      back: back,
+      backHint: backHint,
+      front: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (showHeader) ...[
-            SectionHeader(section: section),
-            const SizedBox(height: 12),
-          ],
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -338,18 +464,12 @@ class WeatherHero extends StatelessWidget {
     final weekly = (data['weekly'] as List).cast<Map<String, dynamic>>();
     final goodFor = (data['good_for'] as List).cast<Map<String, dynamic>>();
     final air = data['air_quality'] as Map<String, dynamic>;
-    return _CardShell(
-      emphasized: true,
-      borderColor: t.color,
+    // WeatherHero는 투데이에서만 쓰여서 항상 섹션 색 헤더 블록을 보여줌.
+    return _HeroShell(
+      section: section,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 2026-09-30: 날씨 전용 탭/화면을 안 만들기로 하면서, 투데이에서
-          // 이 카드가 "날씨" 섹션임을 알려줄 곳이 여기뿐이라 항상 헤더를
-          // 보여줌(다른 HeroCard/ChartCard처럼 showHeader로 끄는 경우가
-          // 없음 — WeatherHero는 이제 투데이에서만 쓰임).
-          SectionHeader(section: section),
-          const SizedBox(height: 12),
           Text('오늘 날씨', style: const TextStyle(color: AppColors.inkSoft, fontSize: 12)),
           const SizedBox(height: 6),
           Row(
@@ -488,10 +608,11 @@ class WeatherHero extends StatelessWidget {
 /// 달만 칸을 채워서 시작~끝을 한눈에 보여줌. 가로로 길게 안 늘어나도
 /// 되게 폭을 고정폭 5칸으로 좁혀서 폰 화면에 맞춤.
 class SeasonalGantt extends StatelessWidget {
-  const SeasonalGantt({super.key, required this.section, required this.items});
+  const SeasonalGantt({super.key, required this.section, required this.items, this.showHeader = true});
 
   final Section section;
-  final List<({String name, int startMonth, int endMonth})> items;
+  final List<({String name, int startMonth, int endMonth, String tip})> items;
+  final bool showHeader;
 
   static const _monthsAround = 2;
 
@@ -508,10 +629,42 @@ class SeasonalGantt extends StatelessWidget {
       for (var i = -_monthsAround; i <= _monthsAround; i++) ((now - 1 + i) % 12 + 12) % 12 + 1,
     ];
 
-    return _CardShell(
-      emphasized: true,
-      borderColor: t.color,
-      child: Column(
+    // 2026-10-10: 뒷면 — 앞면 달력은 당월 기준 ±2개월 창이라 제철이 그
+    // 밖으로 이어지는 품목은 막대만으로 끝을 알 수 없었음. 뒷면에 정확한
+    // 제철 기간을 글로 적고, 고르는 팁도 같이 보여줌.
+    final back = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text('제철 기간 · 고르는 팁', style: TextStyle(color: AppColors.inkSoft, fontSize: 12)),
+        const SizedBox(height: 10),
+        for (final it in items)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 5),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Text(it.name, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+                    const Spacer(),
+                    Text('${it.startMonth}~${it.endMonth}월',
+                        style: const TextStyle(fontSize: 12, fontFeatures: [FontFeature.tabularFigures()])),
+                  ],
+                ),
+                const SizedBox(height: 2),
+                Text(it.tip, style: const TextStyle(fontSize: 12, color: AppColors.inkSoft, height: 1.45)),
+              ],
+            ),
+          ),
+      ],
+    );
+
+    return _FlippableHero(
+      section: section,
+      showHeader: showHeader,
+      back: back,
+      backHint: '눌러서 제철 기간·고르는 팁 보기',
+      front: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text('제철 캘린더', style: const TextStyle(color: AppColors.inkSoft, fontSize: 12)),
@@ -527,7 +680,7 @@ class SeasonalGantt extends StatelessWidget {
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: m == now ? FontWeight.w800 : FontWeight.w400,
-                        color: m == now ? t.color : AppColors.inkSoft,
+                        color: m == now ? AppColors.ink : AppColors.inkSoft,
                       ),
                     ),
                   ),
@@ -577,6 +730,8 @@ class ChartCard extends StatelessWidget {
     required this.series,
     this.source,
     this.showHeader = true,
+    this.back,
+    this.backHint,
   });
 
   final Section section;
@@ -586,6 +741,8 @@ class ChartCard extends StatelessWidget {
   final List<double> series;
   final String? source;
   final bool showHeader;
+  final Widget? back;
+  final String? backHint;
 
   Color get _changeColor => switch (change) {
         'up' => AppColors.up,
@@ -596,16 +753,14 @@ class ChartCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final t = sectionThemes[section]!;
-    return _CardShell(
-      emphasized: true,
-      borderColor: t.color,
-      child: Column(
+    return _FlippableHero(
+      section: section,
+      showHeader: showHeader,
+      back: back,
+      backHint: backHint,
+      front: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (showHeader) ...[
-            SectionHeader(section: section),
-            const SizedBox(height: 12),
-          ],
           Text(label, style: const TextStyle(color: AppColors.inkSoft, fontSize: 12)),
           const SizedBox(height: 4),
           Row(

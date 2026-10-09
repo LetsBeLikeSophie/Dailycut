@@ -45,8 +45,6 @@ class _SectionScreenState extends State<SectionScreen> {
         return ListView(
           padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
           children: [
-            SectionHeader(section: widget.section),
-            const SizedBox(height: 16),
             ...widget.contentBuilder(context, snapshot.data!),
           ],
         );
@@ -90,7 +88,7 @@ Widget marketScreen(ApiClient api) => SectionScreen(
         final items = (data['items'] as List).cast<Map<String, dynamic>>();
         final season = (data['in_season'] as List)
             .cast<Map<String, dynamic>>()
-            .map((e) => (name: e['name'] as String, startMonth: e['start_month'] as int, endMonth: e['end_month'] as int))
+            .map((e) => (name: e['name'] as String, startMonth: e['start_month'] as int, endMonth: e['end_month'] as int, tip: (e['tip'] as String?) ?? ''))
             .toList();
         final livestock = (data['livestock'] as List).cast<Map<String, dynamic>>();
         final essentials = (data['essentials'] as List).cast<Map<String, dynamic>>();
@@ -134,10 +132,8 @@ Widget cultureScreen(ApiClient api) => SectionScreen(
       fetch: api.culture,
       contentBuilder: (context, data) {
         final hero = data['hero'] as Map<String, dynamic>;
-        final boxOffice = (data['box_office'] as List)
-            .cast<Map<String, dynamic>>()
-            .where((it) => it['rank'] != 1)
-            .toList();
+        final allBoxOffice = (data['box_office'] as List).cast<Map<String, dynamic>>();
+        final boxOffice = allBoxOffice.where((it) => it['rank'] != 1).toList();
         final performances = (data['performances'] as List).cast<Map<String, dynamic>>();
         final festivals = (data['festivals'] as List).cast<Map<String, dynamic>>();
         final spotifyTop = (data['spotify_top'] as List).cast<Map<String, dynamic>>();
@@ -151,7 +147,15 @@ Widget cultureScreen(ApiClient api) => SectionScreen(
             stat: hero['stat'] as String,
             poster: hero['poster'] as String?,
             source: hero['source'] as String?,
-            showHeader: false,
+            backHint: '눌러서 박스오피스 TOP 3 보기',
+            back: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('박스오피스 TOP 3', style: TextStyle(color: AppColors.inkSoft, fontSize: 12)),
+                for (final it in allBoxOffice.take(3))
+                  RankRow(section: Section.culture, rank: it['rank'] as int, title: it['title'] as String, meta: it['meta'] as String),
+              ],
+            ),
           ),
           const SizedBox(height: 16),
           for (final it in boxOffice)
@@ -186,6 +190,7 @@ Widget moneyScreen(ApiClient api) => SectionScreen(
         final hero = data['hero'] as Map<String, dynamic>;
         final stats = (data['stats'] as List).cast<Map<String, dynamic>>();
         final deposits = (data['deposits'] as List).cast<Map<String, dynamic>>();
+        final fxOthers = (data['fx_others'] as List? ?? const []).cast<Map<String, dynamic>>();
         return [
           ChartCard(
             section: Section.money,
@@ -194,7 +199,17 @@ Widget moneyScreen(ApiClient api) => SectionScreen(
             change: hero['change'] as String,
             series: (hero['series'] as List).map((e) => (e as num).toDouble()).toList(),
             source: hero['source'] as String?,
-            showHeader: false,
+            backHint: fxOthers.isEmpty ? null : '눌러서 다른 통화 환율 보기',
+            back: fxOthers.isEmpty
+                ? null
+                : Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('주요 통화 환율', style: TextStyle(color: AppColors.inkSoft, fontSize: 12)),
+                      for (final it in fxOthers)
+                        RankRow(section: Section.money, rank: 0, title: it['title'] as String, meta: it['meta'] as String),
+                    ],
+                  ),
           ),
           const SizedBox(height: 16),
           _statGrid(stats),
@@ -219,7 +234,6 @@ Widget aiScreen(ApiClient api) => SectionScreen(
             title: article['title'] as String,
             highlight: article['highlight'] as String?,
             meta: article['meta'] as String?,
-            showHeader: false,
           ),
           const SizedBox(height: 16),
           Text('이번 주 인기 논문', style: AppTheme.subheading),

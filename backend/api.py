@@ -163,10 +163,10 @@ def market():
         # 요청 — 자유 텍스트(meta) 대신 시작·끝 월(1~12)로 바꿔서
         # 프론트(SeasonalGantt)가 직접 막대를 그리게 함.
         "in_season": [
-            {"name": "배추", "start_month": 10, "end_month": 12},
-            {"name": "무", "start_month": 10, "end_month": 12},
-            {"name": "단감", "start_month": 10, "end_month": 11},
-            {"name": "고구마", "start_month": 9, "end_month": 11},
+            {"name": "배추", "start_month": 10, "end_month": 12, "tip": "속이 꽉 차고 묵직한 걸로. 겉잎이 푸르고 밑동이 단단하면 신선해요."},
+            {"name": "무", "start_month": 10, "end_month": 12, "tip": "표면이 매끈하고 들었을 때 무거운 것. 잎 쪽 초록이 짙을수록 달아요."},
+            {"name": "단감", "start_month": 10, "end_month": 11, "tip": "꼭지가 마르지 않고 껍질에 윤기가 도는 것. 색이 고르게 짙은 주황이면 잘 익었어요."},
+            {"name": "고구마", "start_month": 9, "end_month": 11, "tip": "모양이 통통하고 껍질이 매끈한 것. 수확 후 한 달쯤 두면 더 달아져요."},
         ],
         "livestock": [
             {"label": "계란(특란 30구)", "value": "6,900원", "change": "flat"},
@@ -242,6 +242,12 @@ def money():
             "series": [1342.1, 1345.0, 1348.5, 1350.2],
             "source": "한국은행 ECOS",
         },
+        # 2026-10-10: 환율 카드 뒷면(뒤집으면 보임)용 — 주요 통화 환율.
+        "fx_others": [
+            {"title": "엔화 (100엔)", "meta": "910.4원"},
+            {"title": "유로", "meta": "1,462.8원"},
+            {"title": "위안", "meta": "188.1원"},
+        ],
         "stats": [
             {"label": "기준금리", "value": "3.50%", "change": "flat"},
             {"label": "소비자물가", "value": "2.1%", "change": "up"},
