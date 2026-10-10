@@ -101,4 +101,17 @@ def describe() -> list[dict]:
                 "last_error": s.get("last_error"),
             }
         )
+    # 요청 시점에 계산하는 위치별 소스(weather·culture)는 JOBS에 없지만 상태는 store에 남음
+    for name, st_row in st.items():
+        if name not in JOBS:
+            out.append(
+                {
+                    "name": name,
+                    "mode": "on-demand" if st_row.get("last_ok") else "waiting",
+                    "keys_present": True,
+                    "interval_min": None,
+                    "last_ok": st_row.get("last_ok"),
+                    "last_error": st_row.get("last_error"),
+                }
+            )
     return out

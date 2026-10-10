@@ -20,9 +20,12 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 import config  # noqa: F401  (.env를 읽어 환경변수에 채움)
+import geo
 import jobs
 import sources  # noqa: F401  (수집 작업 등록)
 import store
+from sources import culture as culture_src
+from sources import weather as weather_src
 
 app = FastAPI(title="데일리컷 API")
 
@@ -52,6 +55,25 @@ def live_merge(name: str):
         def wrapper(*args, **kwargs):
             stub = fn(*args, **kwargs)
             live = jobs.get_live(name)
+            if not live:
+                return {**stub, "live_keys": []}
+            return {**stub, **live, "live_keys": sorted(live.keys())}
+
+        return wrapper
+
+    return deco
+
+
+def live_geo(source):
+    """사용자 위치(lat, lon 쿼리)별 실데이터를 스텁 위에 덮어씀. 위치가 없거나 한국 밖이면
+    서울시청 기본 위치. 좌표는 앱에서 이미 소수 둘째 자리로 뭉개서 보내고, 여기서도 한 번 더 정규화함."""
+
+    def deco(fn):
+        @functools.wraps(fn)
+        def wrapper(*args, **kwargs):
+            stub = fn(*args, **kwargs)
+            lat, lon = geo.clamp_latlon(kwargs.get("lat"), kwargs.get("lon"))
+            live = source.get(lat, lon)
             if not live:
                 return {**stub, "live_keys": []}
             return {**stub, **live, "live_keys": sorted(live.keys())}
@@ -129,8 +151,8 @@ def _mock_weekly(base_high: int, base_low: int, days: int = 6) -> list[dict]:
 
 
 @app.get("/weather")
-@live_merge("weather")
-def weather():
+@live_geo(weather_src)
+def weather(lat: float | None = None, lon: float | None = None):
     return {
         # 2026-10-06: "출처 표시가 하나도 없다"는 지적 — 기획 문서 원칙
         # ("모든 데이터 카드에는 출처를 표시")을 처음 반영함. 지금은 TODO
@@ -259,8 +281,8 @@ def market():
 # TODO: KOBIS 박스오피스 (https://www.kobis.or.kr/kobisopenapi/homepg/apiservice/searchServiceInfo.do)
 # + KOPIS 공연예술통합전산망 + TourAPI 지역 축제
 @app.get("/culture")
-@live_merge("culture")
-def culture():
+@live_geo(culture_src)
+def culture(lat: float | None = None, lon: float | None = None):
     return {
         "hero": {
             "theme": "culture",
@@ -374,11 +396,11 @@ def _headline(w: dict) -> str:
 
 
 @app.get("/today")
-def today():
+def today(lat: float | None = None, lon: float | None = None):
     """투데이(홈) — 섹션별 대표 카드 1개씩만 모아서 반환.
     2026-09-30: 날씨가 독립 섹션으로 빠지면서 투데이 카드 목록에도
     다른 섹션들과 동등하게 날씨 카드를 추가함(맨 앞)."""
-    w, m, c, mo, a = weather(), market(), culture(), money(), ai()
+    w, m, c, mo, a = weather(lat=lat, lon=lon), market(), culture(lat=lat, lon=lon), money(), ai()
     season_top = m["in_season"][0]
     weather_card = {
         "theme": "weather",

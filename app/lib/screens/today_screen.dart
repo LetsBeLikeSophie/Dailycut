@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../api_client.dart';
+import '../location.dart';
 import '../theme.dart';
 import '../widgets/components.dart';
 
@@ -13,16 +14,21 @@ class TodayScreen extends StatefulWidget {
 }
 
 class _TodayScreenState extends State<TodayScreen> {
-  late Future<({Map<String, dynamic> today, Map<String, dynamic> weather})> _future;
+  late Future<({Map<String, dynamic> today, Map<String, dynamic> weather, UserLocation loc})> _future;
 
   @override
   void initState() {
     super.initState();
     // 날씨는 전용 탭이 없고 투데이 맨 위에만 있어서, today()의 요약
     // 필드 말고 weather()의 전체 데이터(시간대별·주간·지수)를 같이 받아옴.
+    // 위치를 먼저 받고(권한 요청 포함, 못 받으면 서울시청) 그 위치 기준으로 날씨를 받아옴.
     _future = () async {
-      final results = await Future.wait([widget.api.today(), widget.api.weather()]);
-      return (today: results[0], weather: results[1]);
+      final loc = await LocationService.get();
+      final results = await Future.wait([
+        widget.api.today(lat: loc.lat, lon: loc.lon),
+        widget.api.weather(lat: loc.lat, lon: loc.lon),
+      ]);
+      return (today: results[0], weather: results[1], loc: loc);
     }();
   }
 
@@ -39,6 +45,13 @@ class _TodayScreenState extends State<TodayScreen> {
         }
         final data = snapshot.data!.today;
         final weather = snapshot.data!.weather;
+        final loc = snapshot.data!.loc;
+        final place = (weather['location'] as Map<String, dynamic>?)?['label'] as String?;
+        final eyebrow = [
+          '오늘',
+          ?place,
+          if (!loc.real) '기본 위치',
+        ].join(' · ');
         final t = sectionThemes[Section.weather]!;
         final others = (data['cards'] as List).cast<Map<String, dynamic>>().where((c) => c['section'] != 'weather').toList();
 
@@ -58,7 +71,7 @@ class _TodayScreenState extends State<TodayScreen> {
           children: [
             PageHero(
               section: Section.weather,
-              eyebrow: '오늘',
+              eyebrow: eyebrow,
               stub: !weatherLive,
               headline: data['headline'] as String,
               source: weatherLive ? weather['source'] as String? : '${weather['source']} · 예시 데이터',

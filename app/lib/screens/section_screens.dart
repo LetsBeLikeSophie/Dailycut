@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../api_client.dart';
+import '../location.dart';
 import '../theme.dart';
 import '../widgets/components.dart';
 
@@ -139,7 +140,13 @@ Widget marketScreen(ApiClient api) => SectionScreen(
 /// 문화: 어제 박스오피스 1위를 한 문장 + 큰 관객 수로, 눌러 뒤집으면 TOP 3.
 Widget cultureScreen(ApiClient api) => SectionScreen(
       section: Section.culture,
-      fetch: api.culture,
+      // 내 위치 기준 가까운 순(위치를 못 받으면 서울시청 기준, loc_real로 구분)
+      fetch: () async {
+        final loc = await LocationService.get();
+        final data = await api.culture(lat: loc.lat, lon: loc.lon);
+        data['loc_real'] = loc.real;
+        return data;
+      },
       contentBuilder: (context, data) {
         final hero = data['hero'] as Map<String, dynamic>;
         final allBoxOffice = (data['box_office'] as List).cast<Map<String, dynamic>>();
@@ -149,6 +156,7 @@ Widget cultureScreen(ApiClient api) => SectionScreen(
         final spotifyTop = (data['spotify_top'] as List).cast<Map<String, dynamic>>();
         final youtubeTrending = (data['youtube_trending'] as List).cast<Map<String, dynamic>>();
 
+        final nearby = (data['loc_real'] as bool? ?? false) ? '내 주변 · 가까운 순' : '서울시청 기준 · 가까운 순';
         final title = '‘${hero['title']}’';
         // "182만 명" → 숫자 182 + 단위 "만 명"
         final stat = hero['stat'] as String;
@@ -206,11 +214,13 @@ Widget cultureScreen(ApiClient api) => SectionScreen(
           ),
           ListSection(
             title: '진행 중인 전시·공연',
+            trailing: _isLive(data, 'performances') ? nearby : null,
             stub: !_isLive(data, 'performances'),
             children: [for (final it in performances) RankRow(rank: 0, title: it['title'] as String, meta: it['meta'] as String)],
           ),
           ListSection(
             title: '곧 열리는 축제',
+            trailing: _isLive(data, 'festivals') ? nearby : null,
             stub: !_isLive(data, 'festivals'),
             children: [for (final it in festivals) RankRow(rank: 0, title: it['title'] as String, meta: it['meta'] as String)],
           ),

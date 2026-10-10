@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
-"""날씨 수집: 기상청 단기예보·중기예보 + 에어코리아 + 특일정보(다음 공휴일).
+"""날씨 수집: 기상청 단기·중기예보 + 에어코리아 + 생활기상지수 + 출몰시각 + 특일정보.
 
-/weather 응답에 덮어쓸 필드를 만듦: today, hourly, weekly, weekend, outfit,
-good_for, air_quality, next_holiday, source.
-위치는 지금 서울(격자 nx=60, ny=127 / 중기 육상 11B00000, 기온 11B10101 /
-측정소 중구)로 고정 — 사용자 위치별 날씨는 나중에(위경도→격자 변환 필요).
+사용자 위치(위경도)로 전국 어디서든 동작함 — 격자(nx, ny)·근접 측정소·중기 예보 구역·
+시도 지점코드를 geo.py로 계산하고, 같은 격자 칸은 25분 동안 캐시(_cache.cached).
+/weather 응답에 덮어쓸 필드: today, hourly, weekly, weekend, outfit, good_for,
+air_quality, life, next_holiday, location, source.
 """
 
 from __future__ import annotations
@@ -13,12 +13,9 @@ import math
 from datetime import date, datetime, timedelta
 
 import config
-import jobs
-from sources import _http
+import geo
+from sources import _cache, _http
 
-NX, NY = 60, 127
-MID_LAND_REG, MID_TEMP_REG = "11B00000", "11B10101"
-AIR_STATION = "중구"
 WEEKDAYS = ["월", "화", "수", "목", "금", "토", "일"]
 SKY = {"1": "맑음", "3": "구름 많음", "4": "흐림"}
 PTY = {"1": "비", "2": "비/눈", "3": "눈", "4": "소나기", "5": "빗방울", "6": "빗방울눈날림", "7": "눈날림"}
@@ -32,10 +29,16 @@ def _cfg(name: str) -> str:
     return v
 
 
-def _short(base_date: str, base_time: str) -> dict[tuple[str, str], dict[str, str]]:
+def available() -> bool:
+    return config.has_keys([_http.KEY_ENV, "KMA_SHORT_FCST_BASE_URL", "KMA_MID_FCST_BASE_URL"])
+
+
+# ---------------- 기상청 ----------------
+
+def _short(base_date: str, base_time: str, nx: int, ny: int) -> dict[tuple[str, str], dict[str, str]]:
     body = _http.get_json(
         _cfg("KMA_SHORT_FCST_BASE_URL") + "/getVilageFcst",
-        {"pageNo": 1, "numOfRows": 1000, "dataType": "JSON", "base_date": base_date, "base_time": base_time, "nx": NX, "ny": NY},
+        {"pageNo": 1, "numOfRows": 1000, "dataType": "JSON", "base_date": base_date, "base_time": base_time, "nx": nx, "ny": ny},
     )
     out: dict[tuple[str, str], dict[str, str]] = {}
     for it in _http.items_of(body):
@@ -52,19 +55,18 @@ def _latest_base(now: datetime) -> tuple[str, str]:
     return (avail - timedelta(days=1)).strftime("%Y%m%d"), "2300"
 
 
-def _ncst(now: datetime) -> dict[str, str]:
+def _ncst(now: datetime, nx: int, ny: int) -> dict[str, str]:
     """초단기실황(지금 관측): 정시 자료는 40분 뒤부터 나와서 45분 전 정시를 씀."""
     t = now - timedelta(minutes=45)
     body = _http.get_json(
         _cfg("KMA_SHORT_FCST_BASE_URL") + "/getUltraSrtNcst",
-        {"pageNo": 1, "numOfRows": 20, "dataType": "JSON", "base_date": t.strftime("%Y%m%d"), "base_time": t.strftime("%H00"), "nx": NX, "ny": NY},
+        {"pageNo": 1, "numOfRows": 20, "dataType": "JSON", "base_date": t.strftime("%Y%m%d"), "base_time": t.strftime("%H00"), "nx": nx, "ny": ny},
     )
     return {it["category"]: it["obsrValue"] for it in _http.items_of(body)}
 
 
 def _cond(vals: dict[str, str]) -> str:
-    pty = vals.get("PTY", "0")
-    return PTY.get(pty) or SKY.get(vals.get("SKY", "1"), "맑음")
+    return PTY.get(vals.get("PTY", "0")) or SKY.get(vals.get("SKY", "1"), "맑음")
 
 
 def _feels_like(temp: float, wind_ms: float) -> int:
@@ -93,8 +95,8 @@ def _daily(pivot: dict, days: list[date]) -> dict[date, dict]:
     return out
 
 
-def _mid(now: datetime, wanted: list[date]) -> dict[date, dict]:
-    """중기예보(3~10일 뒤). 발표는 06시·18시, 발표 직후에는 아직 없어서 30분 여유."""
+def _mid(now: datetime, wanted: list[date], land_reg: str, temp_reg: str) -> dict[date, dict]:
+    """중기예보(4일 뒤부터). 발표는 06시·18시, 발표 직후에는 아직 없어서 30분 여유."""
     base = now - timedelta(minutes=30)
     if base.hour >= 18:
         tm = base.replace(hour=18, minute=0, second=0, microsecond=0)
@@ -102,11 +104,10 @@ def _mid(now: datetime, wanted: list[date]) -> dict[date, dict]:
         tm = base.replace(hour=6, minute=0, second=0, microsecond=0)
     else:
         tm = (base - timedelta(days=1)).replace(hour=18, minute=0, second=0, microsecond=0)
-    tm_fc = tm.strftime("%Y%m%d%H%M")
     root = _cfg("KMA_MID_FCST_BASE_URL")
-    common = {"pageNo": 1, "numOfRows": 10, "dataType": "JSON", "tmFc": tm_fc}
-    ta = (_http.items_of(_http.get_json(root + "/getMidTa", {**common, "regId": MID_TEMP_REG})) or [{}])[0]
-    land = (_http.items_of(_http.get_json(root + "/getMidLandFcst", {**common, "regId": MID_LAND_REG})) or [{}])[0]
+    common = {"pageNo": 1, "numOfRows": 10, "dataType": "JSON", "tmFc": tm.strftime("%Y%m%d%H%M")}
+    ta = (_http.items_of(_http.get_json(root + "/getMidTa", {**common, "regId": temp_reg})) or [{}])[0]
+    land = (_http.items_of(_http.get_json(root + "/getMidLandFcst", {**common, "regId": land_reg})) or [{}])[0]
     out = {}
     for n in range(3, 11):
         d = tm.date() + timedelta(days=n)
@@ -141,46 +142,57 @@ def _outfit(temp: int, rainy: bool) -> str:
     return s + (" · 우산도 챙기세요" if rainy else "")
 
 
-def _air() -> dict:
+# ---------------- 에어코리아 ----------------
+
+def _stations(lat: float, lon: float) -> list[dict]:
+    """가까운 측정소 3곳(가까운 순). 위치 라벨(시군구)도 여기서 얻음."""
+    x, y = geo.to_tm(lat, lon)
     body = _http.get_json(
-        _cfg("AIRKOREA_AIR_QUALITY_BASE_URL") + "/getMsrstnAcctoRltmMesureDnsty",
-        {"returnType": "json", "numOfRows": 6, "pageNo": 1, "stationName": AIR_STATION, "dataTerm": "DAILY", "ver": "1.0"},
+        _cfg("AIRKOREA_STATION_BASE_URL") + "/getNearbyMsrstnList",
+        {"returnType": "json", "tmX": x, "tmY": y, "ver": "1.1"},
     )
-    # 매 정시 직후에는 최신 행의 값이 비어 있어서(null) 값이 있는 가장 최근 행을 씀
-    rows = _http.items_of(body)
-    it = next((r for r in rows if r.get("pm10Grade") and r.get("pm25Grade")), rows[0] if rows else {})
-    return {"pm10": GRADE.get(str(it.get("pm10Grade")), "정보 없음"), "pm25": GRADE.get(str(it.get("pm25Grade")), "정보 없음")}
+    return _http.items_of(body)
 
 
-def _next_holiday(today: date) -> dict | None:
-    """오늘 이후 가장 가까운 공휴일(이번 달부터 최대 4달 뒤까지 찾음)."""
-    y, m = today.year, today.month
-    for _ in range(5):
-        items = _http.get_xml_items(_cfg("KASI_SPECIAL_DAY_BASE_URL") + "/getRestDeInfo", {"solYear": y, "solMonth": f"{m:02d}", "numOfRows": 50})
-        days = sorted((datetime.strptime(i["locdate"], "%Y%m%d").date(), i["dateName"]) for i in items if i.get("isHoliday") == "Y")
-        for d, name in days:
-            if d > today:
-                return {"name": name, "date": d.isoformat(), "d_day": (d - today).days}
-        m += 1
-        if m > 12:
-            y, m = y + 1, 1
-    return None
+def _air(stations: list[dict]) -> dict:
+    """가까운 측정소부터 값이 있는 첫 곳. 매 정시 직후엔 최신 행이 비어(null) 있어서 값 있는 행을 고름."""
+    for st in stations[:3]:
+        body = _http.get_json(
+            _cfg("AIRKOREA_AIR_QUALITY_BASE_URL") + "/getMsrstnAcctoRltmMesureDnsty",
+            {"returnType": "json", "numOfRows": 6, "pageNo": 1, "stationName": st["stationName"], "dataTerm": "DAILY", "ver": "1.0"},
+        )
+        row = next((r for r in _http.items_of(body) if r.get("pm10Grade") and r.get("pm25Grade")), None)
+        if row:
+            return {"pm10": GRADE.get(str(row["pm10Grade"]), "정보 없음"), "pm25": GRADE.get(str(row["pm25Grade"]), "정보 없음")}
+    return {"pm10": "정보 없음", "pm25": "정보 없음"}
 
 
-AREA_NO = "1100000000"  # 생활기상지수 지점코드(서울)
+# ---------------- 생활 지수 ----------------
+
+def _warning(now: datetime, lat: float, lon: float) -> dict | None:
+    """발효 중인 기상특보. 지점은 서울(108) 고정 — 지점코드 표가 없어 아직 위치별 아님.
+    평소엔 비어 있고 특보가 있을 때만 줄이 뜸(응답 필드 title은 특보 있는 날 확인 못 함)."""
+    body = _http.get_json(
+        _cfg("KMA_WARNING_BASE_URL") + "/getWthrWrnList",
+        {"stnId": "108", "dataType": "JSON", "numOfRows": 5, "pageNo": 1},
+    )
+    items = _http.items_of(body)
+    if not items:
+        return None
+    return {"title": "기상특보(서울·수도권)", "meta": str(items[0].get("title") or items[0])[:30]}
 
 
-def _uv(now: datetime) -> dict | None:
+def _uv(now: datetime, lat: float, lon: float) -> dict | None:
     """오늘 낮 시간대 자외선지수 최고값. 응답의 h0·h3·… 는 발표 시각(date)에서 N시간 뒤 값."""
     body = _http.get_json(
         _cfg("KMA_LIVING_IDX_BASE_URL") + "/getUVIdxV5",
-        {"areaNo": AREA_NO, "time": now.strftime("%Y%m%d%H"), "dataType": "JSON", "numOfRows": 1, "pageNo": 1},
+        {"areaNo": geo.sido_area_no(lat, lon), "time": now.strftime("%Y%m%d%H"), "dataType": "JSON", "numOfRows": 1, "pageNo": 1},
     )
     it = (_http.items_of(body) or [None])[0]
     if not it:
         return None
     base_hour = int(it["date"][-2:])
-    vals = [int(it[f"h{h}"]) for h in range(0, 22, 3) if it.get(f"h{h}", "") != "" and 6 <= base_hour + h <= 18 and base_hour + h < 24]
+    vals = [int(it[f"h{h}"]) for h in range(0, 22, 3) if it.get(f"h{h}", "") != "" and 6 <= base_hour + h <= 18]
     if not vals:
         return None
     v = max(vals)
@@ -188,11 +200,11 @@ def _uv(now: datetime) -> dict | None:
     return {"title": "자외선", "meta": f"{label} ({v})"}
 
 
-def _pollen(now: datetime) -> dict | None:
+def _pollen(now: datetime, lat: float, lon: float) -> dict | None:
     """꽃가루(잡초류) — 제공 기간(보통 9~10월)에만 값이 나오고 0(낮음)이면 보여줄 게 없어서 생략."""
     body = _http.get_json(
         _cfg("KMA_POLLEN_BASE_URL") + "/getWeedsPollenRiskndxV3",
-        {"areaNo": AREA_NO, "time": now.strftime("%Y%m%d%H"), "dataType": "JSON", "numOfRows": 1, "pageNo": 1},
+        {"areaNo": geo.sido_area_no(lat, lon), "time": now.strftime("%Y%m%d%H"), "dataType": "JSON", "numOfRows": 1, "pageNo": 1},
     )
     it = (_http.items_of(body) or [None])[0]
     if not it or not str(it.get("today", "")).isdigit() or int(it["today"]) < 1:
@@ -201,27 +213,16 @@ def _pollen(now: datetime) -> dict | None:
     return {"title": "꽃가루(잡초류)", "meta": level}
 
 
-def _sun(now: datetime) -> dict | None:
-    items = _http.get_xml_items(_cfg("KASI_RISE_SET_BASE_URL") + "/getAreaRiseSetInfo", {"locdate": now.strftime("%Y%m%d"), "location": "서울"})
+def _sun(now: datetime, lat: float, lon: float) -> dict | None:
+    items = _http.get_xml_items(
+        _cfg("KASI_RISE_SET_BASE_URL") + "/getLCRiseSetInfo",
+        {"locdate": now.strftime("%Y%m%d"), "longitude": lon, "latitude": lat, "dnYn": "Y"},
+    )
     if not items:
         return None
     a = items[0]
     f = lambda t: f"{t[:2]}:{t[2:4]}"
     return {"title": "일출 · 일몰", "meta": f"{f(a['sunrise'])} · {f(a['sunset'])}"}
-
-
-def _warning(now: datetime) -> dict | None:
-    """발효 중인 기상특보(서울 지점 108). 없으면 None — 평소엔 안 보이고 특보가 있을 때만 뜸.
-    주의: 응답 필드 이름(title)은 특보가 있는 날 실제 응답으로 확인 못 했음(지금은 비어 있음)."""
-    body = _http.get_json(
-        _cfg("KMA_WARNING_BASE_URL") + "/getWthrWrnList",
-        {"stnId": "108", "dataType": "JSON", "numOfRows": 5, "pageNo": 1},
-    )
-    items = _http.items_of(body)
-    if not items:
-        return None
-    text = str(items[0].get("title") or items[0])
-    return {"title": "기상특보", "meta": text[:30]}
 
 
 def _next_term(today: date) -> dict | None:
@@ -239,37 +240,55 @@ def _next_term(today: date) -> dict | None:
     return None
 
 
-def run() -> dict:
+def _next_holiday(today: date) -> dict | None:
+    """오늘 이후 가장 가까운 공휴일(이번 달부터 최대 4달 뒤까지 찾음)."""
+    y, m = today.year, today.month
+    for _ in range(5):
+        items = _http.get_xml_items(_cfg("KASI_SPECIAL_DAY_BASE_URL") + "/getRestDeInfo", {"solYear": y, "solMonth": f"{m:02d}", "numOfRows": 50})
+        days = sorted((datetime.strptime(i["locdate"], "%Y%m%d").date(), i["dateName"]) for i in items if i.get("isHoliday") == "Y")
+        for d, name in days:
+            if d > today:
+                return {"name": name, "date": d.isoformat(), "d_day": (d - today).days}
+        m += 1
+        if m > 12:
+            y, m = y + 1, 1
+    return None
+
+
+# ---------------- 조립 ----------------
+
+def fetch(lat: float, lon: float) -> dict:
     now = datetime.now()
     today = now.date()
+    nx, ny = geo.to_grid(lat, lon)
+    land_reg, temp_reg = geo.mid_regions(lat, lon)
 
-    ncst = _ncst(now)
+    ncst = _ncst(now, nx, ny)
     base_date, base_time = _latest_base(now)
-    latest = _short(base_date, base_time)
+    latest = _short(base_date, base_time, nx, ny)
     # 오늘 최저/최고는 02시 발표분에만 들어 있음(02시 20분 전이면 어제 23시 발표분)
     if now - timedelta(minutes=20) >= now.replace(hour=2, minute=0, second=0, microsecond=0):
-        daily_src = _short(today.strftime("%Y%m%d"), "0200")
+        daily_src = _short(today.strftime("%Y%m%d"), "0200", nx, ny)
     else:
-        daily_src = _short((today - timedelta(days=1)).strftime("%Y%m%d"), "2300")
+        daily_src = _short((today - timedelta(days=1)).strftime("%Y%m%d"), "2300", nx, ny)
     merged = {k: {**daily_src.get(k, {}), **latest.get(k, {})} for k in set(daily_src) | set(latest)}
     daily = _daily(merged, [today + timedelta(days=i) for i in range(3)])
 
-    # 지금
     temp = float(ncst.get("T1H", "nan"))
     if math.isnan(temp):
         raise RuntimeError("실황 기온 없음")
-    here = latest.get((today.strftime("%Y%m%d"), now.strftime("%H00"))) or next((v for (d, t), v in sorted(latest.items()) if (d, t) >= (today.strftime("%Y%m%d"), now.strftime("%H00"))), {})
-    cond_now = PTY.get(ncst.get("PTY", "0")) or SKY.get(here.get("SKY", "1"), "맑음")
+    here = latest.get((today.strftime("%Y%m%d"), now.strftime("%H00"))) or next(
+        (v for (d, t), v in sorted(latest.items()) if (d, t) >= (today.strftime("%Y%m%d"), now.strftime("%H00"))), {}
+    )
     td = daily.get(today, {})
     today_block = {
         "temp": round(temp),
         "feels_like": _feels_like(temp, float(ncst.get("WSD", 0) or 0)),
-        "condition": cond_now,
+        "condition": PTY.get(ncst.get("PTY", "0")) or SKY.get(here.get("SKY", "1"), "맑음"),
         "high": td.get("high", round(temp)),
         "low": td.get("low", round(temp)),
     }
 
-    # 시간대별: 3시간 간격 8칸
     hourly = []
     start = now.replace(minute=0, second=0, microsecond=0)
     for i in range(0, 24, 3):
@@ -281,11 +300,10 @@ def run() -> dict:
         if len(hourly) == 8:
             break
 
-    # 주간: 내일~6일 뒤(단기 2일 + 중기)
     wanted = [today + timedelta(days=i) for i in range(1, 7)]
     by_day = dict(daily)
     try:
-        by_day.update(_mid(now, wanted))
+        by_day.update(_mid(now, wanted, land_reg, temp_reg))
     except Exception:
         pass  # 중기예보가 안 와도 단기 구간은 보여줌
     weekly = [
@@ -294,34 +312,44 @@ def run() -> dict:
         if d in by_day
     ]
 
-    # 주말 한 줄
     wk = {w["day"]: w for w in weekly}
     weekend = ""
     if "토" in wk and "일" in wk:
         weekend = f"토요일은 {wk['토']['condition']} {wk['토']['low']}~{wk['토']['high']}°, 일요일은 {wk['일']['condition']} {wk['일']['low']}~{wk['일']['high']}°예요"
 
-    # 빨래/세차: 비 예보 기준 규칙
     pop_2d = max([td.get("pop", 0)] + [daily[d]["pop"] for d in (today + timedelta(days=1),) if d in daily])
     pop_3d = max([daily[d]["pop"] for d in daily] or [0])
     rainy_now = ncst.get("PTY", "0") != "0" or td.get("pop", 0) >= 60
 
-    out = {
+    out: dict = {
         "source": "기상청 · 에어코리아",
         "today": today_block,
         "hourly": hourly,
         "weekly": weekly,
         "outfit": _outfit(round((today_block["high"] + today_block["temp"]) / 2), rainy_now),
         "good_for": [{"label": "빨래", "good": pop_2d < 30}, {"label": "세차", "good": pop_3d < 30}],
+        "weekend": weekend,  # 비어 있으면 화면에서 숨김(스텁 문구가 남지 않게 항상 덮어씀)
     }
-    out["weekend"] = weekend  # 비어 있으면 화면에서 숨김(스텁 문구가 남지 않게 항상 덮어씀)
+
+    # 위치 라벨(가장 가까운 측정소의 시군구) + 미세먼지
+    stations: list[dict] = []
     try:
-        out["air_quality"] = _air()
+        stations = _stations(lat, lon)
     except Exception:
+        pass
+    if stations:
+        out["location"] = {"label": " ".join((stations[0].get("addr") or "").split()[:2]) or stations[0]["stationName"], "station": stations[0]["stationName"]}
+        try:
+            out["air_quality"] = _air(stations)
+        except Exception:
+            out["air_quality"] = {"pm10": "정보 없음", "pm25": "정보 없음"}
+    else:
         out["air_quality"] = {"pm10": "정보 없음", "pm25": "정보 없음"}
+
     life = []
     for fn in (_warning, _uv, _sun, _pollen):
         try:
-            row = fn(now)
+            row = fn(now, lat, lon)
             if row:
                 life.append(row)
         except Exception:
@@ -342,4 +370,12 @@ def run() -> dict:
     return out
 
 
-jobs.register(jobs.Job(name="weather", run=run, env_keys=[_http.KEY_ENV, "KMA_SHORT_FCST_BASE_URL", "KMA_MID_FCST_BASE_URL"], interval_min=30))
+def get(lat: float, lon: float) -> dict | None:
+    """위치별 캐시된 날씨(키/수집 실패 시 None → 스텁)."""
+    if not available():
+        return None
+    nx, ny = geo.to_grid(lat, lon)
+    try:
+        return _cache.cached("weather", f"weather:{nx}:{ny}", 25, lambda: fetch(lat, lon))
+    except Exception:
+        return None

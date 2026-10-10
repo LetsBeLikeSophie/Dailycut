@@ -13,15 +13,19 @@ class ApiClient {
 
   final String baseUrl;
 
-  Future<Map<String, dynamic>> today() => _getJson('/today');
-  Future<Map<String, dynamic>> weather() => _getJson('/weather');
+  // 위치(lat, lon)는 소수 둘째 자리로 뭉갠 값만 받음(location.dart). 날씨·문화는 이 위치 기준.
+  Future<Map<String, dynamic>> today({double? lat, double? lon}) => _getJson('/today', lat: lat, lon: lon);
+  Future<Map<String, dynamic>> weather({double? lat, double? lon}) => _getJson('/weather', lat: lat, lon: lon);
   Future<Map<String, dynamic>> market() => _getJson('/market');
-  Future<Map<String, dynamic>> culture() => _getJson('/culture');
+  Future<Map<String, dynamic>> culture({double? lat, double? lon}) => _getJson('/culture', lat: lat, lon: lon);
   Future<Map<String, dynamic>> money() => _getJson('/money');
   Future<Map<String, dynamic>> ai() => _getJson('/ai');
 
-  Future<Map<String, dynamic>> _getJson(String path) async {
-    final res = await http.get(Uri.parse('$baseUrl$path'));
+  Future<Map<String, dynamic>> _getJson(String path, {double? lat, double? lon}) async {
+    final uri = Uri.parse('$baseUrl$path').replace(
+      queryParameters: (lat != null && lon != null) ? {'lat': '$lat', 'lon': '$lon'} : null,
+    );
+    final res = await http.get(uri);
     if (res.statusCode != 200) {
       throw Exception('$path 응답 실패: ${res.statusCode}');
     }
