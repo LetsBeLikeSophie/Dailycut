@@ -14,8 +14,15 @@ from __future__ import annotations
 import random
 from datetime import date, datetime, timedelta
 
+import functools
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+
+import config  # noqa: F401  (.env를 읽어 환경변수에 채움)
+import jobs
+import sources  # noqa: F401  (수집 작업 등록)
+import store
 
 app = FastAPI(title="데일리컷 API")
 
@@ -27,9 +34,42 @@ app.add_middleware(
 )
 
 
+@app.on_event("startup")
+def _startup() -> None:
+    # 2026-10-10: 실데이터 연동 시작 — 수집 결과는 SQLite에 캐시/이력으로 저장하고
+    # API는 저장된 값만 읽음. 키가 없는 소스는 건너뛰고 아래 스텁이 그대로 나감.
+    store.init()
+    jobs.start()
+
+
+def live_merge(name: str):
+    """엔드포인트의 스텁 응답 위에 수집된 실데이터 필드를 덮어씀.
+    응답의 live_keys에 덮어쓴 필드 이름을 넣어서, 화면이 스텁(예시) 구간을
+    "예시 데이터"로 표시할 수 있게 함."""
+
+    def deco(fn):
+        @functools.wraps(fn)
+        def wrapper(*args, **kwargs):
+            stub = fn(*args, **kwargs)
+            live = jobs.get_live(name)
+            if not live:
+                return {**stub, "live_keys": []}
+            return {**stub, **live, "live_keys": sorted(live.keys())}
+
+        return wrapper
+
+    return deco
+
+
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+
+@app.get("/status")
+def status():
+    """수집 작업별 상태(live/waiting/stub). 키 값은 절대 안 내보냄."""
+    return {"jobs": jobs.describe()}
 
 
 # 2026-09-29: 기획 문서에 "생활" 섹션 확정 내용이 추가되면서 날씨가 제일
@@ -89,6 +129,7 @@ def _mock_weekly(base_high: int, base_low: int, days: int = 6) -> list[dict]:
 
 
 @app.get("/weather")
+@live_merge("weather")
 def weather():
     return {
         # 2026-10-06: "출처 표시가 하나도 없다"는 지적 — 기획 문서 원칙
@@ -167,6 +208,7 @@ def _price_row(label: str, price: int, change: str, pct: float, sub: str | None 
 
 
 @app.get("/market")
+@live_merge("market")
 def market():
     # 2026-10-10: 추이 차트 X축을 "이번 달 1일~말일" 고정축으로 바꿈 — 시리즈는
     # 이번 달 1일부터 오늘까지의 일별 값만 보내고(미래 날짜는 비워둠), 지난주
@@ -217,6 +259,7 @@ def market():
 # TODO: KOBIS 박스오피스 (https://www.kobis.or.kr/kobisopenapi/homepg/apiservice/searchServiceInfo.do)
 # + KOPIS 공연예술통합전산망 + TourAPI 지역 축제
 @app.get("/culture")
+@live_merge("culture")
 def culture():
     return {
         "hero": {
@@ -265,6 +308,7 @@ def culture():
 
 # TODO: 한국은행 ECOS (https://ecos.bok.or.kr/api/) + 금감원 금융상품 한눈에
 @app.get("/money")
+@live_merge("money")
 def money():
     # 이번 달 1일~오늘 일별 환율(스텁). 마지막 값이 1350.2가 되게 맞춤.
     today_d = date.today()
@@ -318,6 +362,17 @@ def ai():
     }
 
 
+def _headline(w: dict) -> str:
+    """투데이 맨 위 한 문장 — 실제 날씨가 붙은 경우에만 규칙으로 만듦(아직 AI 요약 없음)."""
+    if "today" not in (w.get("live_keys") or []):
+        return "오늘 한 줄 요약(스텁)"
+    t = w["today"]
+    wet = any(h.get("pop", 0) >= 60 for h in w.get("hourly", [])[:4])
+    air_bad = w.get("air_quality", {}).get("pm25") in ("나쁨", "매우나쁨")
+    tail = " · 우산을 챙기세요" if wet else (" · 마스크를 챙기세요" if air_bad else "")
+    return f"오늘은 {t['condition']}, 낮 최고 {t['high']}°예요{tail}"
+
+
 @app.get("/today")
 def today():
     """투데이(홈) — 섹션별 대표 카드 1개씩만 모아서 반환.
@@ -348,7 +403,7 @@ def today():
         "meta": f"{c['hero']['stat_label']} {c['hero']['stat']}",
     }
     return {
-        "headline": "오늘 한 줄 요약(스텁)",
+        "headline": _headline(w),
         "cards": [
             {"section": "weather", **weather_card},
             {"section": "market", **market_card},

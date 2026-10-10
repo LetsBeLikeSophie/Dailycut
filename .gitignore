@@ -25,3 +25,5 @@ backend/*.db
 .env.*
 *.env
 backend/.env
+!.env.example
+!backend/.env.example

@@ -581,10 +581,13 @@ class _MiniPainter extends CustomPainter {
 
 /// 목록 한 묶음. 제목 + 오른쪽 작은 보조 글 + 진한 선 한 줄, 그 아래 행들.
 class ListSection extends StatelessWidget {
-  const ListSection({super.key, required this.title, this.trailing, required this.children});
+  const ListSection({super.key, required this.title, this.trailing, this.stub = false, required this.children});
 
   final String title;
   final String? trailing;
+  // 실데이터가 아직 안 붙은(스텁) 묶음이면 true — 제목 옆에 "예시 데이터"를 표시해서
+  // 가짜 숫자가 진짜처럼 보이지 않게 함.
+  final bool stub;
   final List<Widget> children;
 
   @override
@@ -599,7 +602,11 @@ class ListSection extends StatelessWidget {
             textBaseline: TextBaseline.alphabetic,
             children: [
               Expanded(child: Text(title, style: AppTheme.subheading)),
-              if (trailing != null) Text(trailing!, style: const TextStyle(fontSize: 11, color: AppColors.inkSoft)),
+              if (trailing != null || stub)
+                Text(
+                  [?trailing, if (stub) '예시 데이터'].join(' · '),
+                  style: const TextStyle(fontSize: 11, color: AppColors.inkSoft),
+                ),
             ],
           ),
           const SizedBox(height: 10),

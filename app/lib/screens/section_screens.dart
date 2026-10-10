@@ -51,6 +51,11 @@ class _SectionScreenState extends State<SectionScreen> {
   }
 }
 
+/// 서버가 실데이터로 덮어쓴 필드인지(live_keys) — 아니면 아직 스텁(예시)임.
+bool _isLive(Map<String, dynamic> data, String key) => (data['live_keys'] as List?)?.contains(key) ?? false;
+
+String? _sourceLabel(String? source, bool live) => source == null ? null : (live ? source : '$source · 예시 데이터');
+
 List<Widget> _priceRows(List<Map<String, dynamic>> items) => [for (final it in items) priceRow(it)];
 
 /// 생활: 대표 가격(배추) 한 문장 + 큰 숫자 + 추이, 그 아래 제철 · 시세 목록.
@@ -61,14 +66,18 @@ Widget marketScreen(ApiClient api) => SectionScreen(
         final trend = data['price_trend'] as Map<String, dynamic>;
         final rawPoints = (trend['series'] as List).cast<Map<String, dynamic>>();
         // 이번 달 1일~오늘 일별 값(차트 X축은 월 전체 고정)
+        final nowD = DateTime.now();
+        // 이번 달 데이터만 차트에 올림(X축이 이번 달 1일~말일 고정이라서)
         final points = [
           for (final e in rawPoints)
-            ChartPoint(DateTime.parse(e['date'] as String).day, (e['price'] as num).toDouble()),
+            if (DateTime.parse(e['date'] as String).month == nowD.month)
+              ChartPoint(DateTime.parse(e['date'] as String).day, (e['price'] as num).toDouble()),
         ];
         final item = trend['item'] as String;
-        final last = points.last.value;
+        final latest = trend['latest'] as Map<String, dynamic>?;
+        final last = latest != null ? (latest['price'] as num).toDouble() : points.last.value;
         // 지난주(7일 전) 대비 — 월초에는 지난달 값이 필요해서 서버가 따로 줌
-        final weekAgo = ((trend['week_ago'] as num?) ?? points.first.value).toDouble();
+        final weekAgo = ((trend['week_ago'] as num?) ?? last).toDouble();
         final pct = (last - weekAgo) / weekAgo * 100;
         final flat = pct.abs() < 0.5;
         final emphasis = flat ? '비슷해요' : '${pct.abs().round()}% ${pct < 0 ? '내렸어요' : '올랐어요'}';
@@ -85,7 +94,7 @@ Widget marketScreen(ApiClient api) => SectionScreen(
             section: Section.market,
             headline: headline,
             emphasis: emphasis,
-            source: data['source'] as String?,
+            source: _sourceLabel(data['source'] as String?, _isLive(data, 'price_trend')),
             body: [
               BigNumber(to: last, unit: trend['unit'] as String),
               const SizedBox(height: 4),
@@ -112,11 +121,12 @@ Widget marketScreen(ApiClient api) => SectionScreen(
               const SeasonLegend(),
             ],
           ),
-          ListSection(title: '채소 시세', trailing: '전주 대비', children: _priceRows(items)),
-          ListSection(title: '축산물 시세', trailing: '전주 대비', children: _priceRows(livestock)),
-          ListSection(title: '생필품 물가지수', trailing: '전월 대비', children: _priceRows(essentials)),
+          ListSection(title: '채소·과일 시세', trailing: '전주 대비', stub: !_isLive(data, 'items'), children: _priceRows(items)),
+          ListSection(title: '축산물 시세', trailing: '전주 대비', stub: !_isLive(data, 'livestock'), children: _priceRows(livestock)),
+          ListSection(title: '생필품 물가지수', trailing: '전월 대비', stub: !_isLive(data, 'essentials'), children: _priceRows(essentials)),
           ListSection(
             title: '우리 동네 전통시장',
+            stub: !_isLive(data, 'markets_nearby'),
             children: [
               for (final it in marketsNearby) RankRow(rank: 0, title: it['title'] as String, meta: it['meta'] as String),
             ],
@@ -148,7 +158,7 @@ Widget cultureScreen(ApiClient api) => SectionScreen(
             section: Section.culture,
             headline: '${hero['label'] ?? '어제 박스오피스 1위'}는 $title',
             emphasis: title,
-            source: hero['source'] as String?,
+            source: _sourceLabel(hero['source'] as String?, _isLive(data, 'hero')),
             backTitle: '박스오피스 TOP 3',
             backHint: '눌러서 TOP 3 보기',
             back: Column(
@@ -187,16 +197,19 @@ Widget cultureScreen(ApiClient api) => SectionScreen(
           ListSection(
             title: '박스오피스',
             trailing: '어제 기준',
+            stub: !_isLive(data, 'box_office'),
             children: [
               for (final it in rest) RankRow(rank: it['rank'] as int, title: it['title'] as String, meta: it['meta'] as String),
             ],
           ),
           ListSection(
-            title: '이번 주 개막 공연',
+            title: '진행 중인 전시·공연',
+            stub: !_isLive(data, 'performances'),
             children: [for (final it in performances) RankRow(rank: 0, title: it['title'] as String, meta: it['meta'] as String)],
           ),
           ListSection(
-            title: '주말 축제',
+            title: '곧 열리는 축제',
+            stub: !_isLive(data, 'festivals'),
             children: [for (final it in festivals) RankRow(rank: 0, title: it['title'] as String, meta: it['meta'] as String)],
           ),
           // 2026-09-29: 국내 3대 차트(멜론/지니/벅스)·가온(써클차트) 전부
@@ -207,12 +220,14 @@ Widget cultureScreen(ApiClient api) => SectionScreen(
           ListSection(
             title: '오늘의 음악',
             trailing: 'Spotify 기준',
+            stub: !_isLive(data, 'spotify_top'),
             children: [
               for (final it in spotifyTop) RankRow(rank: it['rank'] as int, title: it['title'] as String, meta: it['meta'] as String),
             ],
           ),
           ListSection(
             title: '유튜브 인기 급상승 음악',
+            stub: !_isLive(data, 'youtube_trending'),
             children: [
               for (final it in youtubeTrending) RankRow(rank: it['rank'] as int, title: it['title'] as String, meta: it['meta'] as String),
             ],
@@ -227,9 +242,11 @@ Widget moneyScreen(ApiClient api) => SectionScreen(
       fetch: api.money,
       contentBuilder: (context, data) {
         final hero = data['hero'] as Map<String, dynamic>;
+        final heroLive = _isLive(data, 'hero');
         final stats = (data['stats'] as List).cast<Map<String, dynamic>>();
         final deposits = (data['deposits'] as List).cast<Map<String, dynamic>>();
-        final fxOthers = (data['fx_others'] as List? ?? const []).cast<Map<String, dynamic>>();
+        // 뒤집으면 보이는 면: 실데이터면 서버가 준 back, 아니면 스텁의 다른 통화
+        final backRows = ((data['back'] ?? data['fx_others']) as List? ?? const []).cast<Map<String, dynamic>>();
         final points = [
           for (final e in (hero['series'] as List).cast<Map<String, dynamic>>())
             ChartPoint(DateTime.parse(e['date'] as String).day, (e['value'] as num).toDouble()),
@@ -237,37 +254,45 @@ Widget moneyScreen(ApiClient api) => SectionScreen(
         final change = hero['change'] as String;
         final emphasis = switch (change) { 'up' => '올랐어요', 'down' => '내렸어요', _ => '그대로예요' };
         final diff = points.last.value - points.first.value;
+        final diffKey = diff.abs() < 1e-9 ? 'flat' : (diff > 0 ? 'up' : 'down');
+        final unit = (hero['unit'] as String?) ?? '원';
+        final when = heroLive ? '마지막 거래일엔' : '오늘은';
         return [
           PageHero(
             section: Section.money,
-            headline: '${hero['label']}, 오늘은 $emphasis',
+            headline: '${hero['label']}, $when $emphasis',
             emphasis: emphasis,
-            source: hero['source'] as String?,
-            backTitle: '주요 통화 환율',
-            backHint: fxOthers.isEmpty ? null : '눌러서 다른 통화 보기',
-            back: fxOthers.isEmpty
+            source: _sourceLabel(hero['source'] as String?, heroLive),
+            backTitle: (data['back_title'] as String?) ?? '주요 통화 환율',
+            backHint: backRows.isEmpty ? null : '눌러서 다른 지표 보기',
+            back: backRows.isEmpty
                 ? null
                 : Column(
                     children: [
-                      for (final it in fxOthers) RankRow(rank: 0, title: it['title'] as String, meta: it['meta'] as String),
+                      for (final it in backRows) RankRow(rank: 0, title: it['title'] as String, meta: it['meta'] as String),
                     ],
                   ),
             body: [
-              BigNumber(to: hero['value'] as num, decimals: 1, unit: '원'),
+              BigNumber(to: hero['value'] as num, decimals: 1, unit: unit),
               const SizedBox(height: 4),
               Text(
                 points.length < 2
                     ? '이번 달 첫 기록이에요'
-                    : '${changeLabel(change)} 이번 달 ${diff >= 0 ? '+' : '-'}${formatNumber(diff.abs(), decimals: 1)}원',
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: changeColor(change)),
+                    : '${changeLabel(diffKey)} 이번 달 ${diff >= 0 ? '+' : '-'}${formatNumber(diff.abs(), decimals: 1)}$unit',
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: changeColor(diffKey)),
               ),
               const SizedBox(height: 14),
               TrendChart(section: Section.money, points: points),
             ],
           ),
-          ListSection(title: '기준 지표', children: _priceRows(stats)),
+          ListSection(
+            title: _isLive(data, 'stats') ? '시장 지표' : '기준 지표',
+            stub: !_isLive(data, 'stats'),
+            children: _priceRows(stats),
+          ),
           ListSection(
             title: '예·적금 금리 순위',
+            stub: !_isLive(data, 'deposits'),
             children: [
               for (final it in deposits) RankRow(rank: it['rank'] as int, title: it['title'] as String, meta: it['meta'] as String),
             ],
@@ -305,11 +330,12 @@ Widget aiScreen(ApiClient api) => SectionScreen(
           ),
           ListSection(
             title: '이번 주 인기 논문',
+            stub: !_isLive(data, 'papers'),
             children: [
               for (final it in papers) RankRow(rank: 0, title: it['title'] as String, meta: it['meta'] as String),
             ],
           ),
-          ListSection(title: '이번 달 새 모델', children: _priceRows(models)),
+          ListSection(title: '이번 달 새 모델', stub: !_isLive(data, 'new_models'), children: _priceRows(models)),
         ];
       },
     );

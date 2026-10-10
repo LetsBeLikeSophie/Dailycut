@@ -47,6 +47,9 @@ class _TodayScreenState extends State<TodayScreen> {
         final weekly = (weather['weekly'] as List).cast<Map<String, dynamic>>();
         final goodFor = (weather['good_for'] as List).cast<Map<String, dynamic>>();
         final air = weather['air_quality'] as Map<String, dynamic>;
+        final weatherLive = (weather['live_keys'] as List?)?.contains('today') ?? false;
+        final holiday = weather['next_holiday'] as Map<String, dynamic>?;
+        final weekend = (weather['weekend'] as String?) ?? '';
 
         return ListView(
           padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
@@ -55,7 +58,7 @@ class _TodayScreenState extends State<TodayScreen> {
               section: Section.weather,
               eyebrow: '오늘',
               headline: data['headline'] as String,
-              source: weather['source'] as String?,
+              source: weatherLive ? weather['source'] as String? : '${weather['source']} · 예시 데이터',
               body: [
                 BigNumber(to: today['temp'] as num, suffix: '°', unit: today['condition'] as String),
                 const SizedBox(height: 4),
@@ -104,15 +107,18 @@ class _TodayScreenState extends State<TodayScreen> {
                   color: t.highlight,
                   style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, height: 1.6),
                 ),
-                const SizedBox(height: 10),
-                Text(
-                  weather['weekend'] as String,
-                  style: const TextStyle(fontSize: 13, color: AppColors.inkSoft, height: 1.5),
-                ),
+                if (weekend.isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  Text(
+                    weekend,
+                    style: const TextStyle(fontSize: 13, color: AppColors.inkSoft, height: 1.5),
+                  ),
+                ],
               ],
             ),
             ListSection(
               title: '이번 주 날씨',
+              stub: !weatherLive,
               children: [
                 for (final w in weekly)
                   ListLine(
@@ -131,7 +137,10 @@ class _TodayScreenState extends State<TodayScreen> {
             ),
             ListSection(
               title: '오늘의 생활 지수',
+              stub: !weatherLive,
               children: [
+                if (holiday != null)
+                  RankRow(rank: 0, title: '다음 공휴일', meta: 'D-${holiday['d_day']} ${holiday['name']}'),
                 for (final g in goodFor)
                   RankRow(
                     rank: 0,
