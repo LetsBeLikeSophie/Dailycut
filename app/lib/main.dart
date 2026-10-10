@@ -52,7 +52,7 @@ class _RootShellState extends State<RootShell> {
       body: SafeArea(child: IndexedStack(index: _index, children: screens)),
       bottomNavigationBar: DecoratedBox(
         decoration: const BoxDecoration(
-          border: Border(top: BorderSide(color: AppColors.line)),
+          border: Border(top: BorderSide(color: AppColors.hair)),
         ),
         child: SafeArea(
           top: false,
@@ -71,13 +71,13 @@ class _RootShellState extends State<RootShell> {
                           Text(
                             _tabs[i],
                             style: TextStyle(
-                              fontSize: 12,
+                              fontSize: 13,
                               fontWeight: i == _index ? FontWeight.w700 : FontWeight.w400,
                               color: i == _index ? AppColors.ink : AppColors.inkSoft,
                             ),
                           ),
                           const SizedBox(height: 4),
-                          if (i == _index) Container(width: 4, height: 4, color: AppColors.ink),
+                          if (i == _index) Container(width: 4, height: 4, decoration: const BoxDecoration(color: AppColors.ink, shape: BoxShape.circle)),
                         ],
                       ),
                     ),

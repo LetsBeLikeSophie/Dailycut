@@ -18,11 +18,8 @@ class _TodayScreenState extends State<TodayScreen> {
   @override
   void initState() {
     super.initState();
-    // 2026-09-30: "날씨는 따로 볼 페이지가 없으니 투데이 카드에 정보를
-    // 더 실어달라" 요청 — 다른 섹션과 같은 3줄짜리 HeroCard 대신, 날씨만
-    // WeatherHero(오늘 기온+시간대별+주간+옷차림+빨래·세차+미세먼지)를
-    // 그대로 씀. 그러려면 today()의 요약 필드 말고 weather()의 전체
-    // 데이터가 따로 필요해서 같이 받아옴.
+    // 날씨는 전용 탭이 없고 투데이 맨 위에만 있어서, today()의 요약
+    // 필드 말고 weather()의 전체 데이터(시간대별·주간·지수)를 같이 받아옴.
     _future = () async {
       final results = await Future.wait([widget.api.today(), widget.api.weather()]);
       return (today: results[0], weather: results[1]);
@@ -42,30 +39,121 @@ class _TodayScreenState extends State<TodayScreen> {
         }
         final data = snapshot.data!.today;
         final weather = snapshot.data!.weather;
-        final cards = (data['cards'] as List).cast<Map<String, dynamic>>();
+        final t = sectionThemes[Section.weather]!;
+        final others = (data['cards'] as List).cast<Map<String, dynamic>>().where((c) => c['section'] != 'weather').toList();
+
+        final today = weather['today'] as Map<String, dynamic>;
+        final hourly = (weather['hourly'] as List).cast<Map<String, dynamic>>();
+        final weekly = (weather['weekly'] as List).cast<Map<String, dynamic>>();
+        final goodFor = (weather['good_for'] as List).cast<Map<String, dynamic>>();
+        final air = weather['air_quality'] as Map<String, dynamic>;
+
         return ListView(
-          padding: const EdgeInsets.fromLTRB(20, 24, 20, 24),
+          padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
           children: [
-            // 2026-09-30: "세리프를 좀 더 써보자"는 요청으로, 대제목뿐
-            // 아니라 이런 "읽는 문장"류 헤드라인도 세리프로 넓힘(displaySerif가
-            // Noto Serif KR로 바뀌면서 한글도 실제로 세리프가 적용됨).
-            Text(
-              data['headline'] as String,
-              style: AppTheme.displaySerif(size: 24, fontWeight: FontWeight.w700),
-            ),
-            const SizedBox(height: 20),
-            for (final c in cards) ...[
-              if (c['section'] == 'weather')
-                WeatherHero(section: Section.weather, data: weather)
-              else
-                HeroCard(
-                  section: Section.values.byName(c['section'] as String),
-                  title: (c['title'] ?? c['label'] ?? '') as String,
-                  highlight: c['highlight'] as String?,
-                  meta: (c['meta'] ?? c['value']?.toString()) as String?,
+            PageHero(
+              section: Section.weather,
+              eyebrow: '오늘',
+              headline: data['headline'] as String,
+              source: weather['source'] as String?,
+              body: [
+                BigNumber(to: today['temp'] as num, suffix: '°', unit: today['condition'] as String),
+                const SizedBox(height: 4),
+                Text(
+                  '체감 ${today['feels_like']}° · 최고 ${today['high']}° · 최저 ${today['low']}°',
+                  style: const TextStyle(fontSize: 13, color: AppColors.inkSoft),
                 ),
-              const SizedBox(height: 12),
-            ],
+                const SizedBox(height: 18),
+                // 시간대별 가로 스크롤.
+                SizedBox(
+                  height: 76,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: hourly.length,
+                    separatorBuilder: (context, i) => const SizedBox(width: 20),
+                    itemBuilder: (context, i) {
+                      final h = hourly[i];
+                      final pop = h['pop'] as int;
+                      return Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(h['time'] as String, style: const TextStyle(fontSize: 11, color: AppColors.inkSoft)),
+                          const SizedBox(height: 6),
+                          Text(
+                            '${h['temp']}°',
+                            style: const TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                              fontFeatures: [FontFeature.tabularFigures()],
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            pop > 0 ? '$pop%' : '',
+                            style: const TextStyle(fontSize: 11, color: AppColors.down),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(height: 18),
+                HighlightText(
+                  text: weather['outfit'] as String,
+                  emphasis: weather['outfit'] as String,
+                  color: t.highlight,
+                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, height: 1.6),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  weather['weekend'] as String,
+                  style: const TextStyle(fontSize: 13, color: AppColors.inkSoft, height: 1.5),
+                ),
+              ],
+            ),
+            ListSection(
+              title: '이번 주 날씨',
+              children: [
+                for (final w in weekly)
+                  ListLine(
+                    leading: SizedBox(
+                      width: 20,
+                      child: Text(w['day'] as String, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                    ),
+                    name: w['condition'] as String,
+                    sub: w['date'] as String,
+                    middle: (w['pop'] as int) > 0
+                        ? Text('${w['pop']}%', style: const TextStyle(fontSize: 13, color: AppColors.down))
+                        : null,
+                    value: '${w['low']}° / ${w['high']}°',
+                  ),
+              ],
+            ),
+            ListSection(
+              title: '오늘의 생활 지수',
+              children: [
+                for (final g in goodFor)
+                  RankRow(
+                    rank: 0,
+                    title: g['label'] as String,
+                    meta: g['good'] == true ? '하기 좋아요' : '별로예요',
+                  ),
+                RankRow(rank: 0, title: '미세먼지', meta: '${air['pm10']}'),
+                RankRow(rank: 0, title: '초미세먼지', meta: '${air['pm25']}'),
+              ],
+            ),
+            ListSection(
+              title: '오늘의 섹션',
+              children: [
+                for (final c in others)
+                  ListLine(
+                    name: (c['title'] ?? c['label'] ?? '') as String,
+                    sub: sectionThemes[Section.values.byName(c['section'] as String)]!.label,
+                    value: (c['highlight'] ?? c['meta'] ?? c['value'] ?? '').toString(),
+                    valueSub: c['highlight'] != null ? (c['meta'] ?? c['value'])?.toString() : null,
+                  ),
+              ],
+            ),
           ],
         );
       },

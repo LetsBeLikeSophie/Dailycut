@@ -13,15 +13,10 @@ class SectionTheme {
     required this.highlight,
     required this.shape,
     required this.shapeAsset,
-    required this.onColor,
   });
 
   final String label;
   final Color color;
-  // 2026-10-10: 카드 헤더가 섹션 색 블록으로 바뀌면서(테두리 없는 비비드 카드)
-  // 그 위에 올리는 글자·도형 색이 필요해짐. 노랑/주황은 흰 글씨 대비가
-  // 2~2.7:1이라 너무 약해서(30대+ 가독성) 짙은 잉크색으로, 나머지는 흰색.
-  final Color onColor;
   final Color highlight;
   final String shape; // ○ △ □ ✳ — 더 이상 화면에 안 쓰지만(비정형 도형
   // 이미지로 교체됨) 참고/디버그용으로 남겨둠.
@@ -50,7 +45,6 @@ const sectionThemes = <Section, SectionTheme>{
     highlight: Color(0xFFF7D9BA),
     shape: '☁',
     shapeAsset: 'assets/shapes/shape_weather.png',
-    onColor: Color(0xFF191919),
   ),
   Section.market: SectionTheme(
     label: '생활',
@@ -58,7 +52,6 @@ const sectionThemes = <Section, SectionTheme>{
     highlight: Color(0xFFFCE9A8),
     shape: '○',
     shapeAsset: 'assets/shapes/shape_market.png',
-    onColor: Color(0xFF191919),
   ),
   Section.culture: SectionTheme(
     label: '문화',
@@ -66,7 +59,6 @@ const sectionThemes = <Section, SectionTheme>{
     highlight: Color(0xFFFAD6CC),
     shape: '△',
     shapeAsset: 'assets/shapes/shape_culture.png',
-    onColor: Color(0xFFFFFFFF),
   ),
   Section.money: SectionTheme(
     label: '머니',
@@ -74,7 +66,6 @@ const sectionThemes = <Section, SectionTheme>{
     highlight: Color(0xFFD9DFFA),
     shape: '□',
     shapeAsset: 'assets/shapes/shape_money.png',
-    onColor: Color(0xFFFFFFFF),
   ),
   Section.ai: SectionTheme(
     label: 'AI',
@@ -82,7 +73,6 @@ const sectionThemes = <Section, SectionTheme>{
     highlight: Color(0xFFE5F7A3),
     shape: '✳',
     shapeAsset: 'assets/shapes/shape_ai.png',
-    onColor: Color(0xFFFFFFFF),
   ),
 };
 
@@ -92,6 +82,7 @@ class AppColors {
   static const inkSoft = Color(0xFF8B8B8B);
   static const line = Color(0xFFEBEBEB);
   static const sectionDivider = Color(0xFFF5F5F5);
+  static const hair = Color(0xFFEEEEEE);
   static const up = Color(0xFFD13A2A);
   static const down = Color(0xFF2F42B0);
 }

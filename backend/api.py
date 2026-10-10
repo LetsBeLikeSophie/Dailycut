@@ -142,6 +142,30 @@ def _mock_daily_series(item: str, base: int, days: int = 14) -> list[dict]:
     ]
 
 
+def _mini_series(label: str, price: int, change: str, points: int = 8) -> list[int]:
+    """목록 행 옆에 그리는 작은 추이선용 스텁 — 마지막 값이 price이고
+    change(up/down/flat) 방향으로 흐르게 결정론적으로 만듦."""
+    rng = random.Random(sum(ord(c) for c in label))
+    drift = {"up": -0.03, "down": 0.03, "flat": 0.0}[change]
+    out, v = [], float(price) * (1 + drift)
+    for i in range(points - 1):
+        v += (price - v) / (points - 1 - i) + price * rng.uniform(-0.006, 0.006)
+        out.append(round(v))
+    out.append(price)
+    return out
+
+
+def _price_row(label: str, price: int, change: str, pct: float, sub: str | None = None, unit: str = "원") -> dict:
+    return {
+        "label": label,
+        "sub": sub,
+        "value": f"{price:,}{unit}",
+        "change": change,
+        "pct": pct,
+        "series": _mini_series(label, price, change),
+    }
+
+
 @app.get("/market")
 def market():
     trend = _mock_daily_series("배추", 2650)
@@ -154,27 +178,27 @@ def market():
             "change_pct": round((trend[-1]["price"] - trend[0]["price"]) / trend[0]["price"] * 100, 1),
         },
         "items": [
-            {"label": "배추", "value": "2,400원", "change": "down"},
-            {"label": "무", "value": "1,800원", "change": "down"},
-            {"label": "대파", "value": "3,200원", "change": "flat"},
-            {"label": "양파", "value": "2,100원", "change": "up"},
+            _price_row("배추", 2400, "down", 4.0, "1포기"),
+            _price_row("무", 1800, "down", 2.0, "1개"),
+            _price_row("대파", 3200, "flat", 0.0, "1kg"),
+            _price_row("양파", 2100, "up", 3.0, "1kg"),
         ],
         # 2026-09-30: "제철이 언제부터 언제까지인지 월별 간트차트로"
         # 요청 — 자유 텍스트(meta) 대신 시작·끝 월(1~12)로 바꿔서
         # 프론트(SeasonalGantt)가 직접 막대를 그리게 함.
         "in_season": [
-            {"name": "배추", "start_month": 10, "end_month": 12, "tip": "속이 꽉 차고 묵직한 걸로. 겉잎이 푸르고 밑동이 단단하면 신선해요."},
-            {"name": "무", "start_month": 10, "end_month": 12, "tip": "표면이 매끈하고 들었을 때 무거운 것. 잎 쪽 초록이 짙을수록 달아요."},
-            {"name": "단감", "start_month": 10, "end_month": 11, "tip": "꼭지가 마르지 않고 껍질에 윤기가 도는 것. 색이 고르게 짙은 주황이면 잘 익었어요."},
-            {"name": "고구마", "start_month": 9, "end_month": 11, "tip": "모양이 통통하고 껍질이 매끈한 것. 수확 후 한 달쯤 두면 더 달아져요."},
+            {"name": "배추", "start_month": 10, "end_month": 12, "tip": "속이 꽉 차고 묵직한 것"},
+            {"name": "무", "start_month": 10, "end_month": 12, "tip": "들었을 때 무겁고 매끈한 것"},
+            {"name": "단감", "start_month": 10, "end_month": 11, "tip": "꼭지가 마르지 않은 것"},
+            {"name": "고구마", "start_month": 9, "end_month": 11, "tip": "통통하고 껍질이 매끈한 것"},
         ],
         "livestock": [
-            {"label": "계란(특란 30구)", "value": "6,900원", "change": "flat"},
-            {"label": "돼지고기(삼겹살 100g)", "value": "2,450원", "change": "up"},
+            _price_row("계란", 6900, "flat", 0.0, "특란 30구"),
+            _price_row("삼겹살", 2450, "up", 2.0, "100g"),
         ],
         "essentials": [
-            {"label": "세제류 물가지수", "value": "+1.8%", "change": "up"},
-            {"label": "생활용품 물가지수", "value": "+0.6%", "change": "up"},
+            {"label": "세제류", "sub": "물가지수", "value": "+1.8%", "change": "up", "pct": 1.8},
+            {"label": "생활용품", "sub": "물가지수", "value": "+0.6%", "change": "up", "pct": 0.6},
         ],
         "markets_nearby": [
             {"title": "OO전통시장", "meta": "휴장일: 매월 둘째·넷째 화요일"},
@@ -189,7 +213,8 @@ def culture():
     return {
         "hero": {
             "theme": "culture",
-            "title": "어제 박스오피스 1위",
+            "label": "어제 박스오피스 1위",
+            "title": "영화 A",
             "poster": None,
             "rank": 1,
             "stat_label": "누적 관객",
