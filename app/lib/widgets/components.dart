@@ -188,8 +188,10 @@ class PageHero extends StatelessWidget {
     this.backTitle,
     this.backHint,
     this.stub = false,
+    this.onEyebrowTap,
   });
 
+  final VoidCallback? onEyebrowTap; // 있으면 눈썹 글(예: '오늘 · 서울 ▾')을 눌러 지역 선택
   final bool stub; // 실데이터가 아니면 true(개발용 표시)
   final Section section;
   final String headline;
@@ -213,6 +215,7 @@ class PageHero extends StatelessWidget {
     );
     final front = _HeroFrame(
       section: section,
+      onEyebrowTap: onEyebrowTap,
       eyebrow: eyebrow ?? t.label,
       headline: HighlightText(
         text: headline,
@@ -240,6 +243,7 @@ class PageHero extends StatelessWidget {
         stub: stub,
         child: _HeroFrame(
           section: section,
+          onEyebrowTap: onEyebrowTap,
           eyebrow: eyebrow ?? t.label,
           headline: Text(
             backTitle ?? '',
@@ -265,8 +269,10 @@ class _HeroFrame extends StatelessWidget {
     required this.eyebrow,
     required this.headline,
     required this.child,
+    this.onEyebrowTap,
   });
 
+  final VoidCallback? onEyebrowTap;
   final Section section;
   final String eyebrow;
   final Widget headline;
@@ -298,9 +304,19 @@ class _HeroFrame extends StatelessWidget {
               style: const TextStyle(fontSize: 13, color: AppColors.ink),
             ),
             const SizedBox(height: 86),
-            Text(
-              eyebrow,
-              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+            GestureDetector(
+              onTap: onEyebrowTap,
+              behavior: HitTestBehavior.opaque,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 4),
+                child: Text(
+                  onEyebrowTap == null ? eyebrow : '$eyebrow ▾',
+                  style: const TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
             ),
             const SizedBox(height: 8),
             headline,

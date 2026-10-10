@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../api_client.dart';
-import '../location.dart';
+import '../region.dart';
 import '../theme.dart';
 import '../widgets/components.dart';
 
@@ -57,12 +57,30 @@ bool _isLive(Map<String, dynamic> data, String key) => (data['live_keys'] as Lis
 
 String? _sourceLabel(String? source, bool live) => source == null ? null : (live ? source : '$source · 예시 데이터');
 
+/// {rank, title, meta} 목록이 들어 있는 키들을 순서대로 구간으로 만듦(없는 키는 건너뜀).
+/// 금융감독원 금융상품 한눈에(예·적금·대출)처럼 같은 모양의 순위 목록 여러 개에 씀.
+List<Widget> _rankSections(Map<String, dynamic> data, List<(String, String, String)> specs) {
+  return [
+    for (final (key, title, trailing) in specs)
+      if (data[key] is List && (data[key] as List).isNotEmpty)
+        ListSection(
+          title: title,
+          trailing: trailing,
+          stub: !_isLive(data, key),
+          children: [
+            for (final it in (data[key] as List).cast<Map<String, dynamic>>())
+              RankRow(rank: it['rank'] as int, title: it['title'] as String, meta: it['meta'] as String),
+          ],
+        ),
+  ];
+}
+
 List<Widget> _priceRows(List<Map<String, dynamic>> items) => [for (final it in items) priceRow(it)];
 
 /// 생활: 대표 가격(배추) 한 문장 + 큰 숫자 + 추이, 그 아래 제철 · 시세 목록.
-Widget marketScreen(ApiClient api) => SectionScreen(
+Widget marketScreen(ApiClient api, Region region, BuildContext shellContext) => SectionScreen(
       section: Section.market,
-      fetch: api.market,
+      fetch: () => api.market(sido: region.code),
       contentBuilder: (context, data) {
         final trend = data['price_trend'] as Map<String, dynamic>;
         final rawPoints = (trend['series'] as List).cast<Map<String, dynamic>>();
@@ -93,6 +111,8 @@ Widget marketScreen(ApiClient api) => SectionScreen(
         return [
           PageHero(
             section: Section.market,
+            eyebrow: '생활 · ${region.name}',
+            onEyebrowTap: () => showRegionPicker(shellContext),
             headline: headline,
             emphasis: emphasis,
             source: _sourceLabel(data['source'] as String?, _isLive(data, 'price_trend')),
@@ -127,7 +147,8 @@ Widget marketScreen(ApiClient api) => SectionScreen(
           ListSection(title: '축산물 시세', trailing: '전주 대비', stub: !_isLive(data, 'livestock'), children: _priceRows(livestock)),
           ListSection(title: '생필품 물가지수', trailing: '전월 대비', stub: !_isLive(data, 'essentials'), children: _priceRows(essentials)),
           ListSection(
-            title: '우리 동네 전통시장',
+            title: '${region.name} 전통시장',
+            trailing: _isLive(data, 'markets_nearby') ? '총 ${data['markets_total']}곳 · 시설 많은 순' : null,
             stub: !_isLive(data, 'markets_nearby'),
             children: [
               for (final it in marketsNearby) RankRow(rank: 0, title: it['title'] as String, meta: it['meta'] as String),
@@ -138,15 +159,9 @@ Widget marketScreen(ApiClient api) => SectionScreen(
     );
 
 /// 문화: 어제 박스오피스 1위를 한 문장 + 큰 관객 수로, 눌러 뒤집으면 TOP 3.
-Widget cultureScreen(ApiClient api) => SectionScreen(
+Widget cultureScreen(ApiClient api, Region region, BuildContext shellContext) => SectionScreen(
       section: Section.culture,
-      // 내 위치 기준 가까운 순(위치를 못 받으면 서울시청 기준, loc_real로 구분)
-      fetch: () async {
-        final loc = await LocationService.get();
-        final data = await api.culture(lat: loc.lat, lon: loc.lon);
-        data['loc_real'] = loc.real;
-        return data;
-      },
+      fetch: () => api.culture(sido: region.code),
       contentBuilder: (context, data) {
         final hero = data['hero'] as Map<String, dynamic>;
         final allBoxOffice = (data['box_office'] as List).cast<Map<String, dynamic>>();
@@ -156,7 +171,7 @@ Widget cultureScreen(ApiClient api) => SectionScreen(
         final spotifyTop = (data['spotify_top'] as List).cast<Map<String, dynamic>>();
         final youtubeTrending = (data['youtube_trending'] as List).cast<Map<String, dynamic>>();
 
-        final nearby = (data['loc_real'] as bool? ?? false) ? '내 주변 · 가까운 순' : '서울시청 기준 · 가까운 순';
+        final nearby = '${region.name} 기준';
         final title = '‘${hero['title']}’';
         // "182만 명" → 숫자 182 + 단위 "만 명"
         final stat = hero['stat'] as String;
@@ -165,6 +180,8 @@ Widget cultureScreen(ApiClient api) => SectionScreen(
         return [
           PageHero(
             section: Section.culture,
+            eyebrow: '문화 · ${region.name}',
+            onEyebrowTap: () => showRegionPicker(shellContext),
             headline: '${hero['label'] ?? '어제 박스오피스 1위'}는 $title',
             emphasis: title,
             source: _sourceLabel(hero['source'] as String?, _isLive(data, 'hero')),
@@ -256,7 +273,6 @@ Widget moneyScreen(ApiClient api) => SectionScreen(
         final hero = data['hero'] as Map<String, dynamic>;
         final heroLive = _isLive(data, 'hero');
         final stats = (data['stats'] as List).cast<Map<String, dynamic>>();
-        final deposits = (data['deposits'] as List).cast<Map<String, dynamic>>();
         // 뒤집으면 보이는 면: 실데이터면 서버가 준 back, 아니면 스텁의 다른 통화
         final backRows = ((data['back'] ?? data['fx_others']) as List? ?? const []).cast<Map<String, dynamic>>();
         final points = [
@@ -303,13 +319,13 @@ Widget moneyScreen(ApiClient api) => SectionScreen(
             stub: !_isLive(data, 'stats'),
             children: _priceRows(stats),
           ),
-          ListSection(
-            title: '예·적금 금리 순위',
-            stub: !_isLive(data, 'deposits'),
-            children: [
-              for (final it in deposits) RankRow(rank: it['rank'] as int, title: it['title'] as String, meta: it['meta'] as String),
-            ],
-          ),
+          ..._rankSections(data, const [
+            ('deposits', '정기예금 최고금리', '12개월 · 우대 포함'),
+            ('savings', '적금 최고금리', '12개월 · 우대 포함'),
+            ('loans_mortgage', '주택담보대출 최저금리', '낮은 순'),
+            ('loans_rent', '전세자금대출 최저금리', '낮은 순'),
+            ('loans_credit', '신용대출 금리', '신용등급 평균 · 낮은 순'),
+          ]),
         ];
       },
     );

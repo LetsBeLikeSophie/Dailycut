@@ -12,6 +12,7 @@ from __future__ import annotations
 from datetime import datetime, timedelta
 
 import html
+import xml.etree.ElementTree as ET
 
 import config
 import geo
@@ -27,20 +28,7 @@ def _md(s: str) -> str:
     return f"{d.month}.{d.day}"
 
 
-def _km(lat: float, lon: float, ylat: str | None, xlon: str | None) -> float | None:
-    try:
-        return geo.haversine_km((lat, lon), (float(ylat), float(xlon)))
-    except (TypeError, ValueError):
-        return None
-
-
-def _dist_label(km: float | None) -> str:
-    if km is None:
-        return ""
-    return "1km 이내" if km < 1 else f"{km:.0f}km"
-
-
-def _festivals(lat: float, lon: float, today: datetime) -> list[dict]:
+def _festivals(region: dict, today: datetime) -> list[dict]:
     base = config.get_key("TOUR_API_BASE_URL")
     # 시작일이 한 달 전인 행사까지 가져와서 "지금 진행 중이거나 곧 시작하는 것"만 남김
     body = _http.get_json(
@@ -66,56 +54,68 @@ def _festivals(lat: float, lon: float, today: datetime) -> list[dict]:
         for r in _http.items_of(body)
         if r.get("eventenddate", "") >= t0 and r.get("eventstartdate", "") <= t1 and span(r) <= 45
     ]
-    for r in rows:
-        r["_km"] = _km(lat, lon, r.get("mapy"), r.get("mapx"))
-    rows.sort(key=lambda r: (r["_km"] is None, r["_km"] or 0, r["eventstartdate"]))
+    # 시도 단위: 주소가 이 시도로 시작하는 행사만, 곧 시작하는/진행 중인 순서로
+    rows = [r for r in rows if geo.sido_of_address(r.get("addr1")) == region["code"]]
+    rows.sort(key=lambda r: (r["eventstartdate"], r["title"]))
     out = []
     for r in rows[:6]:
-        place = " ".join((r.get("addr1") or "").split()[:2])
-        bits = [f"{_md(r['eventstartdate'])}~{_md(r['eventenddate'])}", _dist_label(r["_km"]), place]
+        parts = (r.get("addr1") or "").split()
+        place = parts[1] if len(parts) > 1 else ""
+        bits = [f"{_md(r['eventstartdate'])}~{_md(r['eventenddate'])}", place]
         out.append({"title": html.unescape(r["title"]), "meta": " · ".join(b for b in bits if b)})
     return out
 
 
-def _performances(lat: float, lon: float, today: datetime) -> list[dict]:
+def _kcisa_all(today: datetime) -> list[dict]:
+    """한국문화정보원 향후 7일 전시·공연 전국 목록(시도 필터 파라미터가 먹지 않아서 전부 받아 코드에서 거름).
+    한 번에 100건(numOfrows, 소문자 r 주의)씩 받아 4~5번 호출이라 2시간 캐시해서 시도 17곳이 함께 씀."""
     base = config.get_key("KCISA_CULTURE_BASE_URL")
-    rows = _http.get_xml_items(
-        base + "/period2",
-        {
-            "from": today.strftime("%Y%m%d"),
-            "to": (today + timedelta(days=7)).strftime("%Y%m%d"),
-            "cPage": 1,
-            "rows": 100,
-            # 사용자 주변(약 ±0.25도 ≈ 25km) 상자. 상자 안에 행사가 적으면 전국에서 가까운 순으로 보충됨.
-            "gpsxfrom": round(lon - 0.25, 4),
-            "gpsyfrom": round(lat - 0.25, 4),
-            "gpsxto": round(lon + 0.25, 4),
-            "gpsyto": round(lat + 0.25, 4),
-        },
-    )
-    for r in rows:
-        r["_km"] = _km(lat, lon, r.get("gpsY"), r.get("gpsX"))
-    rows.sort(key=lambda r: (r["_km"] is None, r["_km"] or 0))
+
+    def load() -> dict:
+        rows, page, total = [], 1, None
+        while page <= 12:
+            r = _http.get(
+                base + "/period2",
+                {"from": today.strftime("%Y%m%d"), "to": (today + timedelta(days=7)).strftime("%Y%m%d"), "cPage": page, "numOfrows": 100},
+            )
+            root = ET.fromstring(r.content)
+            code = root.findtext(".//resultCode")
+            if code not in (None, "00"):
+                raise RuntimeError(f"API 오류 {code}")
+            total = int(root.findtext(".//totalCount") or 0)
+            rows += [{c.tag: (c.text or "").strip() for c in it} for it in root.iter("item")]
+            if page * 100 >= total:
+                break
+            page += 1
+        return {"rows": rows}
+
+    return _cache.cached("culture", f"culture:kcisa:{today.strftime('%Y%m%d')}", 120, load)["rows"]
+
+
+def _performances(region: dict, today: datetime) -> list[dict]:
     out, seen = [], set()
-    for r in rows:
-        r["title"] = html.unescape(r["title"])
-        if r["title"] in seen:
+    for r in _kcisa_all(today):
+        if r.get("area") != region["air"]:  # 한국문화정보원도 "서울/부산/경기…" 짧은 시도명
             continue
-        seen.add(r["title"])
-        bits = [r.get("place", ""), f"~{_md(r['endDate'])}", _dist_label(r["_km"])]
-        out.append({"title": html.unescape(r["title"]), "meta": " · ".join(b for b in bits if b)})
+        title = html.unescape(r["title"])
+        if title in seen:
+            continue
+        seen.add(title)
+        bits = [r.get("place", ""), f"~{_md(r['endDate'])}", r.get("sigungu", "")]
+        out.append({"title": title, "meta": " · ".join(b for b in bits if b)})
         if len(out) == 6:
             break
     return out
 
 
-def fetch(lat: float, lon: float) -> dict:
+def fetch(code: str) -> dict:
+    region = geo.region(code)
     today = datetime.now()
     out = {}
     errors = []
     for key, fn in (("festivals", _festivals), ("performances", _performances)):
         try:
-            out[key] = fn(lat, lon, today)
+            out[key] = fn(region, today)
         except Exception as e:
             errors.append(f"{key}: {e}")
     if not out:
@@ -123,11 +123,12 @@ def fetch(lat: float, lon: float) -> dict:
     return out
 
 
-def get(lat: float, lon: float) -> dict | None:
-    """위치별(약 10km 칸) 캐시된 문화 정보. 키/수집 실패 시 None → 스텁."""
+def get(code: str) -> dict | None:
+    """시도별 캐시된 문화 정보. 키/수집 실패 시 None → 스텁."""
     if not available():
         return None
+    code = geo.region(code)["code"]
     try:
-        return _cache.cached("culture", f"culture:{round(lat, 1)}:{round(lon, 1)}", 60, lambda: fetch(lat, lon))
+        return _cache.cached("culture", f"culture:{code}", 60, lambda: fetch(code))
     except Exception:
         return None

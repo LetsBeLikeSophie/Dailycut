@@ -25,6 +25,7 @@ import jobs
 import sources  # noqa: F401  (수집 작업 등록)
 import store
 from sources import culture as culture_src
+from sources import markets as markets_src
 from sources import weather as weather_src
 
 app = FastAPI(title="데일리컷 API")
@@ -45,8 +46,9 @@ def _startup() -> None:
     jobs.start()
 
 
-def live_merge(name: str):
-    """엔드포인트의 스텁 응답 위에 수집된 실데이터 필드를 덮어씀.
+def live_merge(name: str, regional=None):
+    """엔드포인트의 스텁 응답 위에 수집된 실데이터 필드를 덮어씀(전국 공통 소스).
+    regional을 주면 시도(sido 쿼리)별 소스(예: 전통시장)도 같이 덮어씀.
     응답의 live_keys에 덮어쓴 필드 이름을 넣어서, 화면이 스텁(예시) 구간을
     "예시 데이터"로 표시할 수 있게 함."""
 
@@ -54,7 +56,11 @@ def live_merge(name: str):
         @functools.wraps(fn)
         def wrapper(*args, **kwargs):
             stub = fn(*args, **kwargs)
-            live = jobs.get_live(name)
+            live: dict = {}
+            for n in (name,) if isinstance(name, str) else name:
+                live.update(jobs.get_live(n) or {})
+            if regional is not None:
+                live.update(regional.get(geo.region(kwargs.get("sido"))["code"]) or {})
             if not live:
                 return {**stub, "live_keys": []}
             return {**stub, **live, "live_keys": sorted(live.keys())}
@@ -65,15 +71,14 @@ def live_merge(name: str):
 
 
 def live_geo(source):
-    """사용자 위치(lat, lon 쿼리)별 실데이터를 스텁 위에 덮어씀. 위치가 없거나 한국 밖이면
-    서울시청 기본 위치. 좌표는 앱에서 이미 소수 둘째 자리로 뭉개서 보내고, 여기서도 한 번 더 정규화함."""
+    """시도(sido 쿼리, 2자리 코드)별 실데이터를 스텁 위에 덮어씀. 코드가 없거나 모르면 서울(11).
+    앱 전체가 시도 단위로 통일돼 있어서 위치별 소스는 시도 17곳만 캐시하면 됨."""
 
     def deco(fn):
         @functools.wraps(fn)
         def wrapper(*args, **kwargs):
             stub = fn(*args, **kwargs)
-            lat, lon = geo.clamp_latlon(kwargs.get("lat"), kwargs.get("lon"))
-            live = source.get(lat, lon)
+            live = source.get(geo.region(kwargs.get("sido"))["code"])
             if not live:
                 return {**stub, "live_keys": []}
             return {**stub, **live, "live_keys": sorted(live.keys())}
@@ -81,6 +86,34 @@ def live_geo(source):
         return wrapper
 
     return deco
+
+
+@app.get("/regions")
+def regions():
+    """앱의 지역 선택 목록(시도 17곳)."""
+    return {"default": geo.DEFAULT_SIDO, "regions": [{"code": r[0], "name": r[1]} for r in geo.REGIONS]}
+
+
+@app.get("/region")
+def region_of(lat: float, lon: float):
+    """좌표 → 시도. 앱이 위치 권한을 받았을 때 시도를 정하려고 딱 한 번 부름(이후엔 시도 코드만 씀).
+    가장 가까운 측정소의 주소로 시도를 찾고, 못 찾으면 가장 가까운 시도청 소재지."""
+    la, lo = round(lat, 2), round(lon, 2)  # 좌표는 저장하지 않음, 정규화만 함
+    code = None
+    try:
+        from sources import _http
+
+        x, y = geo.to_tm(la, lo)
+        body = _http.get_json(
+            config.get_key("AIRKOREA_STATION_BASE_URL") + "/getNearbyMsrstnList",
+            {"returnType": "json", "tmX": x, "tmY": y, "ver": "1.1"},
+        )
+        items = _http.items_of(body)
+        code = geo.sido_of_address(items[0].get("addr")) if items else None
+    except Exception:
+        pass
+    code = code or geo.nearest_sido(la, lo)
+    return {"code": code, "name": geo.region(code)["name"]}
 
 
 @app.get("/health")
@@ -152,7 +185,7 @@ def _mock_weekly(base_high: int, base_low: int, days: int = 6) -> list[dict]:
 
 @app.get("/weather")
 @live_geo(weather_src)
-def weather(lat: float | None = None, lon: float | None = None):
+def weather(sido: str | None = None):
     return {
         # 2026-10-06: "출처 표시가 하나도 없다"는 지적 — 기획 문서 원칙
         # ("모든 데이터 카드에는 출처를 표시")을 처음 반영함. 지금은 TODO
@@ -230,8 +263,8 @@ def _price_row(label: str, price: int, change: str, pct: float, sub: str | None 
 
 
 @app.get("/market")
-@live_merge("market")
-def market():
+@live_merge("market", regional=markets_src)
+def market(sido: str | None = None, ):
     # 2026-10-10: 추이 차트 X축을 "이번 달 1일~말일" 고정축으로 바꿈 — 시리즈는
     # 이번 달 1일부터 오늘까지의 일별 값만 보내고(미래 날짜는 비워둠), 지난주
     # 대비 계산용으로 7일 전 값(week_ago)을 따로 줌(월초엔 지난달 값이 필요해서).
@@ -282,7 +315,7 @@ def market():
 # + KOPIS 공연예술통합전산망 + TourAPI 지역 축제
 @app.get("/culture")
 @live_geo(culture_src)
-def culture(lat: float | None = None, lon: float | None = None):
+def culture(sido: str | None = None):
     return {
         "hero": {
             "theme": "culture",
@@ -330,7 +363,7 @@ def culture(lat: float | None = None, lon: float | None = None):
 
 # TODO: 한국은행 ECOS (https://ecos.bok.or.kr/api/) + 금감원 금융상품 한눈에
 @app.get("/money")
-@live_merge("money")
+@live_merge(("money", "finance"))
 def money():
     # 이번 달 1일~오늘 일별 환율(스텁). 마지막 값이 1350.2가 되게 맞춤.
     today_d = date.today()
@@ -396,11 +429,11 @@ def _headline(w: dict) -> str:
 
 
 @app.get("/today")
-def today(lat: float | None = None, lon: float | None = None):
+def today(sido: str | None = None):
     """투데이(홈) — 섹션별 대표 카드 1개씩만 모아서 반환.
     2026-09-30: 날씨가 독립 섹션으로 빠지면서 투데이 카드 목록에도
     다른 섹션들과 동등하게 날씨 카드를 추가함(맨 앞)."""
-    w, m, c, mo, a = weather(lat=lat, lon=lon), market(), culture(lat=lat, lon=lon), money(), ai()
+    w, m, c, mo, a = weather(sido=sido), market(), culture(sido=sido), money(), ai()
     season_top = m["in_season"][0]
     weather_card = {
         "theme": "weather",

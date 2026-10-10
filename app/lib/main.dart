@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'api_client.dart';
 import 'screens/today_screen.dart';
 import 'screens/section_screens.dart';
+import 'region.dart';
 import 'theme.dart';
 
 void main() {
@@ -39,11 +40,32 @@ class _RootShellState extends State<RootShell> {
   static const _tabs = ['투데이', '생활', '문화', '머니', 'AI'];
 
   @override
+  void initState() {
+    super.initState();
+    // 지역(시도)을 정함: 저장된 선택 → 위치 권한(허용 시 내 시도) → 기본 서울
+    RegionStore.instance.init(_api);
+  }
+
+  /// 지역에 따라 달라지는 화면(투데이·생활·문화)은 지역이 바뀌면 새로 만들어서 다시 받아옴.
+  Widget _regional(Widget Function(Region) build) {
+    final store = RegionStore.instance;
+    if (!store.ready) return const Center(child: CircularProgressIndicator());
+    return KeyedSubtree(key: ValueKey(store.current.code), child: build(store.current));
+  }
+
+  @override
   Widget build(BuildContext context) {
+    return ListenableBuilder(
+      listenable: RegionStore.instance,
+      builder: (context, _) => _scaffold(context),
+    );
+  }
+
+  Widget _scaffold(BuildContext context) {
     final screens = [
-      TodayScreen(api: _api),
-      marketScreen(_api),
-      cultureScreen(_api),
+      _regional((r) => TodayScreen(api: _api, region: r)),
+      _regional((r) => marketScreen(_api, r, context)),
+      _regional((r) => cultureScreen(_api, r, context)),
       moneyScreen(_api),
       aiScreen(_api),
     ];

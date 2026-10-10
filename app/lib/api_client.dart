@@ -13,18 +13,24 @@ class ApiClient {
 
   final String baseUrl;
 
-  // 위치(lat, lon)는 소수 둘째 자리로 뭉갠 값만 받음(location.dart). 날씨·문화는 이 위치 기준.
-  Future<Map<String, dynamic>> today({double? lat, double? lon}) => _getJson('/today', lat: lat, lon: lon);
-  Future<Map<String, dynamic>> weather({double? lat, double? lon}) => _getJson('/weather', lat: lat, lon: lon);
-  Future<Map<String, dynamic>> market() => _getJson('/market');
-  Future<Map<String, dynamic>> culture({double? lat, double? lon}) => _getJson('/culture', lat: lat, lon: lon);
+  // 지역은 시도 코드(2자리, region.dart)로만 보냄 — 좌표는 resolveRegion에서 딱 한 번만 쓰임.
+  Future<Map<String, dynamic>> today({String? sido}) => _getJson('/today', {'sido': sido});
+  Future<Map<String, dynamic>> weather({String? sido}) => _getJson('/weather', {'sido': sido});
+  Future<Map<String, dynamic>> market({String? sido}) => _getJson('/market', {'sido': sido});
+  Future<Map<String, dynamic>> culture({String? sido}) => _getJson('/culture', {'sido': sido});
   Future<Map<String, dynamic>> money() => _getJson('/money');
   Future<Map<String, dynamic>> ai() => _getJson('/ai');
 
-  Future<Map<String, dynamic>> _getJson(String path, {double? lat, double? lon}) async {
-    final uri = Uri.parse('$baseUrl$path').replace(
-      queryParameters: (lat != null && lon != null) ? {'lat': '$lat', 'lon': '$lon'} : null,
-    );
+  /// 좌표(소수 둘째 자리로 뭉갠 값) → 시도. 서버는 좌표를 저장하지 않음.
+  Future<Map<String, dynamic>> resolveRegion({required double lat, required double lon}) =>
+      _getJson('/region', {'lat': '$lat', 'lon': '$lon'});
+
+  Future<Map<String, dynamic>> _getJson(String path, [Map<String, String?> query = const {}]) async {
+    final q = {
+      for (final e in query.entries)
+        if (e.value != null) e.key: e.value!,
+    };
+    final uri = Uri.parse('$baseUrl$path').replace(queryParameters: q.isEmpty ? null : q);
     final res = await http.get(uri);
     if (res.statusCode != 200) {
       throw Exception('$path 응답 실패: ${res.statusCode}');

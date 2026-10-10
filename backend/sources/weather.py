@@ -144,34 +144,41 @@ def _outfit(temp: int, rainy: bool) -> str:
 
 # ---------------- 에어코리아 ----------------
 
-def _stations(lat: float, lon: float) -> list[dict]:
-    """가까운 측정소 3곳(가까운 순). 위치 라벨(시군구)도 여기서 얻음."""
-    x, y = geo.to_tm(lat, lon)
+def _grade(value: float, cuts: tuple[float, float, float]) -> str:
+    return "좋음" if value <= cuts[0] else "보통" if value <= cuts[1] else "나쁨" if value <= cuts[2] else "매우나쁨"
+
+
+def _air(region: dict) -> dict:
+    """시도 안 모든 측정소의 실시간 평균(미세먼지 30/80/150, 초미세먼지 15/35/75 기준 등급).
+    측정소마다 값이 달라서 시도 대표값으로는 평균이 낫고, 값이 빈 측정소는 뺌."""
     body = _http.get_json(
-        _cfg("AIRKOREA_STATION_BASE_URL") + "/getNearbyMsrstnList",
-        {"returnType": "json", "tmX": x, "tmY": y, "ver": "1.1"},
+        _cfg("AIRKOREA_AIR_QUALITY_BASE_URL") + "/getCtprvnRltmMesureDnsty",
+        {"returnType": "json", "numOfRows": 200, "pageNo": 1, "sidoName": region["air"], "ver": "1.0"},
     )
-    return _http.items_of(body)
 
+    def avg(field: str) -> float | None:
+        vals = []
+        for r in _http.items_of(body):
+            try:
+                vals.append(float(r[field]))
+            except (KeyError, TypeError, ValueError):
+                pass
+        return sum(vals) / len(vals) if vals else None
 
-def _air(stations: list[dict]) -> dict:
-    """가까운 측정소부터 값이 있는 첫 곳. 매 정시 직후엔 최신 행이 비어(null) 있어서 값 있는 행을 고름."""
-    for st in stations[:3]:
-        body = _http.get_json(
-            _cfg("AIRKOREA_AIR_QUALITY_BASE_URL") + "/getMsrstnAcctoRltmMesureDnsty",
-            {"returnType": "json", "numOfRows": 6, "pageNo": 1, "stationName": st["stationName"], "dataTerm": "DAILY", "ver": "1.0"},
-        )
-        row = next((r for r in _http.items_of(body) if r.get("pm10Grade") and r.get("pm25Grade")), None)
-        if row:
-            return {"pm10": GRADE.get(str(row["pm10Grade"]), "정보 없음"), "pm25": GRADE.get(str(row["pm25Grade"]), "정보 없음")}
-    return {"pm10": "정보 없음", "pm25": "정보 없음"}
+    pm10, pm25 = avg("pm10Value"), avg("pm25Value")
+    return {
+        "pm10": _grade(pm10, (30, 80, 150)) if pm10 is not None else "정보 없음",
+        "pm25": _grade(pm25, (15, 35, 75)) if pm25 is not None else "정보 없음",
+    }
 
 
 # ---------------- 생활 지수 ----------------
 
-def _warning(now: datetime, lat: float, lon: float) -> dict | None:
-    """발효 중인 기상특보. 지점은 서울(108) 고정 — 지점코드 표가 없어 아직 위치별 아님.
-    평소엔 비어 있고 특보가 있을 때만 줄이 뜸(응답 필드 title은 특보 있는 날 확인 못 함)."""
+def _warning(now: datetime, region: dict) -> dict | None:
+    """발효 중인 기상특보. 지점이 서울(108, 수도권) 하나뿐이라 서울·인천·경기에서만 보임 —
+    다른 시도는 지점코드 표를 확인해야 함. 평소엔 비어 있고 특보가 있을 때만 줄이 뜸."""
+    if region["code"] not in ("11", "28", "41"):
+        return None
     body = _http.get_json(
         _cfg("KMA_WARNING_BASE_URL") + "/getWthrWrnList",
         {"stnId": "108", "dataType": "JSON", "numOfRows": 5, "pageNo": 1},
@@ -182,11 +189,11 @@ def _warning(now: datetime, lat: float, lon: float) -> dict | None:
     return {"title": "기상특보(서울·수도권)", "meta": str(items[0].get("title") or items[0])[:30]}
 
 
-def _uv(now: datetime, lat: float, lon: float) -> dict | None:
+def _uv(now: datetime, region: dict) -> dict | None:
     """오늘 낮 시간대 자외선지수 최고값. 응답의 h0·h3·… 는 발표 시각(date)에서 N시간 뒤 값."""
     body = _http.get_json(
         _cfg("KMA_LIVING_IDX_BASE_URL") + "/getUVIdxV5",
-        {"areaNo": geo.sido_area_no(lat, lon), "time": now.strftime("%Y%m%d%H"), "dataType": "JSON", "numOfRows": 1, "pageNo": 1},
+        {"areaNo": region["code"] + "00000000", "time": now.strftime("%Y%m%d%H"), "dataType": "JSON", "numOfRows": 1, "pageNo": 1},
     )
     it = (_http.items_of(body) or [None])[0]
     if not it:
@@ -200,11 +207,11 @@ def _uv(now: datetime, lat: float, lon: float) -> dict | None:
     return {"title": "자외선", "meta": f"{label} ({v})"}
 
 
-def _pollen(now: datetime, lat: float, lon: float) -> dict | None:
+def _pollen(now: datetime, region: dict) -> dict | None:
     """꽃가루(잡초류) — 제공 기간(보통 9~10월)에만 값이 나오고 0(낮음)이면 보여줄 게 없어서 생략."""
     body = _http.get_json(
         _cfg("KMA_POLLEN_BASE_URL") + "/getWeedsPollenRiskndxV3",
-        {"areaNo": geo.sido_area_no(lat, lon), "time": now.strftime("%Y%m%d%H"), "dataType": "JSON", "numOfRows": 1, "pageNo": 1},
+        {"areaNo": region["code"] + "00000000", "time": now.strftime("%Y%m%d%H"), "dataType": "JSON", "numOfRows": 1, "pageNo": 1},
     )
     it = (_http.items_of(body) or [None])[0]
     if not it or not str(it.get("today", "")).isdigit() or int(it["today"]) < 1:
@@ -213,10 +220,10 @@ def _pollen(now: datetime, lat: float, lon: float) -> dict | None:
     return {"title": "꽃가루(잡초류)", "meta": level}
 
 
-def _sun(now: datetime, lat: float, lon: float) -> dict | None:
+def _sun(now: datetime, region: dict) -> dict | None:
     items = _http.get_xml_items(
         _cfg("KASI_RISE_SET_BASE_URL") + "/getLCRiseSetInfo",
-        {"locdate": now.strftime("%Y%m%d"), "longitude": lon, "latitude": lat, "dnYn": "Y"},
+        {"locdate": now.strftime("%Y%m%d"), "longitude": region["lon"], "latitude": region["lat"], "dnYn": "Y"},
     )
     if not items:
         return None
@@ -257,11 +264,13 @@ def _next_holiday(today: date) -> dict | None:
 
 # ---------------- 조립 ----------------
 
-def fetch(lat: float, lon: float) -> dict:
+def fetch(code: str) -> dict:
+    region = geo.region(code)
     now = datetime.now()
     today = now.date()
-    nx, ny = geo.to_grid(lat, lon)
-    land_reg, temp_reg = geo.mid_regions(lat, lon)
+    # 시도 단위로 통일: 날씨는 시도청 소재지 격자 기준(큰 도에서는 도내 다른 지역과 다를 수 있음)
+    nx, ny = geo.to_grid(region["lat"], region["lon"])
+    land_reg, temp_reg = geo.mid_regions(region["lat"], region["lon"])
 
     ncst = _ncst(now, nx, ny)
     base_date, base_time = _latest_base(now)
@@ -331,25 +340,16 @@ def fetch(lat: float, lon: float) -> dict:
         "weekend": weekend,  # 비어 있으면 화면에서 숨김(스텁 문구가 남지 않게 항상 덮어씀)
     }
 
-    # 위치 라벨(가장 가까운 측정소의 시군구) + 미세먼지
-    stations: list[dict] = []
+    out["location"] = {"label": region["name"], "code": region["code"]}
     try:
-        stations = _stations(lat, lon)
+        out["air_quality"] = _air(region)
     except Exception:
-        pass
-    if stations:
-        out["location"] = {"label": " ".join((stations[0].get("addr") or "").split()[:2]) or stations[0]["stationName"], "station": stations[0]["stationName"]}
-        try:
-            out["air_quality"] = _air(stations)
-        except Exception:
-            out["air_quality"] = {"pm10": "정보 없음", "pm25": "정보 없음"}
-    else:
         out["air_quality"] = {"pm10": "정보 없음", "pm25": "정보 없음"}
 
     life = []
     for fn in (_warning, _uv, _sun, _pollen):
         try:
-            row = fn(now, lat, lon)
+            row = fn(now, region)
             if row:
                 life.append(row)
         except Exception:
@@ -370,12 +370,12 @@ def fetch(lat: float, lon: float) -> dict:
     return out
 
 
-def get(lat: float, lon: float) -> dict | None:
-    """위치별 캐시된 날씨(키/수집 실패 시 None → 스텁)."""
+def get(code: str) -> dict | None:
+    """시도별 캐시된 날씨(키/수집 실패 시 None → 스텁). 시도가 17곳뿐이라 호출 수가 아주 적음."""
     if not available():
         return None
-    nx, ny = geo.to_grid(lat, lon)
+    code = geo.region(code)["code"]
     try:
-        return _cache.cached("weather", f"weather:{nx}:{ny}", 25, lambda: fetch(lat, lon))
+        return _cache.cached("weather", f"weather:{code}", 25, lambda: fetch(code))
     except Exception:
         return None
