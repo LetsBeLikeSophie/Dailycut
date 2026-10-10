@@ -28,7 +28,7 @@ def _md(s: str) -> str:
     return f"{d.month}.{d.day}"
 
 
-def _festivals(region: dict, today: datetime) -> list[dict]:
+def _festivals(place: dict, today: datetime) -> list[dict]:
     base = config.get_key("TOUR_API_BASE_URL")
     # 시작일이 한 달 전인 행사까지 가져와서 "지금 진행 중이거나 곧 시작하는 것"만 남김
     body = _http.get_json(
@@ -55,14 +55,19 @@ def _festivals(region: dict, today: datetime) -> list[dict]:
         if r.get("eventenddate", "") >= t0 and r.get("eventstartdate", "") <= t1 and span(r) <= 45
     ]
     # 시도 단위: 주소가 이 시도로 시작하는 행사만, 곧 시작하는/진행 중인 순서로
-    rows = [r for r in rows if geo.sido_of_address(r.get("addr1")) == region["code"]]
-    rows.sort(key=lambda r: (r["eventstartdate"], r["title"]))
+    rows = [r for r in rows if geo.sido_of_address(r.get("addr1")) == place["code"]]
+
+    def sgg_of(r: dict) -> str:
+        parts = (r.get("addr1") or "").split()
+        return parts[1] if len(parts) > 1 else ""
+
+    # 고른 시군구의 행사를 먼저, 그다음 같은 시도의 나머지(시작일 순)
+    mine = lambda r: bool(place["names"]) and sgg_of(r) in place["names"]
+    rows.sort(key=lambda r: (not mine(r), r["eventstartdate"], r["title"]))
     out = []
     for r in rows[:6]:
-        parts = (r.get("addr1") or "").split()
-        place = parts[1] if len(parts) > 1 else ""
-        bits = [f"{_md(r['eventstartdate'])}~{_md(r['eventenddate'])}", place]
-        out.append({"title": html.unescape(r["title"]), "meta": " · ".join(b for b in bits if b)})
+        bits = [f"{_md(r['eventstartdate'])}~{_md(r['eventenddate'])}", sgg_of(r)]
+        out.append({"title": html.unescape(r["title"]), "meta": " · ".join(b for b in bits if b), "local": mine(r)})
     return out
 
 
@@ -92,24 +97,33 @@ def _kcisa_all(today: datetime) -> list[dict]:
     return _cache.cached("culture", f"culture:kcisa:{today.strftime('%Y%m%d')}", 120, load)["rows"]
 
 
-def _performances(region: dict, today: datetime) -> list[dict]:
+def _performances(place: dict, today: datetime) -> list[dict]:
     out, seen = [], set()
-    for r in _kcisa_all(today):
-        if r.get("area") != region["air"]:  # 한국문화정보원도 "서울/부산/경기…" 짧은 시도명
+    rows_all = [r for r in _kcisa_all(today) if r.get("area") == place["air"]]
+    # 고른 시군구의 행사를 먼저, 그다음 같은 시도의 나머지
+    rows_all.sort(key=lambda r: not (bool(place["names"]) and r.get("sigungu") in place["names"]))
+    for r in rows_all:
+        if False:  # 한국문화정보원도 "서울/부산/경기…" 짧은 시도명
             continue
         title = html.unescape(r["title"])
         if title in seen:
             continue
         seen.add(title)
         bits = [r.get("place", ""), f"~{_md(r['endDate'])}", r.get("sigungu", "")]
-        out.append({"title": title, "meta": " · ".join(b for b in bits if b)})
+        out.append(
+            {
+                "title": title,
+                "meta": " · ".join(b for b in bits if b),
+                "local": bool(place["names"]) and r.get("sigungu") in place["names"],
+            }
+        )
         if len(out) == 6:
             break
     return out
 
 
-def fetch(code: str) -> dict:
-    region = geo.region(code)
+def fetch(code: str, sgg: str | None = None) -> dict:
+    region = geo.place(code, sgg)
     today = datetime.now()
     out = {}
     errors = []
@@ -123,12 +137,18 @@ def fetch(code: str) -> dict:
     return out
 
 
-def get(code: str) -> dict | None:
-    """시도별 캐시된 문화 정보. 키/수집 실패 시 None → 스텁."""
+def get(code: str, sgg: str | None = None) -> dict | None:
+    """지역별 캐시된 문화 정보. 키/수집 실패 시 None → 스텁."""
     if not available():
         return None
-    code = geo.region(code)["code"]
+    pl = geo.place(code, sgg)
     try:
-        return _cache.cached("culture", f"culture:{code}", 60, lambda: fetch(code))
+        out = _cache.cached("culture", f"culture:{pl['key']}", 60, lambda: fetch(pl["code"], pl["sgg"]))
     except Exception:
         return None
+    # 화면 안내: 고른 시군구에 몇 곳 있고 나머지는 시도에서 채웠는지
+    notes = {}
+    for key in ("festivals", "performances"):
+        rows = out.get(key) or []
+        notes[key] = {"local": sum(1 for r in rows if r.get("local")), "total": len(rows)}
+    return {**out, "culture_scope": {"label": pl["label"], "sgg": pl["sgg"], "sido": pl["sido"], **notes}}

@@ -148,17 +148,29 @@ def _grade(value: float, cuts: tuple[float, float, float]) -> str:
     return "좋음" if value <= cuts[0] else "보통" if value <= cuts[1] else "나쁨" if value <= cuts[2] else "매우나쁨"
 
 
-def _air(region: dict) -> dict:
-    """시도 안 모든 측정소의 실시간 평균(미세먼지 30/80/150, 초미세먼지 15/35/75 기준 등급).
-    측정소마다 값이 달라서 시도 대표값으로는 평균이 낫고, 값이 빈 측정소는 뺌."""
-    body = _http.get_json(
-        _cfg("AIRKOREA_AIR_QUALITY_BASE_URL") + "/getCtprvnRltmMesureDnsty",
-        {"returnType": "json", "numOfRows": 200, "pageNo": 1, "sidoName": region["air"], "ver": "1.0"},
-    )
+def _air_rows(sido_air: str) -> list[dict]:
+    """시도 전체 측정소의 실시간 값(한 번 받아 시도별로 캐시 → 시군구마다 다시 부르지 않음)."""
+
+    def load() -> dict:
+        body = _http.get_json(
+            _cfg("AIRKOREA_AIR_QUALITY_BASE_URL") + "/getCtprvnRltmMesureDnsty",
+            {"returnType": "json", "numOfRows": 300, "pageNo": 1, "sidoName": sido_air, "ver": "1.0"},
+        )
+        return {"rows": _http.items_of(body)}
+
+    return _cache.cached("air", f"air:{sido_air}", 25, load)["rows"]
+
+
+def _air(place: dict) -> dict:
+    """고른 시군구의 측정소 평균(없으면 시도 전체 평균). 미세먼지 30/80/150, 초미세먼지 15/35/75 기준 등급.
+    측정소마다 값이 달라서 평균을 쓰고, 값이 빈 측정소는 뺌."""
+    rows = _air_rows(place["air"])
+    mine = [r for r in rows if r.get("stationName") in place["stations"]]
+    use, scope = (mine, place["label"]) if mine else (rows, place["sido"])
 
     def avg(field: str) -> float | None:
         vals = []
-        for r in _http.items_of(body):
+        for r in use:
             try:
                 vals.append(float(r[field]))
             except (KeyError, TypeError, ValueError):
@@ -171,7 +183,8 @@ def _air(region: dict) -> dict:
         "pm25": _grade(pm25, (15, 35, 75)) if pm25 is not None else "정보 없음",
         "pm10_value": round(pm10) if pm10 is not None else None,
         "pm25_value": round(pm25) if pm25 is not None else None,
-        "stations": len(_http.items_of(body)),
+        "stations": len(use),
+        "scope": scope,
     }
 
 
@@ -207,7 +220,7 @@ def _uv(now: datetime, region: dict) -> dict | None:
         return None
     v = max(vals)
     label = "낮음" if v <= 2 else "보통" if v <= 5 else "높음" if v <= 7 else "매우 높음" if v <= 10 else "위험"
-    return {"title": "자외선", "meta": f"{label} ({v})", "basis": f"기상청 자외선지수 · 오늘 낮(6~18시) 최고 {v} · 0~2 낮음, 3~5 보통, 6~7 높음, 8~10 매우 높음, 11~ 위험"}
+    return {"title": "자외선", "meta": f"{label} ({v})", "basis": f"기상청 자외선지수 · {region['sido']} 시도 단위 · 오늘 낮(6~18시) 최고 {v} · 0~2 낮음, 3~5 보통, 6~7 높음, 8~10 매우 높음, 11~ 위험"}
 
 
 def _pollen(now: datetime, region: dict) -> dict | None:
@@ -220,7 +233,7 @@ def _pollen(now: datetime, region: dict) -> dict | None:
     if not it or not str(it.get("today", "")).isdigit() or int(it["today"]) < 1:
         return None
     level = {1: "보통", 2: "높음", 3: "매우 높음"}.get(int(it["today"]), "주의")
-    return {"title": "꽃가루(잡초류)", "meta": level, "basis": "기상청 꽃가루농도위험지수 · 잡초류(시도 단위)"}
+    return {"title": "꽃가루(잡초류)", "meta": level, "basis": f"기상청 꽃가루농도위험지수 · 잡초류 · {region['sido']} 시도 단위"}
 
 
 def _sun(now: datetime, region: dict) -> dict | None:
@@ -232,7 +245,7 @@ def _sun(now: datetime, region: dict) -> dict | None:
         return None
     a = items[0]
     f = lambda t: f"{t[:2]}:{t[2:4]}"
-    return {"title": "일출 · 일몰", "meta": f"{f(a['sunrise'])} · {f(a['sunset'])}", "basis": "한국천문연구원 · 시도청 소재지 기준"}
+    return {"title": "일출 · 일몰", "meta": f"{f(a['sunrise'])} · {f(a['sunset'])}", "basis": f"한국천문연구원 · {region['label']} 기준"}
 
 
 def _next_term(today: date) -> dict | None:
@@ -267,11 +280,11 @@ def _next_holiday(today: date) -> dict | None:
 
 # ---------------- 조립 ----------------
 
-def fetch(code: str) -> dict:
-    region = geo.region(code)
+def fetch(code: str, sgg: str | None = None) -> dict:
+    # 고른 시군구의 중심 좌표 기준(시군구 없이 시도만 고르면 시도청 소재지 기준)
+    region = geo.place(code, sgg)
     now = datetime.now()
     today = now.date()
-    # 시도 단위로 통일: 날씨는 시도청 소재지 격자 기준(큰 도에서는 도내 다른 지역과 다를 수 있음)
     nx, ny = geo.to_grid(region["lat"], region["lon"])
     land_reg, temp_reg = geo.mid_regions(region["lat"], region["lon"])
 
@@ -381,7 +394,7 @@ def fetch(code: str) -> dict:
         "weekend": weekend,  # 비어 있으면 화면에서 숨김(스텁 문구가 남지 않게 항상 덮어씀)
     }
 
-    out["location"] = {"label": region["name"], "code": region["code"]}
+    out["location"] = {"label": region["label"], "code": region["code"], "sgg": region["sgg"]}
     try:
         out["air_quality"] = _air(region)
     except Exception:
@@ -411,12 +424,12 @@ def fetch(code: str) -> dict:
     return out
 
 
-def get(code: str) -> dict | None:
-    """시도별 캐시된 날씨(키/수집 실패 시 None → 스텁). 시도가 17곳뿐이라 호출 수가 아주 적음."""
+def get(code: str, sgg: str | None = None) -> dict | None:
+    """지역별 캐시된 날씨(키/수집 실패 시 None → 스텁). 같은 시군구는 25분 동안 외부를 다시 안 부름."""
     if not available():
         return None
-    code = geo.region(code)["code"]
+    pl = geo.place(code, sgg)
     try:
-        return _cache.cached("weather", f"weather:{code}", 25, lambda: fetch(code))
+        return _cache.cached("weather", f"weather:{pl['key']}", 25, lambda: fetch(pl["code"], pl["sgg"]))
     except Exception:
         return None

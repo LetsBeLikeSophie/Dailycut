@@ -186,3 +186,59 @@ def sido_of_address(addr: str | None) -> str | None:
 def nearest_sido(lat: float, lon: float) -> str:
     """좌표에서 가장 가까운 시도청 소재지(주소로 못 찾았을 때의 대비책)."""
     return min(REGIONS, key=lambda r: haversine_km((lat, lon), (r[3], r[4])))[0]
+
+
+# ---------------- 시군구 지역 마스터 (data/regions.json, tools_build_regions.py로 생성) ----------------
+import json as _json
+from functools import lru_cache as _lru
+from pathlib import Path as _Path
+
+_REGIONS_JSON = _Path(__file__).resolve().parent / "data" / "regions.json"
+
+
+@_lru(maxsize=1)
+def _tree() -> dict:
+    if not _REGIONS_JSON.exists():
+        return {"sidos": []}
+    return _json.loads(_REGIONS_JSON.read_text(encoding="utf-8"))
+
+
+def sigungu_list(code: str) -> list[dict]:
+    return next((s["sigungu"] for s in _tree()["sidos"] if s["code"] == code), [])
+
+
+def find_sigungu(code: str, name: str | None) -> dict | None:
+    """시도 안에서 시군구 찾기. 이름이 "분당구"처럼 시 아래 구여도 부모 시를 돌려줌."""
+    if not name:
+        return None
+    for sg in sigungu_list(code):
+        if sg["name"] == name or name in sg.get("aliases", []):
+            return sg
+    return None
+
+
+def place(sido: str | None, sgg: str | None = None) -> dict:
+    """앱이 고른 지역 → 각 소스가 쓸 값. 시군구를 고르면 그 중심 좌표·측정소, 아니면 시도 전체(시도청 좌표).
+    label은 화면에 표시할 이름("서울 중구" / "서울")."""
+    r = region(sido)
+    sg = find_sigungu(r["code"], sgg)
+    return {
+        "code": r["code"],
+        "sido": r["name"],
+        "air": r["air"],
+        "sgg": sg["name"] if sg else None,
+        "label": f"{r['name']} {sg['name']}" if sg else r["name"],
+        "lat": sg["lat"] if sg else r["lat"],
+        "lon": sg["lon"] if sg else r["lon"],
+        "stations": sg["stations"] if sg else [],
+        "names": ([sg["name"], *sg.get("aliases", [])] if sg else []),
+        "key": f"{r['code']}:{sg['name']}" if sg else r["code"],
+    }
+
+
+def regions_tree() -> list[dict]:
+    """/regions용: 시도 → 시군구 이름 목록."""
+    return [
+        {"code": s["code"], "name": s["name"], "sigungu": [{"name": g["name"], "aliases": g.get("aliases", [])} for g in s["sigungu"]]}
+        for s in _tree()["sidos"]
+    ]

@@ -80,7 +80,7 @@ List<Widget> _priceRows(List<Map<String, dynamic>> items) => [for (final it in i
 /// 생활: 대표 가격(배추) 한 문장 + 큰 숫자 + 추이, 그 아래 제철 · 시세 목록.
 Widget marketScreen(ApiClient api, Region region, BuildContext shellContext) => SectionScreen(
       section: Section.market,
-      fetch: () => api.market(sido: region.code),
+      fetch: () => api.market(sido: region.code, sgg: region.sgg),
       contentBuilder: (context, data) {
         final trend = data['price_trend'] as Map<String, dynamic>;
         final rawPoints = (trend['series'] as List).cast<Map<String, dynamic>>();
@@ -111,7 +111,7 @@ Widget marketScreen(ApiClient api, Region region, BuildContext shellContext) => 
         return [
           PageHero(
             section: Section.market,
-            eyebrow: '생활 · ${region.name}',
+            eyebrow: '생활 · ${region.label}',
             onEyebrowTap: () => showRegionPicker(shellContext),
             headline: headline,
             emphasis: emphasis,
@@ -147,11 +147,11 @@ Widget marketScreen(ApiClient api, Region region, BuildContext shellContext) => 
           ListSection(title: '축산물 시세', trailing: '전주 대비', stub: !_isLive(data, 'livestock'), children: _priceRows(livestock)),
           ListSection(title: '생필품 물가지수', trailing: '전월 대비', stub: !_isLive(data, 'essentials'), children: _priceRows(essentials)),
           ListSection(
-            title: '${region.name} 전통시장',
+            title: '${data['markets_scope'] ?? region.label} 전통시장',
             trailing: _isLive(data, 'markets_nearby') ? '총 ${data['markets_total']}곳 · 시설 많은 순' : null,
             stub: !_isLive(data, 'markets_nearby'),
             children: [
-              for (final it in marketsNearby) RankRow(rank: 0, title: it['title'] as String, meta: it['meta'] as String),
+              for (final it in marketsNearby.take(6)) RankRow(rank: 0, title: it['title'] as String, meta: it['meta'] as String),
             ],
           ),
         ];
@@ -161,7 +161,7 @@ Widget marketScreen(ApiClient api, Region region, BuildContext shellContext) => 
 /// 문화: 어제 박스오피스 1위를 한 문장 + 큰 관객 수로, 눌러 뒤집으면 TOP 3.
 Widget cultureScreen(ApiClient api, Region region, BuildContext shellContext) => SectionScreen(
       section: Section.culture,
-      fetch: () => api.culture(sido: region.code),
+      fetch: () => api.culture(sido: region.code, sgg: region.sgg),
       contentBuilder: (context, data) {
         final hero = data['hero'] as Map<String, dynamic>;
         final allBoxOffice = (data['box_office'] as List).cast<Map<String, dynamic>>();
@@ -171,7 +171,14 @@ Widget cultureScreen(ApiClient api, Region region, BuildContext shellContext) =>
         final spotifyTop = (data['spotify_top'] as List).cast<Map<String, dynamic>>();
         final youtubeTrending = (data['youtube_trending'] as List).cast<Map<String, dynamic>>();
 
-        final nearby = '${region.name} 기준';
+        final scope = data['culture_scope'] as Map<String, dynamic>?;
+        String nearbyFor(String key) {
+          final n = scope?[key] as Map<String, dynamic>?;
+          if (scope == null || n == null) return '${region.label} 기준';
+          if (scope['sgg'] == null) return '${scope['sido']} 전체';
+          final local = n['local'] as int;
+          return local == 0 ? '${scope['sgg']}엔 없어서 ${scope['sido']} 전체' : '${scope['sgg']} $local곳 · 나머지는 ${scope['sido']}';
+        }
         final title = '‘${hero['title']}’';
         // "182만 명" → 숫자 182 + 단위 "만 명"
         final stat = hero['stat'] as String;
@@ -180,7 +187,7 @@ Widget cultureScreen(ApiClient api, Region region, BuildContext shellContext) =>
         return [
           PageHero(
             section: Section.culture,
-            eyebrow: '문화 · ${region.name}',
+            eyebrow: '문화 · ${region.label}',
             onEyebrowTap: () => showRegionPicker(shellContext),
             headline: '${hero['label'] ?? '어제 박스오피스 1위'}는 $title',
             emphasis: title,
@@ -231,13 +238,13 @@ Widget cultureScreen(ApiClient api, Region region, BuildContext shellContext) =>
           ),
           ListSection(
             title: '진행 중인 전시·공연',
-            trailing: _isLive(data, 'performances') ? nearby : null,
+            trailing: _isLive(data, 'performances') ? nearbyFor('performances') : null,
             stub: !_isLive(data, 'performances'),
             children: [for (final it in performances) RankRow(rank: 0, title: it['title'] as String, meta: it['meta'] as String)],
           ),
           ListSection(
             title: '곧 열리는 축제',
-            trailing: _isLive(data, 'festivals') ? nearby : null,
+            trailing: _isLive(data, 'festivals') ? nearbyFor('festivals') : null,
             stub: !_isLive(data, 'festivals'),
             children: [for (final it in festivals) RankRow(rank: 0, title: it['title'] as String, meta: it['meta'] as String)],
           ),

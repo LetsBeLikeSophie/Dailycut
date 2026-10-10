@@ -13,11 +13,12 @@ class ApiClient {
 
   final String baseUrl;
 
-  // 지역은 시도 코드(2자리, region.dart)로만 보냄 — 좌표는 resolveRegion에서 딱 한 번만 쓰임.
-  Future<Map<String, dynamic>> today({String? sido}) => _getJson('/today', {'sido': sido});
-  Future<Map<String, dynamic>> weather({String? sido}) => _getJson('/weather', {'sido': sido});
-  Future<Map<String, dynamic>> market({String? sido}) => _getJson('/market', {'sido': sido});
-  Future<Map<String, dynamic>> culture({String? sido}) => _getJson('/culture', {'sido': sido});
+  // 지역은 시도 코드(2자리)와 시군구 이름(region.dart)으로만 보냄 — 좌표는 resolveRegion에서 딱 한 번만 쓰임.
+  Future<Map<String, dynamic>> today({String? sido, String? sgg}) => _getJson('/today', {'sido': sido, 'sgg': sgg});
+  Future<Map<String, dynamic>> weather({String? sido, String? sgg}) => _getJson('/weather', {'sido': sido, 'sgg': sgg});
+  Future<Map<String, dynamic>> market({String? sido, String? sgg}) => _getJson('/market', {'sido': sido, 'sgg': sgg});
+  Future<Map<String, dynamic>> culture({String? sido, String? sgg}) => _getJson('/culture', {'sido': sido, 'sgg': sgg});
+  Future<Map<String, dynamic>> regions() => _getJson('/regions');
   Future<Map<String, dynamic>> money() => _getJson('/money');
   Future<Map<String, dynamic>> ai() => _getJson('/ai');
 

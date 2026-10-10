@@ -60,7 +60,7 @@ def live_merge(name: str, regional=None):
             for n in (name,) if isinstance(name, str) else name:
                 live.update(jobs.get_live(n) or {})
             if regional is not None:
-                live.update(regional.get(geo.region(kwargs.get("sido"))["code"]) or {})
+                live.update(regional.get(geo.region(kwargs.get("sido"))["code"], kwargs.get("sgg")) or {})
             if not live:
                 return {**stub, "live_keys": []}
             return {**stub, **live, "live_keys": sorted(live.keys())}
@@ -78,7 +78,7 @@ def live_geo(source):
         @functools.wraps(fn)
         def wrapper(*args, **kwargs):
             stub = fn(*args, **kwargs)
-            live = source.get(geo.region(kwargs.get("sido"))["code"])
+            live = source.get(geo.region(kwargs.get("sido"))["code"], kwargs.get("sgg"))
             if not live:
                 return {**stub, "live_keys": []}
             return {**stub, **live, "live_keys": sorted(live.keys())}
@@ -90,16 +90,16 @@ def live_geo(source):
 
 @app.get("/regions")
 def regions():
-    """앱의 지역 선택 목록(시도 17곳)."""
-    return {"default": geo.DEFAULT_SIDO, "regions": [{"code": r[0], "name": r[1]} for r in geo.REGIONS]}
+    """앱의 지역 선택 목록: 시도 17곳과 각 시도의 시군구(별칭 포함, 예: 성남시 ← 분당구)."""
+    return {"default": geo.DEFAULT_SIDO, "regions": geo.regions_tree()}
 
 
 @app.get("/region")
 def region_of(lat: float, lon: float):
-    """좌표 → 시도. 앱이 위치 권한을 받았을 때 시도를 정하려고 딱 한 번 부름(이후엔 시도 코드만 씀).
-    가장 가까운 측정소의 주소로 시도를 찾고, 못 찾으면 가장 가까운 시도청 소재지."""
+    """좌표 → 시도·시군구. 앱이 위치 권한을 받았을 때 지역을 정하려고 딱 한 번 부름(이후엔 지역 이름만 씀).
+    가장 가까운 측정소의 주소로 찾고, 못 찾으면 가장 가까운 시도청 소재지(시도만)."""
     la, lo = round(lat, 2), round(lon, 2)  # 좌표는 저장하지 않음, 정규화만 함
-    code = None
+    code, sgg = None, None
     try:
         from sources import _http
 
@@ -109,11 +109,17 @@ def region_of(lat: float, lon: float):
             {"returnType": "json", "tmX": x, "tmY": y, "ver": "1.1"},
         )
         items = _http.items_of(body)
-        code = geo.sido_of_address(items[0].get("addr")) if items else None
+        if items:
+            addr = items[0].get("addr") or ""
+            code = geo.sido_of_address(addr)
+            toks = addr.split()
+            sg = geo.find_sigungu(code, toks[1]) if code and len(toks) > 1 else None
+            sgg = sg["name"] if sg else None
     except Exception:
         pass
     code = code or geo.nearest_sido(la, lo)
-    return {"code": code, "name": geo.region(code)["name"]}
+    pl = geo.place(code, sgg)
+    return {"code": pl["code"], "sgg": pl["sgg"], "label": pl["label"]}
 
 
 @app.get("/health")
@@ -185,7 +191,7 @@ def _mock_weekly(base_high: int, base_low: int, days: int = 6) -> list[dict]:
 
 @app.get("/weather")
 @live_geo(weather_src)
-def weather(sido: str | None = None):
+def weather(sido: str | None = None, sgg: str | None = None):
     return {
         # 2026-10-06: "출처 표시가 하나도 없다"는 지적 — 기획 문서 원칙
         # ("모든 데이터 카드에는 출처를 표시")을 처음 반영함. 지금은 TODO
@@ -264,7 +270,7 @@ def _price_row(label: str, price: int, change: str, pct: float, sub: str | None 
 
 @app.get("/market")
 @live_merge("market", regional=markets_src)
-def market(sido: str | None = None, ):
+def market(sido: str | None = None, sgg: str | None = None):
     # 2026-10-10: 추이 차트 X축을 "이번 달 1일~말일" 고정축으로 바꿈 — 시리즈는
     # 이번 달 1일부터 오늘까지의 일별 값만 보내고(미래 날짜는 비워둠), 지난주
     # 대비 계산용으로 7일 전 값(week_ago)을 따로 줌(월초엔 지난달 값이 필요해서).
@@ -315,7 +321,7 @@ def market(sido: str | None = None, ):
 # + KOPIS 공연예술통합전산망 + TourAPI 지역 축제
 @app.get("/culture")
 @live_geo(culture_src)
-def culture(sido: str | None = None):
+def culture(sido: str | None = None, sgg: str | None = None):
     return {
         "hero": {
             "theme": "culture",
@@ -429,11 +435,11 @@ def _headline(w: dict) -> str:
 
 
 @app.get("/today")
-def today(sido: str | None = None):
+def today(sido: str | None = None, sgg: str | None = None):
     """투데이(홈) — 섹션별 대표 카드 1개씩만 모아서 반환.
     2026-09-30: 날씨가 독립 섹션으로 빠지면서 투데이 카드 목록에도
     다른 섹션들과 동등하게 날씨 카드를 추가함(맨 앞)."""
-    w, m, c, mo, a = weather(sido=sido), market(), culture(sido=sido), money(), ai()
+    w, m, c, mo, a = weather(sido=sido, sgg=sgg), market(), culture(sido=sido, sgg=sgg), money(), ai()
     season_top = m["in_season"][0]
     weather_card = {
         "theme": "weather",

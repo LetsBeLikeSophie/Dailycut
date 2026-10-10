@@ -26,8 +26,8 @@ class _TodayScreenState extends State<TodayScreen> {
     // 지역(시도)은 앱 전체가 공유함(region.dart). 지역이 바뀌면 이 화면이 새로 만들어져서 다시 받아옴.
     _future = () async {
       final results = await Future.wait([
-        widget.api.today(sido: widget.region.code),
-        widget.api.weather(sido: widget.region.code),
+        widget.api.today(sido: widget.region.code, sgg: widget.region.sgg),
+        widget.api.weather(sido: widget.region.code, sgg: widget.region.sgg),
       ]);
       return (today: results[0], weather: results[1]);
     }();
@@ -162,7 +162,7 @@ class _TodayScreenState extends State<TodayScreen> {
 String? _airBasis(Map<String, dynamic> air, String valueKey, String name, String cuts) {
   final v = air[valueKey];
   if (v == null) return null;
-  return '$name $v㎍/㎥ · 에어코리아 시도 내 ${air['stations'] ?? '여러'}곳 평균 · 환경부 기준($cuts)';
+  return '$name $v㎍/㎥ · 에어코리아 ${air['scope'] ?? ''} 측정소 ${air['stations'] ?? '여러'}곳 평균 · 환경부 기준($cuts)';
 }
 
 /// 주간 한 줄: 왼쪽에 요일(오늘은 강조)과 그 아래 날짜, 가운데 날씨, 오른쪽 최저/최고.
