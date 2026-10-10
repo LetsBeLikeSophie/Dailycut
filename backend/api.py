@@ -168,14 +168,22 @@ def _price_row(label: str, price: int, change: str, pct: float, sub: str | None 
 
 @app.get("/market")
 def market():
-    trend = _mock_daily_series("배추", 2650)
+    # 2026-10-10: 추이 차트 X축을 "이번 달 1일~말일" 고정축으로 바꿈 — 시리즈는
+    # 이번 달 1일부터 오늘까지의 일별 값만 보내고(미래 날짜는 비워둠), 지난주
+    # 대비 계산용으로 7일 전 값(week_ago)을 따로 줌(월초엔 지난달 값이 필요해서).
+    # 실데이터 연결 후엔 price_history에서 같은 모양으로 만들면 됨.
+    today_d = date.today()
+    full = _mock_daily_series("배추", 2650, days=today_d.day + 7)
+    trend = full[-today_d.day:]
+    week_ago = full[-8]["price"]
     return {
         "source": "KAMIS 농산물유통정보",
         "price_trend": {
             "item": "배추",
             "unit": "원/포기",
             "series": trend,
-            "change_pct": round((trend[-1]["price"] - trend[0]["price"]) / trend[0]["price"] * 100, 1),
+            "week_ago": week_ago,
+            "change_pct": round((trend[-1]["price"] - week_ago) / week_ago * 100, 1),
         },
         "items": [
             _price_row("배추", 2400, "down", 4.0, "1포기"),
@@ -258,13 +266,25 @@ def culture():
 # TODO: 한국은행 ECOS (https://ecos.bok.or.kr/api/) + 금감원 금융상품 한눈에
 @app.get("/money")
 def money():
+    # 이번 달 1일~오늘 일별 환율(스텁). 마지막 값이 1350.2가 되게 맞춤.
+    today_d = date.today()
+    rng = random.Random(today_d.month)
+    walk, v = [], 0.0
+    for _ in range(today_d.day):
+        v += rng.uniform(-4.0, 4.5)
+        walk.append(v)
+    shift = 1350.2 - walk[-1]
+    fx_series = [
+        {"date": (today_d - timedelta(days=today_d.day - 1 - i)).isoformat(), "value": round(w + shift, 1)}
+        for i, w in enumerate(walk)
+    ]
     return {
         "hero": {
             "theme": "money",
             "label": "달러 환율",
-            "value": 1350.2,
-            "change": "up",
-            "series": [1342.1, 1345.0, 1348.5, 1350.2],
+            "value": fx_series[-1]["value"],
+            "change": "up" if fx_series[-1]["value"] > fx_series[0]["value"] else "down" if fx_series[-1]["value"] < fx_series[0]["value"] else "flat",
+            "series": fx_series,
             "source": "한국은행 ECOS",
         },
         # 2026-10-10: 환율 카드 뒷면(뒤집으면 보임)용 — 주요 통화 환율.

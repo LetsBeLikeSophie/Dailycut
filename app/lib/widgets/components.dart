@@ -339,15 +339,23 @@ class _FlipCardState extends State<FlipCard> with SingleTickerProviderStateMixin
   }
 }
 
-/// 화면 폭 끝까지 이어지는 추이선. 선은 왼쪽→오른쪽으로 그려지고, 끝점은
-/// 섹션 색 원. 좌우 20px 안쪽에서 시작해서 본문 여백과 정렬됨.
+/// 차트의 한 점: 이번 달의 며칠(1~말일)에 어떤 값이었는지.
+class ChartPoint {
+  const ChartPoint(this.day, this.value);
+
+  final int day;
+  final double value;
+}
+
+/// 화면 폭 끝까지 이어지는 이번 달 추이선. X축은 항상 이번 달 1일~말일(28~31)
+/// 고정이고, 데이터는 오늘까지만 그려져서 오른쪽은 비어 있음(남은 날).
+/// 선은 왼쪽→오른쪽으로 그려지고 끝점(오늘)은 섹션 색 원. 좌우 20px 안쪽에서
+/// 시작해서 본문 여백과 정렬됨.
 class TrendChart extends StatefulWidget {
-  const TrendChart({super.key, required this.section, required this.series, this.leftLabel, this.rightLabel = '오늘'});
+  const TrendChart({super.key, required this.section, required this.points});
 
   final Section section;
-  final List<double> series;
-  final String? leftLabel;
-  final String rightLabel;
+  final List<ChartPoint> points;
 
   @override
   State<TrendChart> createState() => _TrendChartState();
@@ -379,7 +387,11 @@ class _TrendChartState extends State<TrendChart> with SingleTickerProviderStateM
   @override
   Widget build(BuildContext context) {
     final t = sectionThemes[widget.section]!;
+    final now = DateTime.now();
+    final days = DateTime(now.year, now.month + 1, 0).day;
     final curve = CurvedAnimation(parent: _c, curve: Curves.easeOutCubic);
+    // 눈금: 1, 5, 10, 15, 20, 25, 말일
+    final ticks = <int>[1, 5, 10, 15, 20, 25, days];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -397,7 +409,8 @@ class _TrendChartState extends State<TrendChart> with SingleTickerProviderStateM
                   builder: (context, _) => CustomPaint(
                     size: Size(w, 120),
                     painter: _TrendPainter(
-                      series: widget.series,
+                      points: widget.points,
+                      days: days,
                       progress: curve.value,
                       fill: t.highlight,
                       dot: t.color,
@@ -409,12 +422,31 @@ class _TrendChartState extends State<TrendChart> with SingleTickerProviderStateM
           },
         ),
         const SizedBox(height: 6),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(widget.leftLabel ?? '', style: const TextStyle(fontSize: 11, color: AppColors.inkSoft)),
-            Text(widget.rightLabel, style: const TextStyle(fontSize: 11, color: AppColors.inkSoft)),
-          ],
+        LayoutBuilder(
+          builder: (context, cons) => SizedBox(
+            height: 16,
+            width: cons.maxWidth,
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                for (final d in ticks)
+                  Positioned(
+                    left: cons.maxWidth * (d - 1) / (days - 1),
+                    child: FractionalTranslation(
+                      translation: const Offset(-0.5, 0),
+                      child: Text(
+                        d == 1 || d == days ? '$d일' : '$d',
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: d == now.day ? AppColors.ink : AppColors.inkSoft,
+                          fontWeight: d == now.day ? FontWeight.w700 : FontWeight.w400,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ),
         ),
       ],
     );
@@ -422,52 +454,67 @@ class _TrendChartState extends State<TrendChart> with SingleTickerProviderStateM
 }
 
 class _TrendPainter extends CustomPainter {
-  _TrendPainter({required this.series, required this.progress, required this.fill, required this.dot});
+  _TrendPainter({required this.points, required this.days, required this.progress, required this.fill, required this.dot});
 
-  final List<double> series;
+  final List<ChartPoint> points;
+  final int days;
   final double progress;
   final Color fill;
   final Color dot;
 
   @override
   void paint(Canvas canvas, Size size) {
-    if (series.length < 2) return;
+    if (points.isEmpty) return;
     const padX = 20.0, padTop = 12.0, padBottom = 18.0;
-    final minV = series.reduce(math.min);
-    final maxV = series.reduce(math.max);
+    final values = points.map((p) => p.value);
+    final minV = values.reduce(math.min);
+    final maxV = values.reduce(math.max);
     final range = (maxV - minV).abs() < 1e-6 ? 1.0 : maxV - minV;
-    final dx = (size.width - padX * 2) / (series.length - 1);
-    Offset at(int i) => Offset(
-          padX + dx * i,
-          padTop + (1 - (series[i] - minV) / range) * (size.height - padTop - padBottom),
+    final width = size.width - padX * 2;
+    Offset at(ChartPoint p) => Offset(
+          padX + width * (p.day - 1) / (days - 1),
+          padTop + (1 - (p.value - minV) / range) * (size.height - padTop - padBottom),
         );
 
-    final line = Path()..moveTo(at(0).dx, at(0).dy);
-    for (var i = 1; i < series.length; i++) {
-      line.lineTo(at(i).dx, at(i).dy);
-    }
-    final area = Path.from(line)
-      ..lineTo(at(series.length - 1).dx, size.height)
-      ..lineTo(at(0).dx, size.height)
-      ..close();
-
-    canvas.save();
-    canvas.clipRect(Rect.fromLTWH(0, 0, padX + (size.width - padX * 2) * progress + 2, size.height));
-    canvas.drawPath(area, Paint()..color = fill.withValues(alpha: 0.7));
-    canvas.drawPath(
-      line,
+    // 월 전체 폭을 알려주는 아주 옅은 바닥선
+    canvas.drawLine(
+      Offset(padX, size.height - 1),
+      Offset(padX + width, size.height - 1),
       Paint()
-        ..color = AppColors.ink
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2
-        ..strokeJoin = StrokeJoin.round
-        ..strokeCap = StrokeCap.round,
+        ..color = AppColors.hair
+        ..strokeWidth = 1,
     );
-    canvas.restore();
+
+    final last = at(points.last);
+    if (points.length >= 2) {
+      final line = Path()..moveTo(at(points.first).dx, at(points.first).dy);
+      for (var i = 1; i < points.length; i++) {
+        final o = at(points[i]);
+        line.lineTo(o.dx, o.dy);
+      }
+      final area = Path.from(line)
+        ..lineTo(last.dx, size.height)
+        ..lineTo(at(points.first).dx, size.height)
+        ..close();
+
+      final startX = at(points.first).dx;
+      canvas.save();
+      canvas.clipRect(Rect.fromLTWH(0, 0, startX + (last.dx - startX) * progress + 2, size.height));
+      canvas.drawPath(area, Paint()..color = fill.withValues(alpha: 0.7));
+      canvas.drawPath(
+        line,
+        Paint()
+          ..color = AppColors.ink
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2
+          ..strokeJoin = StrokeJoin.round
+          ..strokeCap = StrokeCap.round,
+      );
+      canvas.restore();
+    }
 
     final o = ((progress - 0.9) / 0.1).clamp(0.0, 1.0);
     if (o > 0) {
-      final last = at(series.length - 1);
       canvas.drawCircle(last, 6, Paint()..color = dot.withValues(alpha: o));
       canvas.drawCircle(
         last,
@@ -481,7 +528,8 @@ class _TrendPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _TrendPainter old) => old.progress != progress || old.series != series;
+  bool shouldRepaint(covariant _TrendPainter old) =>
+      old.progress != progress || old.points != points || old.days != days;
 }
 
 /// 목록 속 작은 추이선(56x24).

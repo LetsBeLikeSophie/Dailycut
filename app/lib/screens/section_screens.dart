@@ -59,17 +59,20 @@ Widget marketScreen(ApiClient api) => SectionScreen(
       fetch: api.market,
       contentBuilder: (context, data) {
         final trend = data['price_trend'] as Map<String, dynamic>;
-        final points = (trend['series'] as List).cast<Map<String, dynamic>>();
-        final series = points.map((e) => (e['price'] as num).toDouble()).toList();
+        final rawPoints = (trend['series'] as List).cast<Map<String, dynamic>>();
+        // 이번 달 1일~오늘 일별 값(차트 X축은 월 전체 고정)
+        final points = [
+          for (final e in rawPoints)
+            ChartPoint(DateTime.parse(e['date'] as String).day, (e['price'] as num).toDouble()),
+        ];
         final item = trend['item'] as String;
-        final last = series.last;
-        // 지난주(7일 전) 대비
-        final weekAgo = series.length > 7 ? series[series.length - 8] : series.first;
+        final last = points.last.value;
+        // 지난주(7일 전) 대비 — 월초에는 지난달 값이 필요해서 서버가 따로 줌
+        final weekAgo = ((trend['week_ago'] as num?) ?? points.first.value).toDouble();
         final pct = (last - weekAgo) / weekAgo * 100;
         final flat = pct.abs() < 0.5;
         final emphasis = flat ? '비슷해요' : '${pct.abs().round()}% ${pct < 0 ? '내렸어요' : '올랐어요'}';
         final headline = flat ? '$item 가격은 지난주와 $emphasis' : '오늘 $item 가격, 지난주보다 $emphasis';
-        final firstDate = DateTime.tryParse(points.first['date'] as String);
         final changeKey = flat ? 'flat' : (pct < 0 ? 'down' : 'up');
 
         final items = (data['items'] as List).cast<Map<String, dynamic>>();
@@ -91,11 +94,7 @@ Widget marketScreen(ApiClient api) => SectionScreen(
                 style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: changeColor(changeKey)),
               ),
               const SizedBox(height: 14),
-              TrendChart(
-                section: Section.market,
-                series: series,
-                leftLabel: firstDate == null ? null : '${firstDate.month}월 ${firstDate.day}일',
-              ),
+              TrendChart(section: Section.market, points: points),
             ],
           ),
           ListSection(
@@ -231,10 +230,13 @@ Widget moneyScreen(ApiClient api) => SectionScreen(
         final stats = (data['stats'] as List).cast<Map<String, dynamic>>();
         final deposits = (data['deposits'] as List).cast<Map<String, dynamic>>();
         final fxOthers = (data['fx_others'] as List? ?? const []).cast<Map<String, dynamic>>();
-        final series = (hero['series'] as List).map((e) => (e as num).toDouble()).toList();
+        final points = [
+          for (final e in (hero['series'] as List).cast<Map<String, dynamic>>())
+            ChartPoint(DateTime.parse(e['date'] as String).day, (e['value'] as num).toDouble()),
+        ];
         final change = hero['change'] as String;
         final emphasis = switch (change) { 'up' => '올랐어요', 'down' => '내렸어요', _ => '그대로예요' };
-        final diff = series.last - series.first;
+        final diff = points.last.value - points.first.value;
         return [
           PageHero(
             section: Section.money,
@@ -254,11 +256,13 @@ Widget moneyScreen(ApiClient api) => SectionScreen(
               BigNumber(to: hero['value'] as num, decimals: 1, unit: '원'),
               const SizedBox(height: 4),
               Text(
-                '${changeLabel(change)} 최근 ${series.length}일 ${diff >= 0 ? '+' : '-'}${formatNumber(diff.abs(), decimals: 1)}원',
+                points.length < 2
+                    ? '이번 달 첫 기록이에요'
+                    : '${changeLabel(change)} 이번 달 ${diff >= 0 ? '+' : '-'}${formatNumber(diff.abs(), decimals: 1)}원',
                 style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: changeColor(change)),
               ),
               const SizedBox(height: 14),
-              TrendChart(section: Section.money, series: series, leftLabel: '${series.length}일 전'),
+              TrendChart(section: Section.money, points: points),
             ],
           ),
           ListSection(title: '기준 지표', children: _priceRows(stats)),
