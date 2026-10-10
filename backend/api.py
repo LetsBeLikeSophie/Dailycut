@@ -88,6 +88,50 @@ def live_geo(source):
     return deco
 
 
+@app.get("/market/detail")
+def market_detail(name: str, sigungu: str | None = None):
+    """전통시장 상세(사진 등, 있을 때만). 사진 주소는 /proxy/image 로 감싸서 줌(원본 서버가 브라우저 접근을 막아서)."""
+    d = markets_src.detail(name, sigungu)
+    if d.get("found"):
+        from urllib.parse import quote
+
+        d = {**d, "image": "/proxy/image?u=" + quote(d["image"], safe=""), "credit": "한국관광공사 TourAPI", "license": "출처표시"}
+    return d
+
+
+@app.get("/culture/detail")
+def culture_detail(id: str):
+    """행사 상세(기간·장소·요금·설명). id는 events 항목의 id. 사진 주소는 /proxy/image 로 감싸서 줌."""
+    d = culture_src.detail(id)
+    if d.get("image"):
+        from urllib.parse import quote
+
+        d = {**d, "image": "/proxy/image?u=" + quote(d["image"], safe="")}
+    return d
+
+
+@app.get("/proxy/image")
+def proxy_image(u: str):
+    """허용된 호스트(한국관광공사 사진 서버)의 이미지만 대신 받아 전달함. 아무 주소나 열지 못하게 호스트를 제한하고 크기도 제한."""
+    from urllib.parse import urlparse
+
+    import requests
+    from fastapi import HTTPException
+    from fastapi.responses import Response
+
+    pu = urlparse(u)
+    if pu.scheme not in ("http", "https") or pu.hostname not in (*markets_src.PHOTO_HOSTS, *culture_src.IMAGE_HOSTS):
+        raise HTTPException(status_code=400, detail="허용되지 않은 주소")
+    try:
+        r = requests.get(u, timeout=15, stream=True)
+        data = r.raw.read(3_000_001)
+    except requests.RequestException:
+        raise HTTPException(status_code=502, detail="사진을 가져오지 못했어요")
+    if r.status_code != 200 or len(data) > 3_000_000 or not r.headers.get("content-type", "").startswith("image"):
+        raise HTTPException(status_code=502, detail="사진을 가져오지 못했어요")
+    return Response(content=data, media_type=r.headers["content-type"], headers={"Cache-Control": "public, max-age=604800"})
+
+
 @app.get("/regions")
 def regions():
     """앱의 지역 선택 목록: 시도 17곳과 각 시도의 시군구(별칭 포함, 예: 성남시 ← 분당구)."""
@@ -439,7 +483,8 @@ def today(sido: str | None = None, sgg: str | None = None):
     """투데이(홈) — 섹션별 대표 카드 1개씩만 모아서 반환.
     2026-09-30: 날씨가 독립 섹션으로 빠지면서 투데이 카드 목록에도
     다른 섹션들과 동등하게 날씨 카드를 추가함(맨 앞)."""
-    w, m, c, mo, a = weather(sido=sido, sgg=sgg), market(sido=sido, sgg=sgg), culture(sido=sido, sgg=sgg), money(), ai()
+    # 투데이는 문화 스텁 카드(박스오피스)만 쓰므로 실데이터 병합(무거운 행사 목록 수집)을 건너뜀
+    w, m, c, mo, a = weather(sido=sido, sgg=sgg), market(sido=sido, sgg=sgg), culture.__wrapped__(sido=sido, sgg=sgg), money(), ai()
     # 이번 달 제철: 실데이터 job이 돌면 편집 가이드(data/produce_guide.json) 기준 이름들, 아니면 스텁 첫 항목
     season_names = m.get("season_now") or [m["in_season"][0]["name"]]
     weather_card = {

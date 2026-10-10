@@ -52,3 +52,42 @@ def get(code: str, sgg: str | None = None) -> dict | None:
         "markets_scope": scope,
         "markets_source": data["source"],
     }
+
+
+# ---------------- 시장 상세(사진): 한국관광공사 TourAPI 키워드 검색 ----------------
+import config  # noqa: E402
+from sources import _cache, _http  # noqa: E402
+
+PHOTO_HOSTS = ("tong.visitkorea.or.kr",)
+
+
+def detail(name: str, sigungu: str | None) -> dict:
+    """시장 이름으로 한국관광공사 관광정보를 찾아 사진을 가져옴(있을 때만).
+    사진은 "출처표시·상업적 이용 허용"(Type1)인 것만 씀 — 변경금지(Type3)는 화면에서 잘라서 쓰기 때문에 제외."""
+
+    def load() -> dict:
+        base = config.get_key("TOUR_API_BASE_URL")
+        body = _http.get_json(
+            base + "/searchKeyword2",
+            {
+                "MobileOS": config.get_key("TOUR_API_MOBILE_OS"),
+                "MobileApp": config.get_key("TOUR_API_MOBILE_APP"),
+                "_type": "json",
+                "keyword": name,
+                "numOfRows": 10,
+                "pageNo": 1,
+            },
+        )
+        for it in _http.items_of(body):
+            addr = it.get("addr1") or ""
+            same_place = (not sigungu) or sigungu in addr
+            if it.get("title", "").replace(" ", "").startswith(name.replace(" ", "")[:4]) and same_place and it.get("firstimage") and it.get("cpyrhtDivCd") == "Type1":
+                return {"found": True, "title": it["title"], "addr": addr, "image": it["firstimage"], "tel": it.get("tel") or None}
+        return {"found": False}
+
+    if not config.has_keys(["DATA_GO_KR_SERVICE_KEY_DECODED", "TOUR_API_BASE_URL", "TOUR_API_MOBILE_OS", "TOUR_API_MOBILE_APP"]):
+        return {"found": False}
+    try:
+        return _cache.cached("market_detail", f"mkt:{name}:{sigungu or ''}", 60 * 24 * 7, load)
+    except Exception:
+        return {"found": False}

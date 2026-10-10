@@ -19,6 +19,8 @@ class ApiClient {
   Future<Map<String, dynamic>> market({String? sido, String? sgg}) => _getJson('/market', {'sido': sido, 'sgg': sgg});
   Future<Map<String, dynamic>> culture({String? sido, String? sgg}) => _getJson('/culture', {'sido': sido, 'sgg': sgg});
   Future<Map<String, dynamic>> regions() => _getJson('/regions');
+  Future<Map<String, dynamic>> cultureDetail(String id) => _getJson('/culture/detail', {'id': id});
+  Future<Map<String, dynamic>> marketDetail({required String name, String? sigungu}) => _getJson('/market/detail', {'name': name, 'sigungu': sigungu});
   Future<Map<String, dynamic>> money() => _getJson('/money');
   Future<Map<String, dynamic>> ai() => _getJson('/ai');
 

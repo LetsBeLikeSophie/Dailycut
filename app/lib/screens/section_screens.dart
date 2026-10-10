@@ -4,6 +4,8 @@ import '../region.dart';
 import '../theme.dart';
 import '../widgets/basket_hero.dart';
 import '../widgets/components.dart';
+import '../widgets/culture_calendar.dart';
+import '../widgets/market_list.dart';
 import '../widgets/shopping_catalog.dart';
 
 /// 생활/문화/머니/AI 네 섹션 화면 — 모두 "future 하나 받아서 위에서
@@ -183,13 +185,12 @@ Widget marketScreen(ApiClient api, Region region, BuildContext shellContext) => 
           ...listing,
           ListSection(title: '축산물 시세(계란·돼지고기)', trailing: '전주 대비', stub: !_isLive(data, 'livestock'), children: _priceRows(livestock)),
           ListSection(title: '생필품 물가지수', trailing: '전월 대비', stub: !_isLive(data, 'essentials'), children: _priceRows(essentials)),
-          ListSection(
-            title: '${data['markets_scope'] ?? region.label} 전통시장',
-            trailing: _isLive(data, 'markets_nearby') ? '총 ${data['markets_total']}곳 · 시설 많은 순' : null,
+          MarketList(
+            api: api,
+            markets: marketsNearby,
+            scope: (data['markets_scope'] as String?) ?? region.label,
+            total: (data['markets_total'] as num?)?.toInt() ?? marketsNearby.length,
             stub: !_isLive(data, 'markets_nearby'),
-            children: [
-              for (final it in marketsNearby.take(6)) RankRow(rank: 0, title: it['title'] as String, meta: it['meta'] as String),
-            ],
           ),
         ];
       },
@@ -221,8 +222,7 @@ Widget cultureScreen(ApiClient api, Region region, BuildContext shellContext) =>
         final stat = hero['stat'] as String;
         final m = RegExp(r'^([\d,\.]+)\s*(.*)$').firstMatch(stat);
         final poster = hero['poster'] as String?;
-        return [
-          PageHero(
+        final Widget legacyHero = PageHero(
             section: Section.culture,
             eyebrow: '문화 · ${region.label}',
             onEyebrowTap: () => showRegionPicker(shellContext),
@@ -264,26 +264,86 @@ Widget cultureScreen(ApiClient api, Region region, BuildContext shellContext) =>
                 ],
               ),
             ],
-          ),
+          );
+        final events = (data['events'] as List?)?.cast<Map<String, dynamic>>();
+        Map<String, dynamic> eventFor(Map<String, dynamic> it) =>
+            events?.firstWhere((e) => e['id'] == it['id'], orElse: () => const {}) ??
+            {'id': it['id'], 'kind': '행사', 'title': it['title'], 'start': '', 'end': '', 'place': it['meta'], 'local': it['local']};
+        Widget listLine(Map<String, dynamic> it) {
+          final full = eventFor(it);
+          final e = full.isEmpty ? {'id': it['id'], 'kind': '행사', 'title': it['title'], 'start': '', 'end': '', 'place': it['meta'], 'local': it['local']} : full;
+          return ListLine(
+            name: it['title'] as String,
+            badge: it['local'] == true ? '우리 동네' : null,
+            sub: it['meta'] as String,
+            onTap: it['id'] == null ? null : () => showEventSheet(context, api, e),
+          );
+        }
+
+        // 행사 달력이 실데이터로 들어오면 맨 위는 "이번 주말 N개 행사"(박스오피스는 KOBIS 키 전까지 예시라 아래로)
+        Widget? weekendHero() {
+          if (events == null) return null;
+          final now = DateTime.now();
+          final today = DateTime(now.year, now.month, now.day);
+          final sat = today.weekday == DateTime.sunday ? today : today.add(Duration(days: (DateTime.saturday - today.weekday) % 7));
+          final sun = today.weekday == DateTime.sunday ? today : sat.add(const Duration(days: 1));
+          String iso(DateTime d) => '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+          final inWeekend = events.where((e) => (e['start'] as String).compareTo(iso(sun)) <= 0 && (e['end'] as String).compareTo(iso(sat)) >= 0).toList();
+          final local = inWeekend.where((e) => e['local'] == true).toList();
+          final useLocal = region.sgg != null && local.isNotEmpty;
+          final list = useLocal ? local : inWeekend;
+          final scopeName = useLocal ? region.label : region.name;
+          final label = today.weekday == DateTime.sunday ? '오늘' : '이번 주말(${sat.month}/${sat.day}~${sun.day})';
+          final emphasis = '${list.length}개 행사';
+          return PageHero(
+            section: Section.culture,
+            eyebrow: '문화 · ${region.label}',
+            onEyebrowTap: () => showRegionPicker(shellContext),
+            headline: list.isEmpty ? '$label $scopeName에는 열리는 행사가 없어요' : '$label $scopeName에서 $emphasis가 열려요',
+            emphasis: list.isEmpty ? null : emphasis,
+            source: '한국관광공사 · 한국문화정보원',
+            body: [
+              BigNumber(to: list.length, unit: '개 행사'),
+              const SizedBox(height: 14),
+              for (final e in list.take(3)) eventLine(context, api, e),
+              if (list.length > 3)
+                Padding(
+                  padding: const EdgeInsets.only(top: 10),
+                  child: Text('나머지 ${list.length - 3}개는 아래 달력에서 날짜를 눌러 보세요', style: const TextStyle(fontSize: 11, color: AppColors.inkSoft)),
+                ),
+            ],
+          );
+        }
+
+        final calendarWidget = events == null
+            ? null
+            : CultureCalendar(
+                api: api,
+                events: events,
+                scopeLabel: scope == null ? region.label : (scope['sgg'] == null ? '${scope['sido']} 전체' : '${scope['sgg']} 우선 · 나머지 ${scope['sido']}'),
+              );
+        return [
+          weekendHero() ?? legacyHero,
+          ?calendarWidget,
           ListSection(
             title: '박스오피스',
             trailing: '어제 기준',
             stub: !_isLive(data, 'box_office'),
             children: [
-              for (final it in rest) RankRow(rank: it['rank'] as int, title: it['title'] as String, meta: it['meta'] as String),
+              for (final it in (events != null ? allBoxOffice : rest)) RankRow(rank: it['rank'] as int, title: it['title'] as String, meta: it['meta'] as String),
             ],
           ),
           ListSection(
             title: '진행 중인 전시·공연',
             trailing: _isLive(data, 'performances') ? nearbyFor('performances') : null,
             stub: !_isLive(data, 'performances'),
-            children: [for (final it in performances) RankRow(rank: 0, title: it['title'] as String, meta: it['meta'] as String)],
+            children: [for (final it in performances) listLine(it)],
           ),
           ListSection(
             title: '곧 열리는 축제',
             trailing: _isLive(data, 'festivals') ? nearbyFor('festivals') : null,
             stub: !_isLive(data, 'festivals'),
-            children: [for (final it in festivals) RankRow(rank: 0, title: it['title'] as String, meta: it['meta'] as String)],
+            children: [for (final it in festivals) listLine(it)],
           ),
           // 2026-09-29: 국내 3대 차트(멜론/지니/벅스)·가온(써클차트) 전부
           // 공식 오픈 API가 없어서 못 넣음(스크래핑은 이용약관 위반 소지) —
