@@ -19,3 +19,9 @@ backend/*.db
 
 # OS
 .DS_Store
+
+# 비밀 값 (API 키)
+.env
+.env.*
+*.env
+backend/.env
