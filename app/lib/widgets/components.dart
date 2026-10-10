@@ -781,8 +781,12 @@ class ListLine extends StatelessWidget {
     this.valueSub,
     this.valueSubColor = AppColors.inkSoft,
     this.stub = false,
+    this.badge,
+    this.onTap,
   });
 
+  final String? badge; // 이름 옆 작은 알약(예: '제철')
+  final VoidCallback? onTap; // 있으면 줄을 눌러 상세로
   final bool stub; // 실데이터가 아닌 줄(개발용 분홍 배경 표시)
   final String name;
   final String? sub;
@@ -794,7 +798,7 @@ class ListLine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final line = Container(
       padding: const EdgeInsets.symmetric(vertical: 14),
       decoration: BoxDecoration(
         color: stub && kShowStubMarks ? const Color(0xFFFFF0F0) : null,
@@ -807,12 +811,33 @@ class ListLine extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  name,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        name,
+                        style: const TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                    if (badge != null) ...[
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                        decoration: BoxDecoration(
+                          color: AppColors.ink,
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                        child: Text(
+                          badge!,
+                          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white),
+                        ),
+                      ),
+                    ],
+                  ],
                 ),
                 if (sub != null) ...[
                   const SizedBox(height: 2),
@@ -863,6 +888,9 @@ class ListLine extends StatelessWidget {
         ],
       ),
     );
+    return onTap == null
+        ? line
+        : GestureDetector(behavior: HitTestBehavior.opaque, onTap: onTap, child: line);
   }
 }
 

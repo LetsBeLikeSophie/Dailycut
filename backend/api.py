@@ -439,8 +439,9 @@ def today(sido: str | None = None, sgg: str | None = None):
     """투데이(홈) — 섹션별 대표 카드 1개씩만 모아서 반환.
     2026-09-30: 날씨가 독립 섹션으로 빠지면서 투데이 카드 목록에도
     다른 섹션들과 동등하게 날씨 카드를 추가함(맨 앞)."""
-    w, m, c, mo, a = weather(sido=sido, sgg=sgg), market(), culture(sido=sido, sgg=sgg), money(), ai()
-    season_top = m["in_season"][0]
+    w, m, c, mo, a = weather(sido=sido, sgg=sgg), market(sido=sido, sgg=sgg), culture(sido=sido, sgg=sgg), money(), ai()
+    # 이번 달 제철: 실데이터 job이 돌면 편집 가이드(data/produce_guide.json) 기준 이름들, 아니면 스텁 첫 항목
+    season_names = m.get("season_now") or [m["in_season"][0]["name"]]
     weather_card = {
         "theme": "weather",
         "title": "오늘 날씨",
@@ -450,8 +451,8 @@ def today(sido: str | None = None, sgg: str | None = None):
     market_card = {
         "theme": "market",
         "title": "지금 제철",
-        "highlight": season_top["name"],
-        "meta": f"{season_top['start_month']}~{season_top['end_month']}월 제철",
+        "highlight": " · ".join(season_names[:3]),
+        "meta": f"이번 달 제철 {len(season_names)}가지" if m.get("season_now") else f"{m['in_season'][0]['start_month']}~{m['in_season'][0]['end_month']}월 제철",
     }
     # 2026-10-05: culture()["hero"]엔 title/poster/rank/stat_label/stat만
     # 있고 투데이 HeroCard가 쓰는 highlight/meta가 없어서, 투데이의 문화
@@ -468,7 +469,7 @@ def today(sido: str | None = None, sgg: str | None = None):
         # 어떤 섹션 카드가 실데이터인지(앱이 스텁 카드를 구분해서 표시)
         "live_sections": [
             name
-            for name, live in (("weather", "today" in w.get("live_keys", [])), ("money", "hero" in mo.get("live_keys", [])))
+            for name, live in (("weather", "today" in w.get("live_keys", [])), ("money", "hero" in mo.get("live_keys", [])), ("market", "season_now" in m.get("live_keys", [])))
             if live
         ],
         "cards": [

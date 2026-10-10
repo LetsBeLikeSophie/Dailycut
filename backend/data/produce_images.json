@@ -1,0 +1,212 @@
+{
+ "배추": {
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/95/Napa_cabbages.png/960px-Napa_cabbages.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+  "page": "https://commons.wikimedia.org/wiki/File:Napa_cabbages.png",
+  "credit": "Bayartai",
+  "license": "CC0",
+  "asset": "assets/produce/p14.jpg"
+ },
+ "무": {
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/23/Different_kinds_of_White_Radish.png/960px-Different_kinds_of_White_Radish.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+  "page": "https://commons.wikimedia.org/wiki/File:Different_kinds_of_White_Radish.png",
+  "credit": "KimYunmi",
+  "license": "CC BY-SA 4.0",
+  "asset": "assets/produce/p12.jpg"
+ },
+ "양파": {
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a2/Mixed_onions.jpg/960px-Mixed_onions.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+  "page": "https://commons.wikimedia.org/wiki/File:Mixed_onions.jpg",
+  "credit": "Colin",
+  "license": "CC BY-SA 3.0",
+  "asset": "assets/produce/p22.jpg"
+ },
+ "당근": {
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a2/Vegetable-Carrot-Bundle-wStalks.jpg/960px-Vegetable-Carrot-Bundle-wStalks.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+  "page": "https://commons.wikimedia.org/wiki/File:Vegetable-Carrot-Bundle-wStalks.jpg",
+  "credit": "Evan-Amos",
+  "license": "Public domain",
+  "asset": "assets/produce/p09.jpg"
+ },
+ "감자": {
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ab/Patates.jpg/960px-Patates.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+  "page": "https://commons.wikimedia.org/wiki/File:Patates.jpg",
+  "credit": "Scott Bauer, USDA ARS",
+  "license": "Public domain",
+  "asset": "assets/produce/p04.jpg"
+ },
+ "고구마": {
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/58/Ipomoea_batatas_006.JPG/960px-Ipomoea_batatas_006.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+  "page": "https://commons.wikimedia.org/wiki/File:Ipomoea_batatas_006.JPG",
+  "credit": "Llez",
+  "license": "CC BY-SA 3.0",
+  "asset": "assets/produce/p05.jpg"
+ },
+ "오이": {
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/96/ARS_cucumber.jpg/960px-ARS_cucumber.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+  "page": "https://commons.wikimedia.org/wiki/File:ARS_cucumber.jpg",
+  "credit": "Stephen Ausmus, USDA ARS",
+  "license": "Public domain",
+  "asset": "assets/produce/p23.jpg"
+ },
+ "호박": {
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/92/CSA-Striped-Zucchini.jpg/960px-CSA-Striped-Zucchini.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+  "page": "https://commons.wikimedia.org/wiki/File:CSA-Striped-Zucchini.jpg",
+  "credit": "Evan-Amos",
+  "license": "Public domain",
+  "asset": "assets/produce/p30.jpg"
+ },
+ "상추": {
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/da/Iceberg_lettuce_in_SB.jpg/960px-Iceberg_lettuce_in_SB.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+  "page": "https://commons.wikimedia.org/wiki/File:Iceberg_lettuce_in_SB.jpg",
+  "credit": "en:User:Geographer",
+  "license": "CC BY 1.0",
+  "asset": "assets/produce/p17.jpg"
+ },
+ "시금치": {
+  "url": "https://upload.wikimedia.org/wikipedia/commons/3/37/Spinacia_oleracea_Spinazie_bloeiend.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+  "page": "https://commons.wikimedia.org/wiki/File:Spinacia_oleracea_Spinazie_bloeiend.jpg",
+  "credit": "Rasbak",
+  "license": "CC BY-SA 3.0",
+  "asset": "assets/produce/p20.jpg"
+ },
+ "파": {
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/da/CSA-Red-Spring-Onions.jpg/960px-CSA-Red-Spring-Onions.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+  "page": "https://commons.wikimedia.org/wiki/File:CSA-Red-Spring-Onions.jpg",
+  "credit": "Evan-Amos",
+  "license": "Public domain",
+  "asset": "assets/produce/p28.jpg"
+ },
+ "마늘": {
+  "url": "https://upload.wikimedia.org/wikipedia/commons/3/39/Allium_sativum_Woodwill_1793.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+  "page": "https://commons.wikimedia.org/wiki/File:Allium_sativum_Woodwill_1793.jpg",
+  "credit": "Wikimedia Commons",
+  "license": "Public domain",
+  "asset": "assets/produce/p11.jpg"
+ },
+ "토마토": {
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/89/Tomato_je.jpg/960px-Tomato_je.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+  "page": "https://commons.wikimedia.org/wiki/File:Tomato_je.jpg",
+  "credit": "Softeis",
+  "license": "CC BY-SA 3.0",
+  "asset": "assets/produce/p27.jpg"
+ },
+ "가지": {
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/76/Solanum_melongena_24_08_2012_%281%29.JPG/960px-Solanum_melongena_24_08_2012_%281%29.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+  "page": "https://commons.wikimedia.org/wiki/File:Solanum_melongena_24_08_2012_(1).JPG",
+  "credit": "Joydeep",
+  "license": "CC BY-SA 3.0",
+  "asset": "assets/produce/p01.jpg"
+ },
+ "깻잎": {
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/46/Perilla_frutescens_in_Gimpo.jpg/960px-Perilla_frutescens_in_Gimpo.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+  "page": "https://commons.wikimedia.org/wiki/File:Perilla_frutescens_in_Gimpo.jpg",
+  "credit": "Dalgial",
+  "license": "CC BY-SA 3.0",
+  "asset": "assets/produce/p07.jpg"
+ },
+ "배": {
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/55/Nashi_pear.jpg/960px-Nashi_pear.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+  "page": "https://commons.wikimedia.org/wiki/File:Nashi_pear.jpg",
+  "credit": "Wikimedia Commons",
+  "license": "CC BY-SA 3.0",
+  "asset": "assets/produce/p13.jpg"
+ },
+ "단감": {
+  "url": "https://upload.wikimedia.org/wikipedia/commons/7/7f/Kaki_20041002.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+  "page": "https://commons.wikimedia.org/wiki/File:Kaki_20041002.jpg",
+  "credit": "Sphl",
+  "license": "CC BY-SA 3.0",
+  "asset": "assets/produce/p08.jpg"
+ },
+ "감귤": {
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/10/Citrus_reticulata_April_2013_Nordbaden.JPG/960px-Citrus_reticulata_April_2013_Nordbaden.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+  "page": "https://commons.wikimedia.org/wiki/File:Citrus_reticulata_April_2013_Nordbaden.JPG",
+  "credit": "4028mdk09",
+  "license": "CC BY-SA 3.0",
+  "asset": "assets/produce/p03.jpg"
+ },
+ "포도": {
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/53/Grapes%2C_Rostov-on-Don%2C_Russia.jpg/960px-Grapes%2C_Rostov-on-Don%2C_Russia.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+  "page": "https://commons.wikimedia.org/wiki/File:Grapes,_Rostov-on-Don,_Russia.jpg",
+  "credit": "Vyacheslav Argenberg",
+  "license": "CC BY 4.0",
+  "asset": "assets/produce/p29.jpg"
+ },
+ "딸기": {
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4c/Garden_strawberry_%28Fragaria_%C3%97_ananassa%29_single2.jpg/960px-Garden_strawberry_%28Fragaria_%C3%97_ananassa%29_single2.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+  "page": "https://commons.wikimedia.org/wiki/File:Garden_strawberry_(Fragaria_%C3%97_ananassa)_single2.jpg",
+  "credit": "Ivar Leidus",
+  "license": "CC BY-SA 4.0",
+  "asset": "assets/produce/p10.jpg"
+ },
+ "수박": {
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/47/Taiwan_2009_Tainan_City_Organic_Farm_Watermelon_FRD_7962.jpg/960px-Taiwan_2009_Tainan_City_Organic_Farm_Watermelon_FRD_7962.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+  "page": "https://commons.wikimedia.org/wiki/File:Taiwan_2009_Tainan_City_Organic_Farm_Watermelon_FRD_7962.jpg",
+  "credit": "Fred Hsu (Wikipedia:User:Fred Hsu on en.wikipedia)",
+  "license": "CC BY-SA 3.0",
+  "asset": "assets/produce/p19.jpg"
+ },
+ "참외": {
+  "url": "https://upload.wikimedia.org/wikipedia/commons/4/45/Korean_melon1.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+  "page": "https://commons.wikimedia.org/wiki/File:Korean_melon1.jpg",
+  "credit": "randychiu",
+  "license": "CC BY 2.0",
+  "asset": "assets/produce/p26.jpg"
+ },
+ "복숭아": {
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/92/Illustration_Prunus_persica_clean_no_descr.jpg/960px-Illustration_Prunus_persica_clean_no_descr.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+  "page": "https://commons.wikimedia.org/wiki/File:Illustration_Prunus_persica_clean_no_descr.jpg",
+  "credit": "File:Illustration Prunus persica0.jpg: PLEASE COMPLETE AUTHOR INFORMATION\nderivative work: Kenraiz",
+  "license": "Public domain",
+  "asset": "assets/produce/p15.jpg"
+ },
+ "고등어": {
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7f/Scomber_scombrus_217326414.jpg/960px-Scomber_scombrus_217326414.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+  "page": "https://commons.wikimedia.org/wiki/File:Scomber_scombrus_217326414.jpg",
+  "credit": "Mikael Nyman",
+  "license": "CC BY 4.0",
+  "asset": "assets/produce/p06.jpg"
+ },
+ "갈치": {
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0f/Trichiurus_lepturus_Umitamago.jpg/960px-Trichiurus_lepturus_Umitamago.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+  "page": "https://commons.wikimedia.org/wiki/File:Trichiurus_lepturus_Umitamago.jpg",
+  "credit": "Totti",
+  "license": "CC BY-SA 4.0",
+  "asset": "assets/produce/p02.jpg"
+ },
+ "오징어": {
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e1/Sepioteuthis_sepioidea_%28Caribbean_Reef_Squid%29.jpg/960px-Sepioteuthis_sepioidea_%28Caribbean_Reef_Squid%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+  "page": "https://commons.wikimedia.org/wiki/File:Sepioteuthis_sepioidea_(Caribbean_Reef_Squid).jpg",
+  "credit": "Nhobgood Nick Hobgood",
+  "license": "CC BY-SA 3.0",
+  "asset": "assets/produce/p24.jpg"
+ },
+ "쇠고기": {
+  "url": "https://upload.wikimedia.org/wikipedia/commons/6/60/Standing-rib-roast.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
+  "page": "https://commons.wikimedia.org/wiki/File:Standing-rib-roast.jpg",
+  "credit": "Michael C. Berch, aka MCB at en.wikipedia",
+  "license": "CC BY-SA 2.5",
+  "asset": "assets/produce/p18.jpg"
+ },
+ "우유": {
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a5/Glass_of_Milk_%2833657535532%29.jpg/960px-Glass_of_Milk_%2833657535532%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+  "page": "https://commons.wikimedia.org/wiki/File:Glass_of_Milk_(33657535532).jpg",
+  "credit": "NIAID",
+  "license": "CC BY 2.0",
+  "asset": "assets/produce/p25.jpg"
+ },
+ "사과": {
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/15/Red_Apple.jpg/960px-Red_Apple.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+  "page": "https://commons.wikimedia.org/wiki/File:Red_Apple.jpg",
+  "credit": "Abhijit Tembhekar from Mumbai, India",
+  "license": "CC BY 2.0",
+  "asset": "assets/produce/p16.jpg"
+ },
+ "양배추": {
+  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5d/Cabbage_heads.jpg/960px-Cabbage_heads.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
+  "page": "https://commons.wikimedia.org/wiki/File:Cabbage_heads.jpg",
+  "credit": "Deborah Tjituka",
+  "license": "CC BY-SA 4.0",
+  "asset": "assets/produce/p21.jpg"
+ }
+}

@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import '../api_client.dart';
 import '../region.dart';
 import '../theme.dart';
+import '../widgets/basket_hero.dart';
 import '../widgets/components.dart';
+import '../widgets/shopping_catalog.dart';
 
 /// 생활/문화/머니/AI 네 섹션 화면 — 모두 "future 하나 받아서 위에서
 /// 아래로 보여주기" 구조가 같아서 하나의 뼈대 위젯으로 묶고, 섹션마다
@@ -77,46 +79,73 @@ List<Widget> _rankSections(Map<String, dynamic> data, List<(String, String, Stri
 
 List<Widget> _priceRows(List<Map<String, dynamic>> items) => [for (final it in items) priceRow(it)];
 
-/// 생활: 대표 가격(배추) 한 문장 + 큰 숫자 + 추이, 그 아래 제철 · 시세 목록.
+/// 생활: 장바구니 지수(대표 품목 묶음의 지난주 대비) + 품목 칩으로 보는 추이, 그 아래 카테고리별 장보기 시세
+/// (제철 표시·상세 포함), 전통시장. 서버가 아직 실데이터를 못 주면(스텁) 예전 화면(배추 + 제철 목록)으로 보임.
 Widget marketScreen(ApiClient api, Region region, BuildContext shellContext) => SectionScreen(
       section: Section.market,
       fetch: () => api.market(sido: region.code, sgg: region.sgg),
       contentBuilder: (context, data) {
-        final trend = data['price_trend'] as Map<String, dynamic>;
-        final rawPoints = (trend['series'] as List).cast<Map<String, dynamic>>();
-        // 이번 달 1일~오늘 일별 값(차트 X축은 월 전체 고정)
-        final nowD = DateTime.now();
-        // 이번 달 데이터만 차트에 올림(X축이 이번 달 1일~말일 고정이라서)
-        final points = [
-          for (final e in rawPoints)
-            if (DateTime.parse(e['date'] as String).month == nowD.month)
-              ChartPoint(DateTime.parse(e['date'] as String).day, (e['price'] as num).toDouble()),
-        ];
-        final item = trend['item'] as String;
-        final latest = trend['latest'] as Map<String, dynamic>?;
-        final last = latest != null ? (latest['price'] as num).toDouble() : points.last.value;
-        // 지난주(7일 전) 대비 — 월초에는 지난달 값이 필요해서 서버가 따로 줌
-        final weekAgo = ((trend['week_ago'] as num?) ?? last).toDouble();
-        final pct = (last - weekAgo) / weekAgo * 100;
-        final flat = pct.abs() < 0.5;
-        final emphasis = flat ? '비슷해요' : '${pct.abs().round()}% ${pct < 0 ? '내렸어요' : '올랐어요'}';
-        final headline = flat ? '$item 가격은 지난주와 $emphasis' : '오늘 $item 가격, 지난주보다 $emphasis';
-        final changeKey = flat ? 'flat' : (pct < 0 ? 'down' : 'up');
-
-        final items = (data['items'] as List).cast<Map<String, dynamic>>();
-        final season = (data['in_season'] as List).cast<Map<String, dynamic>>();
         final livestock = (data['livestock'] as List).cast<Map<String, dynamic>>();
         final essentials = (data['essentials'] as List).cast<Map<String, dynamic>>();
         final marketsNearby = (data['markets_nearby'] as List).cast<Map<String, dynamic>>();
-        return [
-          PageHero(
+
+        final basket = data['basket'] as Map<String, dynamic>?;
+        final catalogRaw = data['catalog'] as List?;
+        final Widget hero;
+        final List<Widget> listing;
+
+        if (basket != null && catalogRaw != null) {
+          final pct = (basket['change_pct'] as num).toDouble();
+          final flat = pct.abs() < 0.5;
+          final emphasis = flat ? '비슷해요' : '${pct.abs().toStringAsFixed(1)}% ${pct < 0 ? '내렸어요' : '올랐어요'}';
+          hero = PageHero(
             section: Section.market,
             eyebrow: '생활 · ${region.label}',
             onEyebrowTap: () => showRegionPicker(shellContext),
-            headline: headline,
+            headline: flat ? '이번 주 장바구니는 지난주와 $emphasis' : '이번 주 장바구니, 지난주보다 $emphasis',
             emphasis: emphasis,
-            source: _sourceLabel(data['source'] as String?, _isLive(data, 'price_trend')),
-            stub: !_isLive(data, 'price_trend'),
+            source: _sourceLabel(data['source'] as String?, true),
+            body: [
+              BasketBody(
+                basket: basket,
+                chartItems: (data['chart_items'] as Map<String, dynamic>?) ?? const {},
+              ),
+            ],
+          );
+          listing = [
+            ShoppingCatalog(
+              catalog: catalogRaw.cast<Map<String, dynamic>>(),
+              guide: (data['guide'] as Map<String, dynamic>?) ?? const {},
+              asOf: data['as_of'] as String?,
+            ),
+          ];
+        } else {
+          // 예시 데이터(서버에 키가 없을 때): 예전 화면
+          final trend = data['price_trend'] as Map<String, dynamic>;
+          final nowD = DateTime.now();
+          final points = [
+            for (final e in (trend['series'] as List).cast<Map<String, dynamic>>())
+              if (DateTime.parse(e['date'] as String).month == nowD.month)
+                ChartPoint(DateTime.parse(e['date'] as String).day, (e['price'] as num).toDouble()),
+          ];
+          final item = trend['item'] as String;
+          final latest = trend['latest'] as Map<String, dynamic>?;
+          final last = latest != null ? (latest['price'] as num).toDouble() : points.last.value;
+          final weekAgo = ((trend['week_ago'] as num?) ?? last).toDouble();
+          final pct = (last - weekAgo) / weekAgo * 100;
+          final flat = pct.abs() < 0.5;
+          final emphasis = flat ? '비슷해요' : '${pct.abs().round()}% ${pct < 0 ? '내렸어요' : '올랐어요'}';
+          final changeKey = flat ? 'flat' : (pct < 0 ? 'down' : 'up');
+          final items = (data['items'] as List).cast<Map<String, dynamic>>();
+          final season = (data['in_season'] as List).cast<Map<String, dynamic>>();
+          hero = PageHero(
+            section: Section.market,
+            eyebrow: '생활 · ${region.label}',
+            onEyebrowTap: () => showRegionPicker(shellContext),
+            headline: flat ? '$item 가격은 지난주와 $emphasis' : '오늘 $item 가격, 지난주보다 $emphasis',
+            emphasis: emphasis,
+            source: _sourceLabel(data['source'] as String?, false),
+            stub: true,
             body: [
               BigNumber(to: last, unit: trend['unit'] as String),
               const SizedBox(height: 4),
@@ -127,24 +156,32 @@ Widget marketScreen(ApiClient api, Region region, BuildContext shellContext) => 
               const SizedBox(height: 14),
               TrendChart(section: Section.market, points: points),
             ],
-          ),
-          ListSection(
-            title: '지금 제철',
-            trailing: '${DateTime.now().month}월 기준',
-            children: [
-              for (final e in season)
-                SeasonRow(
-                  section: Section.market,
-                  name: e['name'] as String,
-                  tip: (e['tip'] as String?) ?? '',
-                  startMonth: e['start_month'] as int,
-                  endMonth: e['end_month'] as int,
-                ),
-              const SeasonLegend(),
-            ],
-          ),
-          ListSection(title: '채소·과일 시세', trailing: '전주 대비', stub: !_isLive(data, 'items'), children: _priceRows(items)),
-          ListSection(title: '축산물 시세', trailing: '전주 대비', stub: !_isLive(data, 'livestock'), children: _priceRows(livestock)),
+          );
+          listing = [
+            ListSection(
+              title: '지금 제철',
+              trailing: '${DateTime.now().month}월 기준',
+              stub: true,
+              children: [
+                for (final e in season)
+                  SeasonRow(
+                    section: Section.market,
+                    name: e['name'] as String,
+                    tip: (e['tip'] as String?) ?? '',
+                    startMonth: e['start_month'] as int,
+                    endMonth: e['end_month'] as int,
+                  ),
+                const SeasonLegend(),
+              ],
+            ),
+            ListSection(title: '채소·과일 시세', trailing: '전주 대비', stub: true, children: _priceRows(items)),
+          ];
+        }
+
+        return [
+          hero,
+          ...listing,
+          ListSection(title: '축산물 시세(계란·돼지고기)', trailing: '전주 대비', stub: !_isLive(data, 'livestock'), children: _priceRows(livestock)),
           ListSection(title: '생필품 물가지수', trailing: '전월 대비', stub: !_isLive(data, 'essentials'), children: _priceRows(essentials)),
           ListSection(
             title: '${data['markets_scope'] ?? region.label} 전통시장',
