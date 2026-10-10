@@ -169,6 +169,9 @@ def _air(region: dict) -> dict:
     return {
         "pm10": _grade(pm10, (30, 80, 150)) if pm10 is not None else "정보 없음",
         "pm25": _grade(pm25, (15, 35, 75)) if pm25 is not None else "정보 없음",
+        "pm10_value": round(pm10) if pm10 is not None else None,
+        "pm25_value": round(pm25) if pm25 is not None else None,
+        "stations": len(_http.items_of(body)),
     }
 
 
@@ -186,7 +189,7 @@ def _warning(now: datetime, region: dict) -> dict | None:
     items = _http.items_of(body)
     if not items:
         return None
-    return {"title": "기상특보(서울·수도권)", "meta": str(items[0].get("title") or items[0])[:30]}
+    return {"title": "기상특보(서울·수도권)", "meta": str(items[0].get("title") or items[0])[:30], "basis": "기상청 기상특보(서울 지점)"}
 
 
 def _uv(now: datetime, region: dict) -> dict | None:
@@ -204,7 +207,7 @@ def _uv(now: datetime, region: dict) -> dict | None:
         return None
     v = max(vals)
     label = "낮음" if v <= 2 else "보통" if v <= 5 else "높음" if v <= 7 else "매우 높음" if v <= 10 else "위험"
-    return {"title": "자외선", "meta": f"{label} ({v})"}
+    return {"title": "자외선", "meta": f"{label} ({v})", "basis": f"기상청 자외선지수 · 오늘 낮(6~18시) 최고 {v} · 0~2 낮음, 3~5 보통, 6~7 높음, 8~10 매우 높음, 11~ 위험"}
 
 
 def _pollen(now: datetime, region: dict) -> dict | None:
@@ -217,7 +220,7 @@ def _pollen(now: datetime, region: dict) -> dict | None:
     if not it or not str(it.get("today", "")).isdigit() or int(it["today"]) < 1:
         return None
     level = {1: "보통", 2: "높음", 3: "매우 높음"}.get(int(it["today"]), "주의")
-    return {"title": "꽃가루(잡초류)", "meta": level}
+    return {"title": "꽃가루(잡초류)", "meta": level, "basis": "기상청 꽃가루농도위험지수 · 잡초류(시도 단위)"}
 
 
 def _sun(now: datetime, region: dict) -> dict | None:
@@ -229,7 +232,7 @@ def _sun(now: datetime, region: dict) -> dict | None:
         return None
     a = items[0]
     f = lambda t: f"{t[:2]}:{t[2:4]}"
-    return {"title": "일출 · 일몰", "meta": f"{f(a['sunrise'])} · {f(a['sunset'])}"}
+    return {"title": "일출 · 일몰", "meta": f"{f(a['sunrise'])} · {f(a['sunset'])}", "basis": "한국천문연구원 · 시도청 소재지 기준"}
 
 
 def _next_term(today: date) -> dict | None:
@@ -240,7 +243,7 @@ def _next_term(today: date) -> dict | None:
         for it in sorted(items, key=lambda i: i["locdate"]):
             d = datetime.strptime(it["locdate"], "%Y%m%d").date()
             if d >= today:
-                return {"title": "다음 절기", "meta": f"{it['dateName']} " + ("오늘" if d == today else f"D-{(d - today).days}")}
+                return {"title": "다음 절기", "meta": f"{it['dateName']} " + ("오늘" if d == today else f"D-{(d - today).days}"), "basis": "한국천문연구원 24절기"}
         m += 1
         if m > 12:
             y, m = y + 1, 1
@@ -298,30 +301,64 @@ def fetch(code: str) -> dict:
         "low": td.get("low", round(temp)),
     }
 
+    # 시간대별: 오늘 0시 ~ 모레 0시(1시간 간격 49칸). 지난 시각은 예보값, "지금"은 실황 기온.
+    # 오늘 0~2시는 어제 23시 발표분에만 있어서(02시 20분 이후에는 02시 발표분에 없음) 따로 받음.
+    prev: dict = {}
+    if now - timedelta(minutes=20) >= now.replace(hour=2, minute=0, second=0, microsecond=0):
+        try:
+            prev = _short((today - timedelta(days=1)).strftime("%Y%m%d"), "2300", nx, ny)
+        except Exception:
+            prev = {}
+    allv: dict = {}
+    for src in (prev, daily_src, latest):  # 뒤에 온 발표분이 앞의 값을 덮어씀
+        for k, v in src.items():
+            allv.setdefault(k, {}).update(v)
     hourly = []
-    start = now.replace(minute=0, second=0, microsecond=0)
-    for i in range(0, 24, 3):
-        t = start + timedelta(hours=i)
-        v = latest.get((t.strftime("%Y%m%d"), t.strftime("%H00")))
+    t0 = datetime.combine(today, datetime.min.time())
+    this_hour = now.replace(minute=0, second=0, microsecond=0)
+    for i in range(0, 49):
+        t = t0 + timedelta(hours=i)
+        v = allv.get((t.strftime("%Y%m%d"), t.strftime("%H00")))
         if not v or "TMP" not in v:
             continue
-        hourly.append({"time": t.strftime("%H시"), "temp": round(float(v["TMP"])), "condition": _cond(v), "pop": int(v.get("POP", 0))})
-        if len(hourly) == 8:
-            break
+        is_now = t == this_hour
+        hourly.append(
+            {
+                "date": t.date().isoformat(),
+                "hour": t.hour,
+                "time": f"{t.hour}시",
+                "temp": round(temp) if is_now else round(float(v["TMP"])),
+                "condition": _cond(v),
+                "pop": int(v.get("POP", 0)),
+                "is_now": is_now,
+                "is_past": t < this_hour,
+            }
+        )
 
-    wanted = [today + timedelta(days=i) for i in range(1, 7)]
+    wanted = [today + timedelta(days=i) for i in range(0, 7)]  # 오늘 포함 7일(시간대별과 같은 "오늘"부터)
     by_day = dict(daily)
     try:
         by_day.update(_mid(now, wanted, land_reg, temp_reg))
     except Exception:
         pass  # 중기예보가 안 와도 단기 구간은 보여줌
-    weekly = [
-        {"day": WEEKDAYS[d.weekday()], "date": f"{d.month}/{d.day}", "high": by_day[d]["high"], "low": by_day[d]["low"], "condition": by_day[d]["condition"], "pop": by_day[d]["pop"]}
-        for d in wanted
-        if d in by_day
-    ]
+    weekly = []
+    for d in wanted:
+        row = by_day.get(d)
+        weekly.append(
+            {
+                "day": "오늘" if d == today else WEEKDAYS[d.weekday()],
+                "weekday": WEEKDAYS[d.weekday()],
+                "date": f"{d.month}/{d.day}",
+                "is_today": d == today,
+                # 기상청이 단기예보(~2일 뒤)와 중기예보(4일 뒤~) 사이의 하루는 제공하지 않아 값이 비는 날이 있음
+                "high": row["high"] if row else None,
+                "low": row["low"] if row else None,
+                "condition": row["condition"] if row else None,
+                "pop": row["pop"] if row else None,
+            }
+        )
 
-    wk = {w["day"]: w for w in weekly}
+    wk = {w["weekday"]: w for w in weekly if w["high"] is not None and not w["is_today"]}
     weekend = ""
     if "토" in wk and "일" in wk:
         weekend = f"토요일은 {wk['토']['condition']} {wk['토']['low']}~{wk['토']['high']}°, 일요일은 {wk['일']['condition']} {wk['일']['low']}~{wk['일']['high']}°예요"
@@ -336,7 +373,11 @@ def fetch(code: str) -> dict:
         "hourly": hourly,
         "weekly": weekly,
         "outfit": _outfit(round((today_block["high"] + today_block["temp"]) / 2), rainy_now),
-        "good_for": [{"label": "빨래", "good": pop_2d < 30}, {"label": "세차", "good": pop_3d < 30}],
+        "good_for": [
+            {"label": "빨래", "good": pop_2d < 30, "basis": f"오늘·내일 강수확률 최대 {pop_2d}%", "source": "데일리컷 기준(공식 지수 아님) · 강수확률 30% 미만이면 좋음"},
+            {"label": "세차", "good": pop_3d < 30, "basis": f"오늘~모레 강수확률 최대 {pop_3d}%", "source": "데일리컷 기준(공식 지수 아님) · 강수확률 30% 미만이면 좋음"},
+        ],
+        "weekly_range": f"{wanted[0].month}/{wanted[0].day}~{wanted[-1].month}/{wanted[-1].day}",
         "weekend": weekend,  # 비어 있으면 화면에서 숨김(스텁 문구가 남지 않게 항상 덮어씀)
     }
 

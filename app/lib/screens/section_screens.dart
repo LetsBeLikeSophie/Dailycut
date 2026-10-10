@@ -314,11 +314,13 @@ Widget moneyScreen(ApiClient api) => SectionScreen(
               TrendChart(section: Section.money, points: points),
             ],
           ),
-          ListSection(
-            title: _isLive(data, 'stats') ? '시장 지표' : '기준 지표',
-            stub: !_isLive(data, 'stats'),
-            children: _priceRows(stats),
-          ),
+          // 실데이터면 시장 지표는 위 카드를 뒤집으면 보임(여기서 반복하지 않음). 예시 데이터일 때만 목록으로.
+          if (!heroLive || backRows.isEmpty)
+            ListSection(
+              title: '기준 지표',
+              stub: !_isLive(data, 'stats'),
+              children: _priceRows(stats),
+            ),
           ..._rankSections(data, const [
             ('deposits', '정기예금 최고금리', '12개월 · 우대 포함'),
             ('savings', '적금 최고금리', '12개월 · 우대 포함'),

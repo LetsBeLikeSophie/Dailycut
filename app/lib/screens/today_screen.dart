@@ -3,6 +3,7 @@ import '../api_client.dart';
 import '../region.dart';
 import '../theme.dart';
 import '../widgets/components.dart';
+import '../widgets/hourly_strip.dart';
 
 class TodayScreen extends StatefulWidget {
   const TodayScreen({super.key, required this.api, required this.region});
@@ -78,39 +79,8 @@ class _TodayScreenState extends State<TodayScreen> {
                   style: const TextStyle(fontSize: 13, color: AppColors.inkSoft),
                 ),
                 const SizedBox(height: 18),
-                // 시간대별 가로 스크롤.
-                SizedBox(
-                  height: 76,
-                  child: ListView.separated(
-                    scrollDirection: Axis.horizontal,
-                    itemCount: hourly.length,
-                    separatorBuilder: (context, i) => const SizedBox(width: 20),
-                    itemBuilder: (context, i) {
-                      final h = hourly[i];
-                      final pop = h['pop'] as int;
-                      return Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(h['time'] as String, style: const TextStyle(fontSize: 11, color: AppColors.inkSoft)),
-                          const SizedBox(height: 6),
-                          Text(
-                            '${h['temp']}°',
-                            style: const TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                              fontFeatures: [FontFeature.tabularFigures()],
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            pop > 0 ? '$pop%' : '',
-                            style: const TextStyle(fontSize: 11, color: AppColors.down),
-                          ),
-                        ],
-                      );
-                    },
-                  ),
-                ),
+                // 시간대별: 오늘 0시~모레 0시 가로 스크롤(지금 칸에서 시작)
+                HourlyStrip(hours: hourly),
                 const SizedBox(height: 18),
                 HighlightText(
                   text: weather['outfit'] as String,
@@ -129,38 +99,43 @@ class _TodayScreenState extends State<TodayScreen> {
             ),
             ListSection(
               title: '이번 주 날씨',
+              trailing: weather['weekly_range'] as String?,
               stub: !weatherLive,
-              children: [
-                for (final w in weekly)
-                  ListLine(
-                    leading: SizedBox(
-                      width: 20,
-                      child: Text(w['day'] as String, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-                    ),
-                    name: w['condition'] as String,
-                    sub: w['date'] as String,
-                    middle: (w['pop'] as int) > 0
-                        ? Text('${w['pop']}%', style: const TextStyle(fontSize: 13, color: AppColors.down))
-                        : null,
-                    value: '${w['low']}° / ${w['high']}°',
-                  ),
-              ],
+              children: [for (final w in weekly) _weeklyRow(w)],
             ),
             ListSection(
               title: '오늘의 생활 지수',
               stub: !weatherLive,
               children: [
                 if (holiday != null)
-                  RankRow(rank: 0, title: '다음 공휴일', meta: 'D-${holiday['d_day']} ${holiday['name']}'),
-                for (final g in goodFor)
-                  RankRow(
-                    rank: 0,
-                    title: g['label'] as String,
-                    meta: g['good'] == true ? '하기 좋아요' : '별로예요',
+                  ListLine(
+                    name: '다음 공휴일',
+                    sub: '한국천문연구원 특일정보',
+                    value: 'D-${holiday['d_day']}',
+                    valueSub: holiday['name'] as String?,
                   ),
-                RankRow(rank: 0, title: '미세먼지', meta: '${air['pm10']}'),
-                RankRow(rank: 0, title: '초미세먼지', meta: '${air['pm25']}'),
-                for (final r in life) RankRow(rank: 0, title: r['title'] as String, meta: r['meta'] as String),
+                for (final g in goodFor)
+                  ListLine(
+                    name: g['label'] as String,
+                    sub: [if (g['basis'] != null) g['basis'], if (g['source'] != null) g['source']].join(' · '),
+                    value: g['good'] == true ? '하기 좋아요' : '별로예요',
+                  ),
+                ListLine(
+                  name: '미세먼지',
+                  sub: _airBasis(air, 'pm10_value', 'PM10', '30/80/150'),
+                  value: '${air['pm10']}',
+                ),
+                ListLine(
+                  name: '초미세먼지',
+                  sub: _airBasis(air, 'pm25_value', 'PM2.5', '15/35/75'),
+                  value: '${air['pm25']}',
+                ),
+                for (final r in life)
+                  ListLine(
+                    name: r['title'] as String,
+                    sub: r['basis'] as String?,
+                    value: r['meta'] as String,
+                  ),
               ],
             ),
             ListSection(
@@ -181,4 +156,39 @@ class _TodayScreenState extends State<TodayScreen> {
       },
     );
   }
+}
+
+/// 미세먼지 줄 설명: 에어코리아 시도 내 측정소 평균값과 등급 기준(환경부).
+String? _airBasis(Map<String, dynamic> air, String valueKey, String name, String cuts) {
+  final v = air[valueKey];
+  if (v == null) return null;
+  return '$name $v㎍/㎥ · 에어코리아 시도 내 ${air['stations'] ?? '여러'}곳 평균 · 환경부 기준($cuts)';
+}
+
+/// 주간 한 줄: 왼쪽에 요일(오늘은 강조)과 그 아래 날짜, 가운데 날씨, 오른쪽 최저/최고.
+/// 기상청이 안 주는 날(단기·중기예보 사이)은 "예보 없음"으로 비워둠.
+Widget _weeklyRow(Map<String, dynamic> w) {
+  final high = w['high'];
+  final has = high != null;
+  final pop = (w['pop'] as num?)?.toInt() ?? 0;
+  final today = w['is_today'] == true;
+  return ListLine(
+    leading: SizedBox(
+      width: 40,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            w['day'] as String,
+            style: TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: today ? AppColors.ink : AppColors.ink),
+          ),
+          Text(w['date'] as String, style: const TextStyle(fontSize: 11, color: AppColors.inkSoft)),
+        ],
+      ),
+    ),
+    name: has ? (w['condition'] as String? ?? '') : '예보 없음',
+    sub: has ? null : '기상청이 이 날은 제공하지 않아요',
+    middle: pop > 0 ? Text('$pop%', style: const TextStyle(fontSize: 13, color: AppColors.down)) : null,
+    value: has ? '${w['low']}° / $high°' : '–',
+  );
 }

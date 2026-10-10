@@ -439,7 +439,8 @@ class _FlipCardState extends State<FlipCard>
           return Transform(
             transform: transform,
             alignment: Alignment.center,
-            child: isBack ? widget.back : widget.front,
+            // 앞·뒷면을 IndexedStack에 같이 넣어 둘 중 큰 쪽 높이로 맞춤(뒤집어도 아래가 안 출렁임)
+            child: IndexedStack(index: isBack ? 1 : 0, children: [widget.front, widget.back]),
           );
         },
       ),
