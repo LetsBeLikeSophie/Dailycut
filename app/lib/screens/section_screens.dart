@@ -5,6 +5,7 @@ import '../theme.dart';
 import '../widgets/basket_hero.dart';
 import '../widgets/components.dart';
 import '../widgets/culture_calendar.dart';
+import '../widgets/finance_sheet.dart';
 import '../widgets/market_list.dart';
 import '../widgets/shopping_catalog.dart';
 
@@ -63,7 +64,7 @@ String? _sourceLabel(String? source, bool live) => source == null ? null : (live
 
 /// {rank, title, meta} 목록이 들어 있는 키들을 순서대로 구간으로 만듦(없는 키는 건너뜀).
 /// 금융감독원 금융상품 한눈에(예·적금·대출)처럼 같은 모양의 순위 목록 여러 개에 씀.
-List<Widget> _rankSections(Map<String, dynamic> data, List<(String, String, String)> specs) {
+List<Widget> _rankSections(BuildContext context, Map<String, dynamic> data, List<(String, String, String)> specs) {
   return [
     for (final (key, title, trailing) in specs)
       if (data[key] is List && (data[key] as List).isNotEmpty)
@@ -72,8 +73,7 @@ List<Widget> _rankSections(Map<String, dynamic> data, List<(String, String, Stri
           trailing: trailing,
           stub: !_isLive(data, key),
           children: [
-            for (final it in (data[key] as List).cast<Map<String, dynamic>>())
-              RankRow(rank: it['rank'] as int, title: it['title'] as String, meta: it['meta'] as String),
+            for (final it in (data[key] as List).cast<Map<String, dynamic>>()) financeLine(context, it),
           ],
         ),
   ];
@@ -425,7 +425,7 @@ Widget moneyScreen(ApiClient api) => SectionScreen(
               stub: !_isLive(data, 'stats'),
               children: _priceRows(stats),
             ),
-          ..._rankSections(data, const [
+          ..._rankSections(context, data, const [
             ('deposits', '정기예금 최고금리', '12개월 · 우대 포함'),
             ('savings', '적금 최고금리', '12개월 · 우대 포함'),
             ('loans_mortgage', '주택담보대출 최저금리', '낮은 순'),
