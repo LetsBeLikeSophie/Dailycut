@@ -90,12 +90,37 @@ def run() -> dict:
     except Exception:
         pass
 
+    # 소비자물가지수(KOSIS, 전국 총지수) — 최근 13개월로 전년 동월 대비 상승률을 구함
+    try:
+        body = _http.get_json(
+            config.get_key("KOSIS_BASE_URL") + "/getStatisticsData",
+            {"orgId": "101", "tblId": "DT_1J22003", "prdSe": "M", "newEstPrdCnt": 13, "numOfRows": 20, "pageNo": 1, "itmId": "T+", "objL1": "T10", "format": "json"},
+        )
+        rows = sorted(_http.items_of(body), key=lambda r: r["PRD_DE"])
+        if len(rows) >= 13:
+            cur, prev = rows[-1], rows[0]
+            yoy = (_f(cur["DT"]) / _f(prev["DT"]) - 1) * 100
+            stats.append(
+                {
+                    "label": "소비자물가",
+                    "sub": f"{cur['PRD_DE'][:4]}.{cur['PRD_DE'][4:]} · 전년 동월 대비",
+                    "value": f"{yoy:+.1f}%",
+                    "change": _change(yoy),
+                    "pct": None,
+                }
+            )
+    except Exception:
+        pass
+
     if not stats:
         raise RuntimeError("지수·상품 시세 없음")
     out["stats"] = stats
     # 뒤집으면 보이는 면: 시장 지표 전체를 한 줄 요약으로
     out["back_title"] = "시장 지표"
-    out["back"] = [{"title": s["label"], "meta": f"{s['value']} {'▲' if s['change'] == 'up' else '▼' if s['change'] == 'down' else '－'} {s['pct']}%"} for s in stats]
+    out["back"] = [
+        {"title": s["label"], "meta": f"{s['value']} {'▲' if s['change'] == 'up' else '▼' if s['change'] == 'down' else '－'}" + (f" {s['pct']}%" if s.get("pct") is not None else "")}
+        for s in stats
+    ]
     return out
 
 
@@ -103,7 +128,7 @@ jobs.register(
     jobs.Job(
         name="money",
         run=run,
-        env_keys=[_http.KEY_ENV, "FSC_INDEX_BASE_URL", "FSC_COMMODITY_BASE_URL"],
+        env_keys=[_http.KEY_ENV, "FSC_INDEX_BASE_URL", "FSC_COMMODITY_BASE_URL"],  # KOSIS_BASE_URL은 있으면 소비자물가도 붙임
         interval_min=180,
     )
 )

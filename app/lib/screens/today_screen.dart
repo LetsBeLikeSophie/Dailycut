@@ -50,6 +50,8 @@ class _TodayScreenState extends State<TodayScreen> {
         final weatherLive = (weather['live_keys'] as List?)?.contains('today') ?? false;
         final holiday = weather['next_holiday'] as Map<String, dynamic>?;
         final weekend = (weather['weekend'] as String?) ?? '';
+        final life = (weather['life'] as List?)?.cast<Map<String, dynamic>>() ?? const [];
+        final liveSections = (data['live_sections'] as List?)?.cast<String>() ?? const <String>[];
 
         return ListView(
           padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
@@ -57,6 +59,7 @@ class _TodayScreenState extends State<TodayScreen> {
             PageHero(
               section: Section.weather,
               eyebrow: '오늘',
+              stub: !weatherLive,
               headline: data['headline'] as String,
               source: weatherLive ? weather['source'] as String? : '${weather['source']} · 예시 데이터',
               body: [
@@ -149,6 +152,7 @@ class _TodayScreenState extends State<TodayScreen> {
                   ),
                 RankRow(rank: 0, title: '미세먼지', meta: '${air['pm10']}'),
                 RankRow(rank: 0, title: '초미세먼지', meta: '${air['pm25']}'),
+                for (final r in life) RankRow(rank: 0, title: r['title'] as String, meta: r['meta'] as String),
               ],
             ),
             ListSection(
@@ -156,6 +160,7 @@ class _TodayScreenState extends State<TodayScreen> {
               children: [
                 for (final c in others)
                   ListLine(
+                    stub: !liveSections.contains(c['section']),
                     name: (c['title'] ?? c['label'] ?? '') as String,
                     sub: sectionThemes[Section.values.byName(c['section'] as String)]!.label,
                     value: (c['highlight'] ?? c['meta'] ?? c['value'] ?? '').toString(),

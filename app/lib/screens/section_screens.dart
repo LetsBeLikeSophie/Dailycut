@@ -95,6 +95,7 @@ Widget marketScreen(ApiClient api) => SectionScreen(
             headline: headline,
             emphasis: emphasis,
             source: _sourceLabel(data['source'] as String?, _isLive(data, 'price_trend')),
+            stub: !_isLive(data, 'price_trend'),
             body: [
               BigNumber(to: last, unit: trend['unit'] as String),
               const SizedBox(height: 4),
@@ -159,6 +160,7 @@ Widget cultureScreen(ApiClient api) => SectionScreen(
             headline: '${hero['label'] ?? '어제 박스오피스 1위'}는 $title',
             emphasis: title,
             source: _sourceLabel(hero['source'] as String?, _isLive(data, 'hero')),
+            stub: !_isLive(data, 'hero'),
             backTitle: '박스오피스 TOP 3',
             backHint: '눌러서 TOP 3 보기',
             back: Column(
@@ -263,6 +265,7 @@ Widget moneyScreen(ApiClient api) => SectionScreen(
             headline: '${hero['label']}, $when $emphasis',
             emphasis: emphasis,
             source: _sourceLabel(hero['source'] as String?, heroLive),
+            stub: !heroLive,
             backTitle: (data['back_title'] as String?) ?? '주요 통화 환율',
             backHint: backRows.isEmpty ? null : '눌러서 다른 지표 보기',
             back: backRows.isEmpty
@@ -314,6 +317,7 @@ Widget aiScreen(ApiClient api) => SectionScreen(
           PageHero(
             section: Section.ai,
             headline: article['title'] as String,
+            stub: !_isLive(data, 'weekly_article'),
             body: [
               if (article['highlight'] != null)
                 HighlightText(

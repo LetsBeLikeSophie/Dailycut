@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+
 import '../theme.dart';
 
 /// 2026-10-10: "카드 상자 대신 한 화면 전체를 규칙으로 디자인"하는 방향으로
@@ -14,23 +15,54 @@ import '../theme.dart';
 ///  6) 글자 크기는 11 / 13 / 16 / 24 / 60 다섯 단계
 /// 화면은 이 부품의 조합으로만 만들고, 색은 SectionTheme만 고치면 바뀜.
 
+/// 개발용 임시 표시: 실데이터가 아닌(스텁/예시) 영역에 분홍 배경 + 빨간 왼쪽 선을 깔아서
+/// 눈으로 구분함. 실데이터가 다 붙으면 false로 바꾸거나 이 표시를 지우면 됨.
+const kShowStubMarks = true;
+
+class StubMark extends StatelessWidget {
+  const StubMark({super.key, required this.stub, required this.child});
+
+  final bool stub;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!stub || !kShowStubMarks) return child;
+    return Container(
+      padding: const EdgeInsets.fromLTRB(10, 8, 10, 8),
+      decoration: const BoxDecoration(
+        color: Color(0xFFFFF0F0),
+        border: Border(left: BorderSide(color: Color(0xFFE57373), width: 3)),
+      ),
+      child: child,
+    );
+  }
+}
+
 const _weekdays = ['월', '화', '수', '목', '금', '토', '일'];
 
 String formatNumber(num v, {int decimals = 0}) {
   final s = v.toStringAsFixed(decimals);
   final parts = s.split('.');
-  final intPart = parts[0].replaceAllMapped(RegExp(r'\B(?=(\d{3})+(?!\d))'), (m) => ',');
+  final intPart = parts[0].replaceAllMapped(
+    RegExp(r'\B(?=(\d{3})+(?!\d))'),
+    (m) => ',',
+  );
   return parts.length > 1 ? '$intPart.${parts[1]}' : intPart;
 }
 
 Color changeColor(String change) => switch (change) {
-      'up' => AppColors.up,
-      'down' => AppColors.down,
-      _ => AppColors.inkSoft,
-    };
+  'up' => AppColors.up,
+  'down' => AppColors.down,
+  _ => AppColors.inkSoft,
+};
 
 String changeLabel(String change, {num? pct}) {
-  final arrow = switch (change) { 'up' => '▲', 'down' => '▼', _ => '－' };
+  final arrow = switch (change) {
+    'up' => '▲',
+    'down' => '▼',
+    _ => '－',
+  };
   if (pct == null) return arrow;
   return '$arrow ${pct.abs() == pct.abs().roundToDouble() ? pct.abs().round() : pct.abs()}%';
 }
@@ -45,14 +77,23 @@ class SourceTag extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(top: 12),
-      child: Text('출처: $source', style: const TextStyle(fontSize: 11, color: AppColors.inkSoft)),
+      child: Text(
+        '출처: $source',
+        style: const TextStyle(fontSize: 11, color: AppColors.inkSoft),
+      ),
     );
   }
 }
 
 /// 제목 속 일부 구절만 섹션 형광펜으로 강조(전체 문장은 그대로).
 class HighlightText extends StatelessWidget {
-  const HighlightText({super.key, required this.text, required this.color, this.emphasis, required this.style});
+  const HighlightText({
+    super.key,
+    required this.text,
+    required this.color,
+    this.emphasis,
+    required this.style,
+  });
 
   final String text;
   final Color color;
@@ -69,7 +110,10 @@ class HighlightText extends StatelessWidget {
         style: style,
         children: [
           TextSpan(text: text.substring(0, i)),
-          TextSpan(text: e, style: TextStyle(backgroundColor: color.withValues(alpha: 0.85))),
+          TextSpan(
+            text: e,
+            style: TextStyle(backgroundColor: color.withValues(alpha: 0.85)),
+          ),
           TextSpan(text: text.substring(i + e.length)),
         ],
       ),
@@ -79,7 +123,13 @@ class HighlightText extends StatelessWidget {
 
 /// 큰 숫자(세리프 60). 숫자는 처음 나타날 때 0에서 올라가며 멈춤.
 class BigNumber extends StatelessWidget {
-  const BigNumber({super.key, required this.to, this.decimals = 0, this.unit, this.suffix = ''});
+  const BigNumber({
+    super.key,
+    required this.to,
+    this.decimals = 0,
+    this.unit,
+    this.suffix = '',
+  });
 
   final num to;
   final int decimals;
@@ -137,8 +187,10 @@ class PageHero extends StatelessWidget {
     this.back,
     this.backTitle,
     this.backHint,
+    this.stub = false,
   });
 
+  final bool stub; // 실데이터가 아니면 true(개발용 표시)
   final Section section;
   final String headline;
   final String? emphasis;
@@ -153,9 +205,12 @@ class PageHero extends StatelessWidget {
   Widget build(BuildContext context) {
     final t = sectionThemes[section]!;
     Widget hint(String text) => Padding(
-          padding: const EdgeInsets.only(top: 16),
-          child: Text('↻ $text', style: const TextStyle(fontSize: 11, color: AppColors.inkSoft)),
-        );
+      padding: const EdgeInsets.only(top: 16),
+      child: Text(
+        '↻ $text',
+        style: const TextStyle(fontSize: 11, color: AppColors.inkSoft),
+      ),
+    );
     final front = _HeroFrame(
       section: section,
       eyebrow: eyebrow ?? t.label,
@@ -163,7 +218,11 @@ class PageHero extends StatelessWidget {
         text: headline,
         emphasis: emphasis,
         color: t.highlight,
-        style: AppTheme.displaySerif(size: 24, fontWeight: FontWeight.w700, letterSpacing: -0.2),
+        style: AppTheme.displaySerif(
+          size: 24,
+          fontWeight: FontWeight.w700,
+          letterSpacing: -0.2,
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -174,19 +233,26 @@ class PageHero extends StatelessWidget {
         ],
       ),
     );
-    if (back == null) return front;
+    if (back == null) return StubMark(stub: stub, child: front);
     return FlipCard(
-      front: front,
-      back: _HeroFrame(
-        section: section,
-        eyebrow: eyebrow ?? t.label,
-        headline: Text(
-          backTitle ?? '',
-          style: AppTheme.displaySerif(size: 24, fontWeight: FontWeight.w700, letterSpacing: -0.2),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [back!, hint('눌러서 앞면으로')],
+      front: StubMark(stub: stub, child: front),
+      back: StubMark(
+        stub: stub,
+        child: _HeroFrame(
+          section: section,
+          eyebrow: eyebrow ?? t.label,
+          headline: Text(
+            backTitle ?? '',
+            style: AppTheme.displaySerif(
+              size: 24,
+              fontWeight: FontWeight.w700,
+              letterSpacing: -0.2,
+            ),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [back!, hint('눌러서 앞면으로')],
+          ),
         ),
       ),
     );
@@ -194,7 +260,12 @@ class PageHero extends StatelessWidget {
 }
 
 class _HeroFrame extends StatelessWidget {
-  const _HeroFrame({required this.section, required this.eyebrow, required this.headline, required this.child});
+  const _HeroFrame({
+    required this.section,
+    required this.eyebrow,
+    required this.headline,
+    required this.child,
+  });
 
   final Section section;
   final String eyebrow;
@@ -214,14 +285,23 @@ class _HeroFrame extends StatelessWidget {
             Text.rich(
               TextSpan(
                 children: [
-                  const TextSpan(text: '데일리컷', style: TextStyle(fontWeight: FontWeight.w700)),
-                  TextSpan(text: '   ${now.month}월 ${now.day}일 ${_weekdays[now.weekday - 1]}요일'),
+                  const TextSpan(
+                    text: '데일리컷',
+                    style: TextStyle(fontWeight: FontWeight.w700),
+                  ),
+                  TextSpan(
+                    text:
+                        '   ${now.month}월 ${now.day}일 ${_weekdays[now.weekday - 1]}요일',
+                  ),
                 ],
               ),
               style: const TextStyle(fontSize: 13, color: AppColors.ink),
             ),
             const SizedBox(height: 86),
-            Text(eyebrow, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
+            Text(
+              eyebrow,
+              style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
+            ),
             const SizedBox(height: 8),
             headline,
             const SizedBox(height: 22),
@@ -244,7 +324,10 @@ class _Blob extends StatefulWidget {
 }
 
 class _BlobState extends State<_Blob> with SingleTickerProviderStateMixin {
-  late final AnimationController _c = AnimationController(vsync: this, duration: const Duration(seconds: 10));
+  late final AnimationController _c = AnimationController(
+    vsync: this,
+    duration: const Duration(seconds: 10),
+  );
   bool _started = false;
 
   @override
@@ -252,7 +335,9 @@ class _BlobState extends State<_Blob> with SingleTickerProviderStateMixin {
     super.didChangeDependencies();
     if (!_started) {
       _started = true;
-      if (!(MediaQuery.maybeOf(context)?.disableAnimations ?? false)) _c.repeat(reverse: true);
+      if (!(MediaQuery.maybeOf(context)?.disableAnimations ?? false)) {
+        _c.repeat(reverse: true);
+      }
     }
   }
 
@@ -272,7 +357,10 @@ class _BlobState extends State<_Blob> with SingleTickerProviderStateMixin {
       height: 200,
       child: IgnorePointer(
         child: RotationTransition(
-          turns: Tween<double>(begin: -0.014, end: 0.017).animate(CurvedAnimation(parent: _c, curve: Curves.easeInOut)),
+          turns: Tween<double>(
+            begin: -0.014,
+            end: 0.017,
+          ).animate(CurvedAnimation(parent: _c, curve: Curves.easeInOut)),
           child: Image.asset(t.shapeAsset, fit: BoxFit.contain),
         ),
       ),
@@ -292,12 +380,16 @@ class FlipCard extends StatefulWidget {
   State<FlipCard> createState() => _FlipCardState();
 }
 
-class _FlipCardState extends State<FlipCard> with SingleTickerProviderStateMixin {
+class _FlipCardState extends State<FlipCard>
+    with SingleTickerProviderStateMixin {
   late final AnimationController _controller = AnimationController(
     vsync: this,
     duration: const Duration(milliseconds: 550),
   );
-  late final Animation<double> _curve = CurvedAnimation(parent: _controller, curve: Curves.easeInOutCubic);
+  late final Animation<double> _curve = CurvedAnimation(
+    parent: _controller,
+    curve: Curves.easeInOutCubic,
+  );
   bool _showingBack = false;
 
   void _toggle() {
@@ -361,8 +453,12 @@ class TrendChart extends StatefulWidget {
   State<TrendChart> createState() => _TrendChartState();
 }
 
-class _TrendChartState extends State<TrendChart> with SingleTickerProviderStateMixin {
-  late final AnimationController _c = AnimationController(vsync: this, duration: const Duration(milliseconds: 1100));
+class _TrendChartState extends State<TrendChart>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 1100),
+  );
   bool _started = false;
 
   @override
@@ -438,8 +534,12 @@ class _TrendChartState extends State<TrendChart> with SingleTickerProviderStateM
                         d == 1 || d == days ? '$d일' : '$d',
                         style: TextStyle(
                           fontSize: 11,
-                          color: d == now.day ? AppColors.ink : AppColors.inkSoft,
-                          fontWeight: d == now.day ? FontWeight.w700 : FontWeight.w400,
+                          color: d == now.day
+                              ? AppColors.ink
+                              : AppColors.inkSoft,
+                          fontWeight: d == now.day
+                              ? FontWeight.w700
+                              : FontWeight.w400,
                         ),
                       ),
                     ),
@@ -454,7 +554,13 @@ class _TrendChartState extends State<TrendChart> with SingleTickerProviderStateM
 }
 
 class _TrendPainter extends CustomPainter {
-  _TrendPainter({required this.points, required this.days, required this.progress, required this.fill, required this.dot});
+  _TrendPainter({
+    required this.points,
+    required this.days,
+    required this.progress,
+    required this.fill,
+    required this.dot,
+  });
 
   final List<ChartPoint> points;
   final int days;
@@ -472,9 +578,10 @@ class _TrendPainter extends CustomPainter {
     final range = (maxV - minV).abs() < 1e-6 ? 1.0 : maxV - minV;
     final width = size.width - padX * 2;
     Offset at(ChartPoint p) => Offset(
-          padX + width * (p.day - 1) / (days - 1),
-          padTop + (1 - (p.value - minV) / range) * (size.height - padTop - padBottom),
-        );
+      padX + width * (p.day - 1) / (days - 1),
+      padTop +
+          (1 - (p.value - minV) / range) * (size.height - padTop - padBottom),
+    );
 
     // 월 전체 폭을 알려주는 아주 옅은 바닥선
     canvas.drawLine(
@@ -499,7 +606,14 @@ class _TrendPainter extends CustomPainter {
 
       final startX = at(points.first).dx;
       canvas.save();
-      canvas.clipRect(Rect.fromLTWH(0, 0, startX + (last.dx - startX) * progress + 2, size.height));
+      canvas.clipRect(
+        Rect.fromLTWH(
+          0,
+          0,
+          startX + (last.dx - startX) * progress + 2,
+          size.height,
+        ),
+      );
       canvas.drawPath(area, Paint()..color = fill.withValues(alpha: 0.7));
       canvas.drawPath(
         line,
@@ -541,7 +655,11 @@ class MiniSpark extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(width: 56, height: 24, child: CustomPaint(painter: _MiniPainter(series, color)));
+    return SizedBox(
+      width: 56,
+      height: 24,
+      child: CustomPaint(painter: _MiniPainter(series, color)),
+    );
   }
 }
 
@@ -558,7 +676,10 @@ class _MiniPainter extends CustomPainter {
     final maxV = series.reduce(math.max);
     final range = (maxV - minV).abs() < 1e-6 ? 1.0 : maxV - minV;
     final dx = (size.width - 6) / (series.length - 1);
-    Offset at(int i) => Offset(2 + dx * i, 3 + (1 - (series[i] - minV) / range) * (size.height - 6));
+    Offset at(int i) => Offset(
+      2 + dx * i,
+      3 + (1 - (series[i] - minV) / range) * (size.height - 6),
+    );
     final p = Path()..moveTo(at(0).dx, at(0).dy);
     for (var i = 1; i < series.length; i++) {
       p.lineTo(at(i).dx, at(i).dy);
@@ -576,12 +697,19 @@ class _MiniPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant _MiniPainter old) => old.series != series || old.color != color;
+  bool shouldRepaint(covariant _MiniPainter old) =>
+      old.series != series || old.color != color;
 }
 
 /// 목록 한 묶음. 제목 + 오른쪽 작은 보조 글 + 진한 선 한 줄, 그 아래 행들.
 class ListSection extends StatelessWidget {
-  const ListSection({super.key, required this.title, this.trailing, this.stub = false, required this.children});
+  const ListSection({
+    super.key,
+    required this.title,
+    this.trailing,
+    this.stub = false,
+    required this.children,
+  });
 
   final String title;
   final String? trailing;
@@ -594,25 +722,31 @@ class ListSection extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.only(top: 40),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
-            children: [
-              Expanded(child: Text(title, style: AppTheme.subheading)),
-              if (trailing != null || stub)
-                Text(
-                  [?trailing, if (stub) '예시 데이터'].join(' · '),
-                  style: const TextStyle(fontSize: 11, color: AppColors.inkSoft),
-                ),
-            ],
-          ),
-          const SizedBox(height: 10),
-          Container(height: 1, color: AppColors.ink),
-          ...children,
-        ],
+      child: StubMark(
+        stub: stub,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.baseline,
+              textBaseline: TextBaseline.alphabetic,
+              children: [
+                Expanded(child: Text(title, style: AppTheme.subheading)),
+                if (trailing != null || stub)
+                  Text(
+                    [?trailing, if (stub) '예시 데이터'].join(' · '),
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: AppColors.inkSoft,
+                    ),
+                  ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Container(height: 1, color: AppColors.ink),
+            ...children,
+          ],
+        ),
       ),
     );
   }
@@ -629,8 +763,10 @@ class ListLine extends StatelessWidget {
     this.value,
     this.valueSub,
     this.valueSubColor = AppColors.inkSoft,
+    this.stub = false,
   });
 
+  final bool stub; // 실데이터가 아닌 줄(개발용 분홍 배경 표시)
   final String name;
   final String? sub;
   final Widget? leading;
@@ -643,7 +779,10 @@ class ListLine extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 14),
-      decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: AppColors.hair))),
+      decoration: BoxDecoration(
+        color: stub && kShowStubMarks ? const Color(0xFFFFF0F0) : null,
+        border: const Border(bottom: BorderSide(color: AppColors.hair)),
+      ),
       child: Row(
         children: [
           if (leading != null) ...[leading!, const SizedBox(width: 12)],
@@ -651,10 +790,22 @@ class ListLine extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(name, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500)),
+                Text(
+                  name,
+                  style: const TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
                 if (sub != null) ...[
                   const SizedBox(height: 2),
-                  Text(sub!, style: const TextStyle(fontSize: 11, color: AppColors.inkSoft)),
+                  Text(
+                    sub!,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: AppColors.inkSoft,
+                    ),
+                  ),
                 ],
               ],
             ),
@@ -701,11 +852,15 @@ class ListLine extends StatelessWidget {
 /// {label, sub?, value, change, pct?, series?} 모양의 시세/지표 항목 한 줄.
 ListLine priceRow(Map<String, dynamic> it) {
   final change = (it['change'] as String?) ?? 'flat';
-  final series = (it['series'] as List?)?.map((e) => (e as num).toDouble()).toList();
+  final series = (it['series'] as List?)
+      ?.map((e) => (e as num).toDouble())
+      .toList();
   return ListLine(
     name: it['label'] as String,
     sub: it['sub'] as String?,
-    middle: series == null ? null : MiniSpark(series: series, color: changeColor(change)),
+    middle: series == null
+        ? null
+        : MiniSpark(series: series, color: changeColor(change)),
     value: it['value'].toString(),
     valueSub: changeLabel(change, pct: it['pct'] as num?),
     valueSubColor: changeColor(change),
@@ -714,7 +869,12 @@ ListLine priceRow(Map<String, dynamic> it) {
 
 /// 순위가 있으면 앞에 숫자, 없으면(rank 0) 이름·보조 글만.
 class RankRow extends StatelessWidget {
-  const RankRow({super.key, required this.rank, required this.title, required this.meta});
+  const RankRow({
+    super.key,
+    required this.rank,
+    required this.title,
+    required this.meta,
+  });
 
   final int rank;
   final String title;
@@ -724,7 +884,9 @@ class RankRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 14),
-      decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: AppColors.hair))),
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: AppColors.hair)),
+      ),
       child: Row(
         children: [
           if (rank > 0)
@@ -739,7 +901,12 @@ class RankRow extends StatelessWidget {
                 ),
               ),
             ),
-          Expanded(child: Text(title, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500))),
+          Expanded(
+            child: Text(
+              title,
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w500),
+            ),
+          ),
           const SizedBox(width: 12),
           ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 170),
@@ -773,7 +940,9 @@ class SeasonRow extends StatelessWidget {
   final int startMonth;
   final int endMonth;
 
-  bool _in(int m) => startMonth <= endMonth ? (m >= startMonth && m <= endMonth) : (m >= startMonth || m <= endMonth);
+  bool _in(int m) => startMonth <= endMonth
+      ? (m >= startMonth && m <= endMonth)
+      : (m >= startMonth || m <= endMonth);
 
   @override
   Widget build(BuildContext context) {
@@ -794,7 +963,9 @@ class SeasonRow extends StatelessWidget {
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: _in(m) ? t.color : const Color(0xFFE9E9E9),
-                  border: m == now ? Border.all(color: AppColors.ink, width: 1.5) : null,
+                  border: m == now
+                      ? Border.all(color: AppColors.ink, width: 1.5)
+                      : null,
                 ),
               ),
             ),
@@ -830,7 +1001,10 @@ class SeasonLegend extends StatelessWidget {
                     maxLines: 1,
                     softWrap: false,
                     textAlign: TextAlign.center,
-                    style: const TextStyle(fontSize: 11, color: AppColors.inkSoft),
+                    style: const TextStyle(
+                      fontSize: 11,
+                      color: AppColors.inkSoft,
+                    ),
                   ),
                 ),
               ),

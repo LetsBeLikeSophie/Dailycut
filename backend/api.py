@@ -404,6 +404,12 @@ def today():
     }
     return {
         "headline": _headline(w),
+        # 어떤 섹션 카드가 실데이터인지(앱이 스텁 카드를 구분해서 표시)
+        "live_sections": [
+            name
+            for name, live in (("weather", "today" in w.get("live_keys", [])), ("money", "hero" in mo.get("live_keys", [])))
+            if live
+        ],
         "cards": [
             {"section": "weather", **weather_card},
             {"section": "market", **market_card},

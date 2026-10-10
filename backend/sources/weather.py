@@ -167,6 +167,78 @@ def _next_holiday(today: date) -> dict | None:
     return None
 
 
+AREA_NO = "1100000000"  # 생활기상지수 지점코드(서울)
+
+
+def _uv(now: datetime) -> dict | None:
+    """오늘 낮 시간대 자외선지수 최고값. 응답의 h0·h3·… 는 발표 시각(date)에서 N시간 뒤 값."""
+    body = _http.get_json(
+        _cfg("KMA_LIVING_IDX_BASE_URL") + "/getUVIdxV5",
+        {"areaNo": AREA_NO, "time": now.strftime("%Y%m%d%H"), "dataType": "JSON", "numOfRows": 1, "pageNo": 1},
+    )
+    it = (_http.items_of(body) or [None])[0]
+    if not it:
+        return None
+    base_hour = int(it["date"][-2:])
+    vals = [int(it[f"h{h}"]) for h in range(0, 22, 3) if it.get(f"h{h}", "") != "" and 6 <= base_hour + h <= 18 and base_hour + h < 24]
+    if not vals:
+        return None
+    v = max(vals)
+    label = "낮음" if v <= 2 else "보통" if v <= 5 else "높음" if v <= 7 else "매우 높음" if v <= 10 else "위험"
+    return {"title": "자외선", "meta": f"{label} ({v})"}
+
+
+def _pollen(now: datetime) -> dict | None:
+    """꽃가루(잡초류) — 제공 기간(보통 9~10월)에만 값이 나오고 0(낮음)이면 보여줄 게 없어서 생략."""
+    body = _http.get_json(
+        _cfg("KMA_POLLEN_BASE_URL") + "/getWeedsPollenRiskndxV3",
+        {"areaNo": AREA_NO, "time": now.strftime("%Y%m%d%H"), "dataType": "JSON", "numOfRows": 1, "pageNo": 1},
+    )
+    it = (_http.items_of(body) or [None])[0]
+    if not it or not str(it.get("today", "")).isdigit() or int(it["today"]) < 1:
+        return None
+    level = {1: "보통", 2: "높음", 3: "매우 높음"}.get(int(it["today"]), "주의")
+    return {"title": "꽃가루(잡초류)", "meta": level}
+
+
+def _sun(now: datetime) -> dict | None:
+    items = _http.get_xml_items(_cfg("KASI_RISE_SET_BASE_URL") + "/getAreaRiseSetInfo", {"locdate": now.strftime("%Y%m%d"), "location": "서울"})
+    if not items:
+        return None
+    a = items[0]
+    f = lambda t: f"{t[:2]}:{t[2:4]}"
+    return {"title": "일출 · 일몰", "meta": f"{f(a['sunrise'])} · {f(a['sunset'])}"}
+
+
+def _warning(now: datetime) -> dict | None:
+    """발효 중인 기상특보(서울 지점 108). 없으면 None — 평소엔 안 보이고 특보가 있을 때만 뜸.
+    주의: 응답 필드 이름(title)은 특보가 있는 날 실제 응답으로 확인 못 했음(지금은 비어 있음)."""
+    body = _http.get_json(
+        _cfg("KMA_WARNING_BASE_URL") + "/getWthrWrnList",
+        {"stnId": "108", "dataType": "JSON", "numOfRows": 5, "pageNo": 1},
+    )
+    items = _http.items_of(body)
+    if not items:
+        return None
+    text = str(items[0].get("title") or items[0])
+    return {"title": "기상특보", "meta": text[:30]}
+
+
+def _next_term(today: date) -> dict | None:
+    """다음 24절기(이번 달에 없으면 다음 달)."""
+    y, m = today.year, today.month
+    for _ in range(2):
+        items = _http.get_xml_items(_cfg("KASI_SPECIAL_DAY_BASE_URL") + "/get24DivisionsInfo", {"solYear": y, "solMonth": f"{m:02d}"})
+        for it in sorted(items, key=lambda i: i["locdate"]):
+            d = datetime.strptime(it["locdate"], "%Y%m%d").date()
+            if d >= today:
+                return {"title": "다음 절기", "meta": f"{it['dateName']} " + ("오늘" if d == today else f"D-{(d - today).days}")}
+        m += 1
+        if m > 12:
+            y, m = y + 1, 1
+    return None
+
+
 def run() -> dict:
     now = datetime.now()
     today = now.date()
@@ -246,6 +318,21 @@ def run() -> dict:
         out["air_quality"] = _air()
     except Exception:
         out["air_quality"] = {"pm10": "정보 없음", "pm25": "정보 없음"}
+    life = []
+    for fn in (_warning, _uv, _sun, _pollen):
+        try:
+            row = fn(now)
+            if row:
+                life.append(row)
+        except Exception:
+            pass
+    try:
+        term = _next_term(today)
+        if term:
+            life.append(term)
+    except Exception:
+        pass
+    out["life"] = life
     try:
         nh = _next_holiday(today)
         if nh:
