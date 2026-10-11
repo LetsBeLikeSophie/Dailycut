@@ -26,6 +26,7 @@ import geo
 import jobs
 import sources  # noqa: F401  (수집 작업 등록)
 import store
+from sources import boxoffice as boxoffice_src
 from sources import culture as culture_src
 from sources import markets as markets_src
 from sources import weather as weather_src
@@ -111,6 +112,12 @@ def culture_detail(id: str):
 
         d = {**d, "image": "/proxy/image?u=" + quote(d["image"], safe="")}
     return d
+
+
+@app.get("/movie/detail")
+def movie_detail(code: str):
+    """영화 상세(KOBIS: 감독·출연·장르·상영시간·등급·제작국). code는 박스오피스 항목의 code."""
+    return boxoffice_src.detail(code)
 
 
 @app.get("/proxy/image")
@@ -405,7 +412,9 @@ def market(sido: str | None = None, sgg: str | None = None):
 @live_geo(culture_src)
 @live_merge("boxoffice")
 def culture(sido: str | None = None, sgg: str | None = None):
+    region_box = boxoffice_src.region_items(geo.region(sido)["code"])  # 선택한 시도의 박스오피스(키가 없으면 None → 필드 없음)
     return {
+        **({"box_office_region": region_box} if region_box else {}),
         "hero": {
             "theme": "culture",
             "label": "어제 박스오피스 1위",

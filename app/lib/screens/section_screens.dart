@@ -5,6 +5,7 @@ import '../theme.dart';
 import '../widgets/basket_hero.dart';
 import '../widgets/metric_chart.dart';
 import '../widgets/components.dart';
+import '../widgets/box_office.dart';
 import '../widgets/culture_calendar.dart';
 import '../widgets/finance_sheet.dart';
 import '../widgets/market_list.dart';
@@ -311,6 +312,25 @@ Widget cultureScreen(ApiClient api, Region region, BuildContext shellContext) =>
                   ],
                 ),
               ),
+              // 영화 한 줄: 문화 탭 맨 위에서 "이번 주말 뭐 하지"와 함께 영화 1위도 바로 보이게
+              if (_isLive(data, 'box_office') && allBoxOffice.isNotEmpty && allBoxOffice.first['code'] != null)
+                GestureDetector(
+                  onTap: () => showMovieSheet(context, api, {...(data['box_office_sets']?['daily|all'] as List? ?? const [{}]).first as Map<String, dynamic>}),
+                  behavior: HitTestBehavior.opaque,
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 14),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.movie_outlined, size: 17),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text('영화 1위 · ${allBoxOffice.first['title']}', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700), overflow: TextOverflow.ellipsis),
+                        ),
+                        const Icon(Icons.chevron_right, size: 18, color: AppColors.inkSoft),
+                      ],
+                    ),
+                  ),
+                ),
             ],
           );
         }
@@ -339,16 +359,15 @@ Widget cultureScreen(ApiClient api, Region region, BuildContext shellContext) =>
               });
         return [
           events == null ? legacyHero : scopedCulture,
-          ListSection(
-            title: '박스오피스',
-            trailing: data['box_office_date'] == null ? '어제 기준' : '${DateTime.parse(data['box_office_date'] as String).month}/${DateTime.parse(data['box_office_date'] as String).day} 기준',
-            stub: !_isLive(data, 'box_office'),
-            children: [
-              ExpandableList(
-                children: [for (final it in (events != null ? allBoxOffice : rest)) RankRow(rank: it['rank'] as int, title: it['title'] as String, meta: it['meta'] as String)],
-              ),
-            ],
-          ),
+          if (data['box_office_sets'] != null)
+            BoxOfficeSection(api: api, data: data, stub: !_isLive(data, 'box_office'))
+          else
+            ListSection(
+              title: '박스오피스',
+              trailing: '어제 기준',
+              stub: !_isLive(data, 'box_office'),
+              children: [for (final it in (events != null ? allBoxOffice : rest)) RankRow(rank: it['rank'] as int, title: it['title'] as String, meta: it['meta'] as String)],
+            ),
           if (events == null) ...[
             ListSection(
               title: '진행 중인 전시·공연',
