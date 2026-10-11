@@ -1,0 +1,106 @@
+import 'package:flutter/material.dart';
+
+import '../analytics.dart';
+import '../theme.dart';
+
+/// 앱이 쓰는 공공데이터·외부 데이터 출처(이용 조건 표기 포함). 화면마다 출처를 길게 적는 대신
+/// 작은 ⓘ → 이 시트에서 한 번에 보여줌. 새 데이터를 붙이면 여기에 한 줄 추가.
+const kAllSources = <(String, String)>[
+  ('기상청', '단기예보·중기예보·초단기실황 (공공누리 1유형: 출처표시)'),
+  ('한국환경공단 에어코리아', '실시간 대기오염 측정값 (공공누리 1유형)'),
+  ('한국천문연구원', '특일(공휴일)·24절기·일출몰 정보'),
+  ('한국농수산식품유통공사(aT)', '농축수산물 소매가격(상품 등급 평균)'),
+  ('통계청 KOSIS', '소비자물가지수(전국 총지수) — 전년 동월 대비 상승률은 데일리컷이 계산'),
+  ('금융위원회', '주식시세정보(코스피·코스닥 종가)·일반상품시세(금·유가) (공공누리 4유형: 출처표시·상업적 이용 금지·변경금지)'),
+  ('금융감독원 금융상품 한눈에', '예금·적금·대출 금리와 우대조건'),
+  ('한국관광공사 TourAPI', '축제·행사 정보, 시장 사진'),
+  ('한국문화정보원 KCISA', '전시·공연 정보'),
+  ('영화진흥위원회 KOBIS', '일별 박스오피스(영화관입장권통합전산망, 출처표시)'),
+  ('소상공인시장진흥공단', '전통시장 현황'),
+  ('Wikimedia Commons', '채소·과일 사진 (작가·라이선스는 사진 아래에 표시)'),
+];
+
+/// [current]가 있으면 "이 화면" 출처를 맨 위에, 그 아래 앱 전체 출처 목록.
+Future<void> showSourcesSheet(BuildContext context, {String? current}) {
+  Analytics.instance.track('sources_open');
+  return showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: AppColors.background,
+    showDragHandle: true,
+    constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.85),
+    builder: (_) => SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(20, 4, 20, 28),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('데이터 출처', style: AppTheme.displaySerif(size: 24, fontWeight: FontWeight.w700)),
+            if (current != null) ...[
+              const SizedBox(height: 16),
+              Text('이 화면', style: AppTheme.subheading),
+              const SizedBox(height: 6),
+              Text(current, style: const TextStyle(fontSize: 15, height: 1.6)),
+              const SizedBox(height: 4),
+              const Text('분홍색으로 표시된 부분은 아직 예시 데이터예요.', style: TextStyle(fontSize: 12, color: AppColors.inkSoft)),
+            ],
+            const SizedBox(height: 22),
+            Text('데일리컷이 쓰는 데이터', style: AppTheme.subheading),
+            const SizedBox(height: 8),
+            for (final (name, desc) in kAllSources)
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 6),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(name, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+                    const SizedBox(height: 2),
+                    Text(desc, style: const TextStyle(fontSize: 12, color: AppColors.inkSoft, height: 1.5)),
+                  ],
+                ),
+              ),
+            const SizedBox(height: 14),
+            const Text(
+              '공공데이터포털(data.go.kr)에서 제공하는 공공데이터를 가공해 보여드려요. 이용 조건은 데이터마다 달라요.',
+              style: TextStyle(fontSize: 11, color: AppColors.inkSoft, height: 1.6),
+            ),
+            const SizedBox(height: 22),
+            Text('앱 개선을 위한 익명 통계', style: AppTheme.subheading),
+            const SizedBox(height: 6),
+            const Text(
+              '어느 화면·기능이 많이 쓰이는지만 익명으로 집계해요. 이름·위치·기기 정보·검색어는 모으지 않고, 개인을 구분할 수도 없어요. 내 장바구니 같은 설정은 이 기기에만 저장돼요.',
+              style: TextStyle(fontSize: 12, color: AppColors.inkSoft, height: 1.6),
+            ),
+            const _AnalyticsSwitch(),
+          ],
+        ),
+      ),
+    ),
+  );
+}
+
+
+class _AnalyticsSwitch extends StatefulWidget {
+  const _AnalyticsSwitch();
+
+  @override
+  State<_AnalyticsSwitch> createState() => _AnalyticsSwitchState();
+}
+
+class _AnalyticsSwitchState extends State<_AnalyticsSwitch> {
+  bool _on = Analytics.instance.enabled;
+
+  @override
+  Widget build(BuildContext context) {
+    return SwitchListTile(
+      contentPadding: EdgeInsets.zero,
+      title: const Text('익명 통계 보내기', style: TextStyle(fontSize: 14)),
+      value: _on,
+      activeThumbColor: AppColors.ink,
+      onChanged: (v) {
+        setState(() => _on = v);
+        Analytics.instance.setEnabled(v);
+      },
+    );
+  }
+}

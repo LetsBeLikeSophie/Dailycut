@@ -2,8 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../api_client.dart';
+import '../analytics.dart';
+import '../local_prefs.dart';
 import '../theme.dart';
 import 'components.dart';
+import 'zoom_image.dart';
 
 String _md(String iso) {
   final d = DateTime.parse(iso);
@@ -15,10 +18,35 @@ String periodText(Map<String, dynamic> e) {
   return s == en ? _md(s) : '${_md(s)}~${_md(en)}';
 }
 
+/// 행사 종류(서버 kind: 축제 / 전시 / 연극 / 뮤지컬·오페라 / 음악·콘서트 / 교육·체험 …)를 4묶음으로.
+/// 알약·아이콘·달력 점의 색이 이 묶음을 따라가서, 한눈에 종류를 구분함.
+String kindGroup(String kind) {
+  if (kind.contains('축제')) return '축제';
+  if (kind.contains('전시') || kind.contains('미술')) return '전시';
+  if (kind.contains('연극') || kind.contains('뮤지컬') || kind.contains('오페라') || kind.contains('무용') || kind.contains('음악') || kind.contains('콘서트') || kind.contains('공연') || kind.contains('국악')) return '공연';
+  if (kind.contains('교육') || kind.contains('체험')) return '체험';
+  return '기타';
+}
+
+({IconData icon, Color color}) kindStyle(String kind) => switch (kindGroup(kind)) {
+      '축제' => (icon: Icons.celebration_outlined, color: const Color(0xFFC4472B)),
+      '전시' => (icon: Icons.palette_outlined, color: const Color(0xFF2F6FB0)),
+      '공연' => (icon: Icons.theater_comedy_outlined, color: const Color(0xFF7B4FA3)),
+      '체험' => (icon: Icons.extension_outlined, color: const Color(0xFF2E8B57)),
+      _ => (icon: Icons.event_outlined, color: AppColors.inkSoft),
+    };
+
 /// 행사 목록 한 줄(달력 아래 목록·목록 구간 공통). 누르면 상세.
 Widget eventLine(BuildContext context, ApiClient api, Map<String, dynamic> e) {
   final bits = [e['kind'], if ((e['place'] as String?)?.isNotEmpty ?? false) e['place'], periodText(e)];
+  final st = kindStyle(e['kind'] as String);
   return ListLine(
+    leading: Container(
+      width: 34,
+      height: 34,
+      decoration: BoxDecoration(color: st.color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(8)),
+      child: Icon(st.icon, size: 19, color: st.color),
+    ),
     name: e['title'] as String,
     badge: e['local'] == true ? '우리 동네' : null,
     sub: bits.join(' · '),
@@ -29,33 +57,55 @@ Widget eventLine(BuildContext context, ApiClient api, Map<String, dynamic> e) {
 /// 이번 달·다음 달 행사 달력. 날짜마다 점(그날 열리는 행사 수, 최대 3개, 선택한 시군구 행사가 있으면 진하게)을
 /// 찍고, 날짜를 누르면 그날 행사가 아래에 나와요. 처음엔 오늘이 선택돼 있어요.
 class CultureCalendar extends StatefulWidget {
-  const CultureCalendar({super.key, required this.api, required this.events, required this.scopeLabel});
+  const CultureCalendar({
+    super.key,
+    required this.api,
+    required this.events,
+  });
 
   final ApiClient api;
-  final List<Map<String, dynamic>> events;
-  final String scopeLabel; // 예: "서울 종로구" — 달력 제목 옆에 범위 표시
+  final List<Map<String, dynamic>> events; // 이미 범위(우리 동네 / 시도 전체)로 걸러진 행사
 
   @override
   State<CultureCalendar> createState() => _CultureCalendarState();
 }
 
 class _CultureCalendarState extends State<CultureCalendar> {
-  static const _limit = 8;
+  static const _limit = kListLimit;
   late DateTime _month = DateTime(DateTime.now().year, DateTime.now().month);
   late DateTime _selected = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
   bool _showAll = false;
+  String _kind = '전체';
+
+  @override
+  void initState() {
+    super.initState();
+    // 마지막으로 고른 종류(축제·전시 등)를 기억해서 다음에도 그 종류로 열어 줌
+    LocalPrefs.getString('culture_kind').then((v) {
+      if (v != null && mounted && _kinds.contains(v)) setState(() => _kind = v);
+    });
+  }
 
   String _iso(DateTime d) => '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 
   List<Map<String, dynamic>> _on(DateTime d) {
     final k = _iso(d);
-    return widget.events.where((e) => (e['start'] as String).compareTo(k) <= 0 && (e['end'] as String).compareTo(k) >= 0).toList();
+    return _filtered.where((e) => (e['start'] as String).compareTo(k) <= 0 && (e['end'] as String).compareTo(k) >= 0).toList();
+  }
+
+  List<Map<String, dynamic>> get _filtered =>
+      _kind == '전체' ? widget.events : widget.events.where((e) => kindGroup(e['kind'] as String) == _kind).toList();
+
+  /// 지금 범위에 실제로 있는 묶음만 칩으로(순서 고정)
+  List<String> get _kinds {
+    final present = {for (final e in widget.events) kindGroup(e['kind'] as String)};
+    return ['전체', for (final k in const ['축제', '전시', '공연', '체험', '기타']) if (present.contains(k)) k];
   }
 
   bool get _hasNext {
     final next = DateTime(_month.year, _month.month + 1);
     final k = _iso(next);
-    return widget.events.any((e) => (e['end'] as String).compareTo(k) >= 0);
+    return _filtered.any((e) => (e['end'] as String).compareTo(k) >= 0);
   }
 
   @override
@@ -72,10 +122,30 @@ class _CultureCalendarState extends State<CultureCalendar> {
 
     return ListSection(
       title: '행사 달력',
-      trailing: widget.scopeLabel,
       children: [
         Padding(
-          padding: const EdgeInsets.only(top: 6),
+          padding: const EdgeInsets.only(top: 12),
+          child: Wrap(
+            spacing: 8,
+            runSpacing: 10,
+            children: [
+              for (final k in _kinds)
+                _Chip(
+                  label: k,
+                  dotColor: k == '전체' ? null : kindStyle(k).color,
+                  selected: _kind == k,
+                  onTap: () => setState(() {
+                    _kind = k;
+                    LocalPrefs.setString('culture_kind', k);
+                    Analytics.instance.track('culture_kind', k);
+                    _showAll = false;
+                  }),
+                ),
+            ],
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.only(top: 10),
           child: Row(
             children: [
               _NavButton(label: '‹', enabled: !isThisMonth, onTap: () => setState(() => _month = DateTime(_month.year, _month.month - 1))),
@@ -106,6 +176,23 @@ class _CultureCalendarState extends State<CultureCalendar> {
               for (var c = 0; c < 7; c++) Expanded(child: _cell(r * 7 + c - lead + 1, days, today)),
             ],
           ),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 12,
+          runSpacing: 4,
+          children: [
+            const Text('날짜 아래 점 =', style: TextStyle(fontSize: 11, color: AppColors.inkSoft)),
+            for (final k in _kinds.where((k) => k != '전체'))
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(width: 6, height: 6, decoration: BoxDecoration(shape: BoxShape.circle, color: kindStyle(k).color)),
+                  const SizedBox(width: 4),
+                  Text(k, style: const TextStyle(fontSize: 11, color: AppColors.inkSoft)),
+                ],
+              ),
+          ],
+        ),
         const SizedBox(height: 12),
         Container(height: 1, color: AppColors.ink),
         Padding(
@@ -122,14 +209,7 @@ class _CultureCalendarState extends State<CultureCalendar> {
           ),
         for (final e in shown) eventLine(context, widget.api, e),
         if (!_showAll && dayEvents.length > _limit)
-          GestureDetector(
-            onTap: () => setState(() => _showAll = true),
-            behavior: HitTestBehavior.opaque,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              child: Center(child: Text('${dayEvents.length - _limit}개 더 보기', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700))),
-            ),
-          ),
+          ShowMoreButton(count: dayEvents.length - _limit, onTap: () => setState(() => _showAll = true)),
       ],
     );
   }
@@ -140,8 +220,9 @@ class _CultureCalendarState extends State<CultureCalendar> {
     final evs = _on(d);
     final selected = d == _selected;
     final isToday = d == today;
-    final hasLocal = evs.any((e) => e['local'] == true);
-    final dots = evs.length.clamp(0, 3);
+    // 점 = 그날 열리는 행사의 종류별 색(축제·전시·공연·체험) — 개수가 아니라 "무슨 종류가 있는지"를 보여줌
+    final groups = [for (final g in const ['축제', '전시', '공연', '체험', '기타']) if (evs.any((e) => kindGroup(e['kind'] as String) == g)) g];
+    final dots = groups.length.clamp(0, 4);
     return GestureDetector(
       onTap: () => setState(() {
         _selected = d;
@@ -180,10 +261,10 @@ class _CultureCalendarState extends State<CultureCalendar> {
                 children: [
                   for (var i = 0; i < dots; i++)
                     Container(
-                      width: 4,
-                      height: 4,
+                      width: 5,
+                      height: 5,
                       margin: const EdgeInsets.symmetric(horizontal: 1),
-                      decoration: BoxDecoration(shape: BoxShape.circle, color: hasLocal ? sectionThemes[Section.culture]!.color : AppColors.inkSoft),
+                      decoration: BoxDecoration(shape: BoxShape.circle, color: kindStyle(groups[i]).color),
                     ),
                 ],
               ),
@@ -220,6 +301,7 @@ class _NavButton extends StatelessWidget {
 
 /// 행사 상세 시트: 서버에서 상세(설명·요금·누리집·전화)를 받아 보여주고, 받는 동안엔 목록의 기본 정보만 보여줌.
 Future<void> showEventSheet(BuildContext context, ApiClient api, Map<String, dynamic> e) {
+  Analytics.instance.track('culture_open', kindGroup((e['kind'] as String?) ?? ''));
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
@@ -244,7 +326,10 @@ class _EventSheet extends StatelessWidget {
     return SafeArea(
       child: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(20, 4, 20, 28),
-        child: FutureBuilder<Map<String, dynamic>>(
+        // 정보가 위, 사진은 맨 아래(스크롤해서 보기). 상세가 도착해도 시트가 다시 커지지 않게 처음부터 넉넉한 높이로 엶.
+        child: ConstrainedBox(
+          constraints: BoxConstraints(minHeight: MediaQuery.of(context).size.height * 0.62),
+          child: FutureBuilder<Map<String, dynamic>>(
           future: api.cultureDetail(event['id'] as String),
           builder: (context, snap) {
             final d = snap.data;
@@ -269,27 +354,11 @@ class _EventSheet extends StatelessWidget {
             return Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                if (image != null) ...[
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: AspectRatio(
-                      aspectRatio: 16 / 10,
-                      child: Image.network(
-                        '${api.baseUrl}$image',
-                        fit: BoxFit.cover,
-                        errorBuilder: (c, e, s) => ColoredBox(color: t.highlight, child: Center(child: Image.asset(t.shapeAsset, width: 72, height: 72))),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 6),
-                  Text('사진: ${d!['credit']}', style: const TextStyle(fontSize: 11, color: AppColors.inkSoft)),
-                  const SizedBox(height: 14),
-                ],
                 Row(
                   children: [
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(color: AppColors.ink, borderRadius: BorderRadius.circular(999)),
+                      decoration: BoxDecoration(color: kindStyle(event['kind'] as String).color, borderRadius: BorderRadius.circular(999)),
                       child: Text(event['kind'] as String, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white)),
                     ),
                     if (event['local'] == true) ...[
@@ -332,6 +401,16 @@ class _EventSheet extends StatelessWidget {
                     ),
                   ),
                 ],
+                if (image != null) ...[
+                  const SizedBox(height: 22),
+                  ZoomImage(
+                    provider: NetworkImage('${api.baseUrl}$image'),
+                    background: t.highlight,
+                    onError: ColoredBox(color: t.highlight, child: SizedBox(height: 140, child: Center(child: Image.asset(t.shapeAsset, width: 72, height: 72)))),
+                  ),
+                  const SizedBox(height: 6),
+                  Text('사진: ${d!['credit']}', style: const TextStyle(fontSize: 11, color: AppColors.inkSoft)),
+                ],
                 if (ok) ...[
                   const SizedBox(height: 18),
                   Text('출처: ${d['credit']}', style: const TextStyle(fontSize: 11, color: AppColors.inkSoft)),
@@ -339,6 +418,43 @@ class _EventSheet extends StatelessWidget {
               ],
             );
           },
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+
+class _Chip extends StatelessWidget {
+  const _Chip({required this.label, required this.selected, required this.onTap, this.dotColor});
+
+  final Color? dotColor; // 종류 칩 앞의 색 점
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+        decoration: BoxDecoration(
+          color: selected ? AppColors.ink : AppColors.background,
+          border: Border.all(color: selected ? AppColors.ink : AppColors.line),
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (dotColor != null) ...[Container(width: 7, height: 7, decoration: BoxDecoration(shape: BoxShape.circle, color: dotColor)), const SizedBox(width: 6)],
+            Text(
+              label,
+              style: TextStyle(fontSize: 13, fontWeight: selected ? FontWeight.w700 : FontWeight.w500, color: selected ? Colors.white : AppColors.ink),
+            ),
+          ],
         ),
       ),
     );

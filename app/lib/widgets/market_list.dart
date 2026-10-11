@@ -4,6 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../api_client.dart';
 import '../theme.dart';
 import 'components.dart';
+import 'zoom_image.dart';
 
 /// 지역(시군구, 없으면 시도)의 전통시장 목록. 시설(주차장·아케이드 등)로 거르고, 시설 많은 순·가나다순·
 /// 시군구순으로 정렬하고, 누르면 주소·시설·지도 링크(있으면 사진)가 있는 상세가 열려요.
@@ -26,7 +27,7 @@ enum _Sort { facilities, name, sigungu }
 
 class _MarketListState extends State<MarketList> {
   static const _filters = ['전체', '주차장', '아케이드', '휴게실', '카트', '수유실'];
-  static const _limit = 8;
+  static const _limit = kListLimit;
   String _filter = '전체';
   _Sort _sort = _Sort.facilities;
   bool _showAll = false;
@@ -67,7 +68,7 @@ class _MarketListState extends State<MarketList> {
             children: [
               for (final f in _filters)
                 _MiniPill(
-                  label: f == '전체' ? f : '$f 있음',
+                  label: f,
                   selected: _filter == f,
                   onTap: () => setState(() {
                     _filter = f;
@@ -118,14 +119,7 @@ class _MarketListState extends State<MarketList> {
             onTap: () => _showDetail(context, m),
           ),
         if (!_showAll && rows.length > _limit)
-          GestureDetector(
-            onTap: () => setState(() => _showAll = true),
-            behavior: HitTestBehavior.opaque,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              child: Center(child: Text('${rows.length - _limit}곳 더 보기', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700))),
-            ),
-          ),
+          ShowMoreButton(count: rows.length - _limit, unit: '곳', onTap: () => setState(() => _showAll = true)),
       ],
     );
   }
@@ -192,30 +186,6 @@ class _MarketSheet extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            FutureBuilder<Map<String, dynamic>>(
-              future: api.marketDetail(name: name, sigungu: sigungu),
-              builder: (context, snap) {
-                final d = snap.data;
-                if (d == null || d['found'] != true) return const SizedBox.shrink();
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(4),
-                        child: AspectRatio(
-                          aspectRatio: 16 / 10,
-                          child: Image.network('${api.baseUrl}${d['image']}', fit: BoxFit.cover, errorBuilder: (c, e, s) => const SizedBox.shrink()),
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      Text('사진: ${d['credit']} · ${d['license']}', style: const TextStyle(fontSize: 11, color: AppColors.inkSoft)),
-                    ],
-                  ),
-                );
-              },
-            ),
             Text(name, style: AppTheme.displaySerif(size: 24, fontWeight: FontWeight.w700)),
             const SizedBox(height: 6),
             Text('${market['type']} · $sigungu', style: const TextStyle(fontSize: 13, color: AppColors.inkSoft)),
@@ -252,6 +222,24 @@ class _MarketSheet extends StatelessWidget {
                     ),
                   ),
               ],
+            ),
+            FutureBuilder<Map<String, dynamic>>(
+              future: api.marketDetail(name: name, sigungu: sigungu),
+              builder: (context, snap) {
+                final d = snap.data;
+                if (d == null || d['found'] != true) return const SizedBox.shrink();
+                return Padding(
+                  padding: const EdgeInsets.only(top: 22),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      ZoomImage(provider: NetworkImage('${api.baseUrl}${d['image']}')),
+                      const SizedBox(height: 6),
+                      Text('사진: ${d['credit']} · ${d['license']}', style: const TextStyle(fontSize: 11, color: AppColors.inkSoft)),
+                    ],
+                  ),
+                );
+              },
             ),
             const SizedBox(height: 22),
             const Text(

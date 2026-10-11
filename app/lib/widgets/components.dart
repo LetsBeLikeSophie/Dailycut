@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../theme.dart';
+import 'sources_info.dart';
 
 /// 2026-10-10: "카드 상자 대신 한 화면 전체를 규칙으로 디자인"하는 방향으로
 /// 전면 개편(디자인 시안: 생활 탭 한 화면). 규칙 여섯 가지 —
@@ -65,24 +66,6 @@ String changeLabel(String change, {num? pct}) {
   };
   if (pct == null) return arrow;
   return '$arrow ${pct.abs() == pct.abs().roundToDouble() ? pct.abs().round() : pct.abs()}%';
-}
-
-/// 출처 표기 — 기획 문서 원칙("모든 데이터 카드에는 출처를 표시").
-class SourceTag extends StatelessWidget {
-  const SourceTag({super.key, required this.source});
-
-  final String source;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(top: 12),
-      child: Text(
-        '출처: $source',
-        style: const TextStyle(fontSize: 11, color: AppColors.inkSoft),
-      ),
-    );
-  }
 }
 
 /// 제목 속 일부 구절만 섹션 형광펜으로 강조(전체 문장은 그대로).
@@ -189,8 +172,10 @@ class PageHero extends StatelessWidget {
     this.backHint,
     this.stub = false,
     this.onEyebrowTap,
+    this.headlineLines = 0,
   });
 
+  final int headlineLines; // 제목이 짧아도 이 줄 수만큼 자리를 비워 둠(고른 항목이 바뀔 때 화면이 위아래로 안 출렁이게)
   final VoidCallback? onEyebrowTap; // 있으면 눈썹 글(예: '오늘 · 서울 ▾')을 눌러 지역 선택
   final bool stub; // 실데이터가 아니면 true(개발용 표시)
   final Section section;
@@ -215,23 +200,26 @@ class PageHero extends StatelessWidget {
     );
     final front = _HeroFrame(
       section: section,
+      source: source,
       onEyebrowTap: onEyebrowTap,
       eyebrow: eyebrow ?? t.label,
-      headline: HighlightText(
-        text: headline,
-        emphasis: emphasis,
-        color: t.highlight,
-        style: AppTheme.displaySerif(
-          size: 24,
-          fontWeight: FontWeight.w700,
-          letterSpacing: -0.2,
+      headline: ConstrainedBox(
+        constraints: BoxConstraints(minHeight: 24 * 1.4 * headlineLines),
+        child: HighlightText(
+          text: headline,
+          emphasis: emphasis,
+          color: t.highlight,
+          style: AppTheme.displaySerif(
+            size: 24,
+            fontWeight: FontWeight.w700,
+            letterSpacing: -0.2,
+          ),
         ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ...body,
-          if (source != null) SourceTag(source: source!),
           if (back != null) hint(backHint ?? '눌러서 더 보기'),
         ],
       ),
@@ -243,7 +231,8 @@ class PageHero extends StatelessWidget {
         stub: stub,
         child: _HeroFrame(
           section: section,
-          onEyebrowTap: onEyebrowTap,
+          source: source,
+              onEyebrowTap: onEyebrowTap,
           eyebrow: eyebrow ?? t.label,
           headline: Text(
             backTitle ?? '',
@@ -270,8 +259,10 @@ class _HeroFrame extends StatelessWidget {
     required this.headline,
     required this.child,
     this.onEyebrowTap,
+    this.source,
   });
 
+  final String? source;
   final VoidCallback? onEyebrowTap;
   final Section section;
   final String eyebrow;
@@ -288,20 +279,33 @@ class _HeroFrame extends StatelessWidget {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text.rich(
-              TextSpan(
-                children: [
-                  const TextSpan(
-                    text: '데일리컷',
-                    style: TextStyle(fontWeight: FontWeight.w700),
-                  ),
+            Row(
+              children: [
+                Text.rich(
                   TextSpan(
-                    text:
-                        '   ${now.month}월 ${now.day}일 ${_weekdays[now.weekday - 1]}요일',
+                    children: [
+                      const TextSpan(
+                        text: '데일리컷',
+                        style: TextStyle(fontWeight: FontWeight.w700),
+                      ),
+                      TextSpan(
+                        text:
+                            '   ${now.month}월 ${now.day}일 ${_weekdays[now.weekday - 1]}요일',
+                      ),
+                    ],
                   ),
-                ],
-              ),
-              style: const TextStyle(fontSize: 13, color: AppColors.ink),
+                  style: const TextStyle(fontSize: 13, color: AppColors.ink),
+                ),
+                // 데이터 출처: 날짜 옆의 작은 ⓘ(배경 없이) — 누르면 이 화면의 출처와 앱 전체 출처 목록
+                GestureDetector(
+                  onTap: () => showSourcesSheet(context, current: source),
+                  behavior: HitTestBehavior.opaque,
+                  child: const Padding(
+                    padding: EdgeInsets.fromLTRB(8, 8, 12, 8),
+                    child: Icon(Icons.info_outline, size: 15, color: AppColors.inkSoft),
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: 86),
             GestureDetector(
@@ -345,7 +349,6 @@ class _BlobState extends State<_Blob> with SingleTickerProviderStateMixin {
     duration: const Duration(seconds: 10),
   );
   bool _started = false;
-
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -461,10 +464,30 @@ class ChartPoint {
 /// 선은 왼쪽→오른쪽으로 그려지고 끝점(오늘)은 섹션 색 원. 좌우 20px 안쪽에서
 /// 시작해서 본문 여백과 정렬됨.
 class TrendChart extends StatefulWidget {
-  const TrendChart({super.key, required this.section, required this.points});
+  const TrendChart({
+    super.key,
+    required this.section,
+    required this.points,
+    this.format,
+    this.unit = '',
+    this.xMax,
+    this.ticks,
+    this.xLabel,
+    this.selLabel,
+  });
 
   final Section section;
   final List<ChartPoint> points;
+
+  /// 값 표시 형식(기본: 1000 이상은 정수+쉼표, 그 밑은 소수 한 자리).
+  final String Function(double)? format;
+  final String unit;
+
+  /// 기본은 "이번 달 1일~말일" 축. 월별 지표처럼 다른 축이 필요하면 xMax(1~xMax), 눈금, 라벨을 직접 줌.
+  final int? xMax;
+  final List<int>? ticks;
+  final String Function(int)? xLabel;
+  final String Function(int)? selLabel; // 눌러서 고른 점/최고·최저에 붙일 자세한 날짜(없으면 xLabel)
 
   @override
   State<TrendChart> createState() => _TrendChartState();
@@ -477,6 +500,34 @@ class _TrendChartState extends State<TrendChart>
     duration: const Duration(milliseconds: 1100),
   );
   bool _started = false;
+  int? _sel; // 눌러서 고른 점(points 인덱스)
+
+  String _fmt(double v) {
+    final f = widget.format;
+    if (f != null) return f(v);
+    final txt = v.abs() >= 1000
+        ? formatNumber(v)
+        : (v == v.roundToDouble() ? v.toStringAsFixed(0) : formatNumber(v, decimals: 1));
+    return '$txt${widget.unit}';
+  }
+
+  void _pick(double dx, double w, int days) {
+    if (widget.points.isEmpty) return;
+    const padX = 20.0;
+    final width = w - padX * 2;
+    var best = 0;
+    var bestD = double.infinity;
+    for (var i = 0; i < widget.points.length; i++) {
+      final x = padX + width * (widget.points[i].day - 1) / (days - 1);
+      final d = (x - dx).abs();
+      if (d < bestD) {
+        bestD = d;
+        best = i;
+      }
+    }
+    if (_sel != best) setState(() => _sel = best);
+  }
+
 
   @override
   void didChangeDependencies() {
@@ -501,10 +552,11 @@ class _TrendChartState extends State<TrendChart>
   Widget build(BuildContext context) {
     final t = sectionThemes[widget.section]!;
     final now = DateTime.now();
-    final days = DateTime(now.year, now.month + 1, 0).day;
+    final monthly = widget.xMax == null;
+    final days = widget.xMax ?? DateTime(now.year, now.month + 1, 0).day;
     final curve = CurvedAnimation(parent: _c, curve: Curves.easeOutCubic);
     // 눈금: 1, 5, 10, 15, 20, 25, 말일
-    final ticks = <int>[1, 5, 10, 15, 20, 25, days];
+    final ticks = widget.ticks ?? <int>[1, 5, 10, 15, 20, 25, days];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -517,16 +569,23 @@ class _TrendChartState extends State<TrendChart>
                 minWidth: w,
                 maxWidth: w,
                 alignment: Alignment.center,
-                child: AnimatedBuilder(
-                  animation: curve,
-                  builder: (context, _) => CustomPaint(
-                    size: Size(w, 120),
-                    painter: _TrendPainter(
-                      points: widget.points,
-                      days: days,
-                      progress: curve.value,
-                      fill: t.highlight,
-                      dot: t.color,
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTapDown: (d) => _pick(d.localPosition.dx, w, days),
+                  onHorizontalDragStart: (d) => _pick(d.localPosition.dx, w, days),
+                  onHorizontalDragUpdate: (d) => _pick(d.localPosition.dx, w, days),
+                  child: AnimatedBuilder(
+                    animation: curve,
+                    builder: (context, _) => CustomPaint(
+                      size: Size(w, 120),
+                      painter: _TrendPainter(
+                        points: widget.points,
+                        days: days,
+                        progress: curve.value,
+                        fill: t.highlight,
+                        dot: t.color,
+                        selected: _sel,
+                      ),
                     ),
                   ),
                 ),
@@ -548,13 +607,13 @@ class _TrendChartState extends State<TrendChart>
                     child: FractionalTranslation(
                       translation: const Offset(-0.5, 0),
                       child: Text(
-                        d == 1 || d == days ? '$d일' : '$d',
+                        widget.xLabel?.call(d) ?? (d == 1 || d == days ? '$d일' : '$d'),
                         style: TextStyle(
                           fontSize: 11,
-                          color: d == now.day
+                          color: monthly && d == now.day
                               ? AppColors.ink
                               : AppColors.inkSoft,
-                          fontWeight: d == now.day
+                          fontWeight: monthly && d == now.day
                               ? FontWeight.w700
                               : FontWeight.w400,
                         ),
@@ -565,6 +624,48 @@ class _TrendChartState extends State<TrendChart>
             ),
           ),
         ),
+        const SizedBox(height: 10),
+        _summary(),
+      ],
+    );
+  }
+
+  Widget _summary() {
+    final pts = widget.points;
+    if (pts.isEmpty) return const SizedBox.shrink();
+    var hi = pts.first, lo = pts.first;
+    for (final p in pts) {
+      if (p.value > hi.value) hi = p;
+      if (p.value < lo.value) lo = p;
+    }
+    const soft = TextStyle(fontSize: 12, color: AppColors.inkSoft, height: 1.5);
+    final sel = _sel != null && _sel! < pts.length ? pts[_sel!] : null;
+    return Wrap(
+      alignment: WrapAlignment.spaceBetween,
+      crossAxisAlignment: WrapCrossAlignment.center,
+      spacing: 12,
+      runSpacing: 2,
+      children: [
+        Wrap(
+          children: [
+            sel != null
+              ? Text.rich(
+                  TextSpan(children: [
+                    TextSpan(text: '${(widget.selLabel ?? widget.xLabel)?.call(sel.day) ?? '${sel.day}일'}  ', style: soft),
+                    TextSpan(
+                      text: _fmt(sel.value),
+                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.ink),
+                    ),
+                  ]),
+                )
+              : const SizedBox.shrink(),
+          ],
+        ),
+        if (pts.length >= 2 && hi.value != lo.value)
+          Text(
+            '최고 ${_fmt(hi.value)}(${(widget.selLabel ?? widget.xLabel)?.call(hi.day) ?? '${hi.day}일'}) · 최저 ${_fmt(lo.value)}(${(widget.selLabel ?? widget.xLabel)?.call(lo.day) ?? '${lo.day}일'})',
+            style: soft,
+          ),
       ],
     );
   }
@@ -577,6 +678,7 @@ class _TrendPainter extends CustomPainter {
     required this.progress,
     required this.fill,
     required this.dot,
+    this.selected,
   });
 
   final List<ChartPoint> points;
@@ -584,6 +686,7 @@ class _TrendPainter extends CustomPainter {
   final double progress;
   final Color fill;
   final Color dot;
+  final int? selected;
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -644,6 +747,26 @@ class _TrendPainter extends CustomPainter {
       canvas.restore();
     }
 
+    if (selected != null && selected! < points.length) {
+      final sp = at(points[selected!]);
+      canvas.drawLine(
+        Offset(sp.dx, 0),
+        Offset(sp.dx, size.height),
+        Paint()
+          ..color = AppColors.ink.withValues(alpha: 0.35)
+          ..strokeWidth = 1,
+      );
+      canvas.drawCircle(sp, 5, Paint()..color = Colors.white);
+      canvas.drawCircle(
+        sp,
+        5,
+        Paint()
+          ..color = AppColors.ink
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2,
+      );
+    }
+
     final o = ((progress - 0.9) / 0.1).clamp(0.0, 1.0);
     if (o > 0) {
       canvas.drawCircle(last, 6, Paint()..color = dot.withValues(alpha: o));
@@ -660,7 +783,7 @@ class _TrendPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _TrendPainter old) =>
-      old.progress != progress || old.points != points || old.days != days;
+      old.progress != progress || old.points != points || old.days != days || old.selected != selected;
 }
 
 /// 목록 속 작은 추이선(56x24).
@@ -719,14 +842,70 @@ class _MiniPainter extends CustomPainter {
 }
 
 /// 목록 한 묶음. 제목 + 오른쪽 작은 보조 글 + 진한 선 한 줄, 그 아래 행들.
+/// 앱 전체에서 긴 목록을 처음에 보여주는 개수(맨 처음 화면의 날짜·기간 목록은 예외). 넘으면 "더 보기".
+const kListLimit = 6;
+
+/// 목록 맨 아래 "N개 더 보기" 버튼 — 모든 긴 목록이 같은 모양·같은 자리에서 펼쳐지게 공용으로 씀.
+class ShowMoreButton extends StatelessWidget {
+  const ShowMoreButton({super.key, required this.count, required this.onTap, this.unit = '개'});
+
+  final int count;
+  final String unit;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        child: Center(child: Text('$count$unit 더 보기', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700))),
+      ),
+    );
+  }
+}
+
+/// 자식이 [limit]개를 넘으면 앞쪽만 보여주고 "더 보기"로 펼치는 목록(상태를 스스로 가짐).
+class ExpandableList extends StatefulWidget {
+  const ExpandableList({super.key, required this.children, this.limit = kListLimit, this.unit = '개'});
+
+  final List<Widget> children;
+  final int limit;
+  final String unit;
+
+  @override
+  State<ExpandableList> createState() => _ExpandableListState();
+}
+
+class _ExpandableListState extends State<ExpandableList> {
+  bool _all = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final over = widget.children.length - widget.limit;
+    final shown = _all || over <= 0 ? widget.children : widget.children.take(widget.limit).toList();
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        ...shown,
+        if (!_all && over > 0) ShowMoreButton(count: over, unit: widget.unit, onTap: () => setState(() => _all = true)),
+      ],
+    );
+  }
+}
+
 class ListSection extends StatelessWidget {
   const ListSection({
     super.key,
     required this.title,
     this.trailing,
+    this.action,
     this.stub = false,
     required this.children,
   });
+
+  final Widget? action; // 제목 줄 오른쪽 끝의 작은 아이콘 버튼(예: 설정)
 
   final String title;
   final String? trailing;
@@ -757,6 +936,7 @@ class ListSection extends StatelessWidget {
                       color: AppColors.inkSoft,
                     ),
                   ),
+                ?action,
               ],
             ),
             const SizedBox(height: 10),
@@ -783,8 +963,21 @@ class ListLine extends StatelessWidget {
     this.stub = false,
     this.badge,
     this.onTap,
+    this.valueColor,
+    this.valueWeight = FontWeight.w700,
+    this.nameIcon,
+    this.nameIconColor = AppColors.ink,
+    this.tag,
   });
 
+  final Color nameIconColor;
+
+  final String? tag; // 이름 옆 윤곽 알약(예: 장바구니에 '담김')
+
+  final IconData? nameIcon; // 이름 옆 작은 아이콘(예: 장바구니에 담긴 품목)
+
+  final FontWeight valueWeight; // 값 굵기(기본 굵게, 생활지수 같은 목록은 보통으로)
+  final Color? valueColor; // 값 글자색(예: 지수 좋음/나쁨 구분)
   final String? badge; // 이름 옆 작은 알약(예: '제철')
   final VoidCallback? onTap; // 있으면 줄을 눌러 상세로
   final bool stub; // 실데이터가 아닌 줄(개발용 분홍 배경 표시)
@@ -823,6 +1016,18 @@ class ListLine extends StatelessWidget {
                         ),
                       ),
                     ),
+                    if (nameIcon != null) ...[
+                      const SizedBox(width: 6),
+                      Icon(nameIcon, size: 16, color: nameIconColor),
+                    ],
+                    if (tag != null) ...[
+                      const SizedBox(width: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                        decoration: BoxDecoration(border: Border.all(color: AppColors.ink), borderRadius: BorderRadius.circular(999)),
+                        child: Text(tag!, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700)),
+                      ),
+                    ],
                     if (badge != null) ...[
                       const SizedBox(width: 6),
                       Container(
@@ -863,10 +1068,11 @@ class ListLine extends StatelessWidget {
                   Text(
                     value!,
                     textAlign: TextAlign.right,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16,
-                      fontWeight: FontWeight.w700,
-                      fontFeatures: [FontFeature.tabularFigures()],
+                      fontWeight: valueWeight,
+                      color: valueColor,
+                      fontFeatures: const [FontFeature.tabularFigures()],
                     ),
                   ),
                   if (valueSub != null) ...[
@@ -1056,6 +1262,42 @@ class SeasonLegend extends StatelessWidget {
             ),
         ],
       ),
+    );
+  }
+}
+
+
+/// 화살표로 항목을 돌려 보는 선택기: ‹ 코스피 1/4 › — 고정 높이라 고른 항목이 바뀌어도 아래가 출렁이지 않음.
+class ArrowSelector extends StatelessWidget {
+  const ArrowSelector({super.key, required this.label, required this.index, required this.count, required this.onChanged});
+
+  final String label;
+  final int index; // 0부터
+  final int count;
+  final ValueChanged<int> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    Widget arrow(IconData icon, int delta) => GestureDetector(
+          onTap: count < 2 ? null : () => onChanged((index + delta + count) % count),
+          behavior: HitTestBehavior.opaque,
+          child: SizedBox(width: 44, height: 36, child: Icon(icon, size: 22, color: count < 2 ? AppColors.line : AppColors.ink)),
+        );
+    return Row(
+      children: [
+        arrow(Icons.chevron_left, -1),
+        Expanded(
+          child: Center(
+            child: Text.rich(
+              TextSpan(children: [
+                TextSpan(text: label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                TextSpan(text: '   ${index + 1}/$count', style: const TextStyle(fontSize: 12, color: AppColors.inkSoft)),
+              ]),
+            ),
+          ),
+        ),
+        arrow(Icons.chevron_right, 1),
+      ],
     );
   }
 }

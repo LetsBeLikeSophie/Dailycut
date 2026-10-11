@@ -46,6 +46,14 @@ def init() -> None:
                     unit TEXT,
                     PRIMARY KEY (source, item, day)
                 );
+                -- 익명 이용 통계: (날짜, 이벤트, 값)별 횟수만 저장. 사용자·기기 식별 값은 어디에도 없음.
+                CREATE TABLE IF NOT EXISTS usage_events (
+                    day TEXT NOT NULL,
+                    name TEXT NOT NULL,
+                    prop TEXT NOT NULL DEFAULT '',
+                    n INTEGER NOT NULL DEFAULT 0,
+                    PRIMARY KEY (day, name, prop)
+                );
                 CREATE TABLE IF NOT EXISTS job_status (
                     name TEXT PRIMARY KEY,
                     last_run TEXT,
@@ -140,3 +148,20 @@ def set_status(name: str, *, ok: bool, error: str | None = None) -> None:
 
 def all_status() -> dict[str, dict]:
     return {r["name"]: dict(r) for r in _query("SELECT * FROM job_status")}
+
+
+def record_usage(rows: list[tuple[str, str]]) -> int:
+    """rows: (이벤트, 값) 목록 → 오늘 날짜의 횟수를 올림. 개인을 구분하는 정보는 받지도 저장하지도 않음."""
+    day = datetime.now().date().isoformat()
+    with _lock:
+        c = _conn()
+        try:
+            c.executemany(
+                "INSERT INTO usage_events(day,name,prop,n) VALUES (?,?,?,1) "
+                "ON CONFLICT(day,name,prop) DO UPDATE SET n=n+1",
+                [(day, name, prop) for name, prop in rows],
+            )
+            c.commit()
+        finally:
+            c.close()
+    return len(rows)

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'api_client.dart';
 import 'screens/today_screen.dart';
 import 'screens/section_screens.dart';
+import 'analytics.dart';
 import 'region.dart';
 import 'theme.dart';
 
@@ -38,12 +39,14 @@ class _RootShellState extends State<RootShell> {
   // 투데이 카드로만 있으면 충분하다는 피드백 — 탭은 원래 5개로 되돌림
   // (Section.weather 자체는 투데이 카드 테마용으로 theme.dart에 남겨둠).
   static const _tabs = ['투데이', '생활', '문화', '머니', 'AI'];
+  static const _tabKeys = ['today', 'life', 'culture', 'money', 'ai'];
 
   @override
   void initState() {
     super.initState();
     // 지역(시도)을 정함: 저장된 선택 → 위치 권한(허용 시 내 시도) → 기본 서울
     RegionStore.instance.init(_api);
+    Analytics.instance.track('tab_view', 'today');
   }
 
   /// 지역에 따라 달라지는 화면(투데이·생활·문화)은 지역이 바뀌면 새로 만들어서 다시 받아옴.
@@ -85,7 +88,10 @@ class _RootShellState extends State<RootShell> {
                 for (var i = 0; i < _tabs.length; i++)
                   Expanded(
                     child: GestureDetector(
-                      onTap: () => setState(() => _index = i),
+                      onTap: () {
+                        setState(() => _index = i);
+                        Analytics.instance.track('tab_view', _tabKeys[i]);
+                      },
                       behavior: HitTestBehavior.opaque,
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,

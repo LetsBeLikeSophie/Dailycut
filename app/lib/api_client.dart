@@ -25,8 +25,16 @@ class ApiClient {
   Future<Map<String, dynamic>> ai() => _getJson('/ai');
 
   /// 좌표(소수 둘째 자리로 뭉갠 값) → 시도. 서버는 좌표를 저장하지 않음.
-  Future<Map<String, dynamic>> resolveRegion({required double lat, required double lon}) =>
-      _getJson('/region', {'lat': '$lat', 'lon': '$lon'});
+  /// POST 본문으로 보냄(주소창 쿼리에 넣으면 서버 접속 로그에 좌표가 남기 때문).
+  Future<Map<String, dynamic>> resolveRegion({required double lat, required double lon}) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/region'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'lat': lat, 'lon': lon}),
+    );
+    if (res.statusCode != 200) throw Exception('/region 응답 실패: ${res.statusCode}');
+    return jsonDecode(utf8.decode(res.bodyBytes)) as Map<String, dynamic>;
+  }
 
   Future<Map<String, dynamic>> _getJson(String path, [Map<String, String?> query = const {}]) async {
     final q = {

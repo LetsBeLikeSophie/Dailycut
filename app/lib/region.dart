@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'analytics.dart';
+
 import 'api_client.dart';
 import 'location.dart';
 import 'theme.dart';
@@ -93,6 +95,7 @@ class RegionStore extends ChangeNotifier {
   }
 
   Future<void> choose(Region r) async {
+    Analytics.instance.track('region_pick', r.code); // 시도 코드만(시군구·좌표는 보내지 않음)
     current = r;
     source = 'saved';
     notifyListeners();

@@ -96,7 +96,9 @@ def _daily(pivot: dict, days: list[date]) -> dict[date, dict]:
 
 
 def _mid(now: datetime, wanted: list[date], land_reg: str, temp_reg: str) -> dict[date, dict]:
-    """중기예보(4일 뒤부터). 발표는 06시·18시, 발표 직후에는 아직 없어서 30분 여유."""
+    """중기예보. 발표는 06시·18시(발표 직후엔 아직 없어서 30분 여유).
+    18시 발표분은 5일 뒤부터 시작해서(06시 발표분은 4일 뒤부터) 저녁에는 하루가 비므로,
+    최신 발표분으로 먼저 채우고 비는 날은 직전 발표분(12시간 전)으로 채움."""
     base = now - timedelta(minutes=30)
     if base.hour >= 18:
         tm = base.replace(hour=18, minute=0, second=0, microsecond=0)
@@ -105,24 +107,31 @@ def _mid(now: datetime, wanted: list[date], land_reg: str, temp_reg: str) -> dic
     else:
         tm = (base - timedelta(days=1)).replace(hour=18, minute=0, second=0, microsecond=0)
     root = _cfg("KMA_MID_FCST_BASE_URL")
-    common = {"pageNo": 1, "numOfRows": 10, "dataType": "JSON", "tmFc": tm.strftime("%Y%m%d%H%M")}
-    ta = (_http.items_of(_http.get_json(root + "/getMidTa", {**common, "regId": temp_reg})) or [{}])[0]
-    land = (_http.items_of(_http.get_json(root + "/getMidLandFcst", {**common, "regId": land_reg})) or [{}])[0]
-    out = {}
-    for n in range(3, 11):
-        d = tm.date() + timedelta(days=n)
-        if d not in wanted:
+    out: dict[date, dict] = {}
+    for t in (tm, tm - timedelta(hours=12)):
+        if all(d in out for d in wanted):
+            break
+        common = {"pageNo": 1, "numOfRows": 10, "dataType": "JSON", "tmFc": t.strftime("%Y%m%d%H%M")}
+        try:
+            ta = (_http.items_of(_http.get_json(root + "/getMidTa", {**common, "regId": temp_reg})) or [{}])[0]
+            land = (_http.items_of(_http.get_json(root + "/getMidLandFcst", {**common, "regId": land_reg})) or [{}])[0]
+        except Exception:
             continue
-        low, high = ta.get(f"taMin{n}"), ta.get(f"taMax{n}")
-        cond = land.get(f"wf{n}Pm") or land.get(f"wf{n}")
-        pop = land.get(f"rnSt{n}Pm") if f"rnSt{n}Pm" in land else land.get(f"rnSt{n}")
-        if low is None or high is None or not cond:
-            continue
-        out[d] = {"low": round(low), "high": round(high), "pop": int(pop or 0), "condition": cond}
+        for n in range(3, 11):
+            d = t.date() + timedelta(days=n)
+            if d not in wanted or d in out:
+                continue
+            low, high = ta.get(f"taMin{n}"), ta.get(f"taMax{n}")
+            cond = land.get(f"wf{n}Pm") or land.get(f"wf{n}")
+            pop = land.get(f"rnSt{n}Pm") if f"rnSt{n}Pm" in land else land.get(f"rnSt{n}")
+            if low is None or high is None or not cond:
+                continue
+            out[d] = {"low": round(low), "high": round(high), "pop": int(pop or 0), "condition": cond}
     return out
 
 
-def _outfit(temp: int, rainy: bool) -> str:
+def _outfit(temp: int, rainy: bool, swing: int = 0) -> str:
+    """temp: 낮 시간대(9~18시) 평균 기온. swing: 하루 최고-최저 차이(일교차)."""
     if temp >= 28:
         s = "민소매나 얇은 반팔에 시원한 하의가 좋아요"
     elif temp >= 23:
@@ -139,6 +148,8 @@ def _outfit(temp: int, rainy: bool) -> str:
         s = "두꺼운 코트에 목도리를 더하세요"
     else:
         s = "패딩과 목도리, 장갑까지 챙기세요"
+    if swing >= 10:
+        s += " · 일교차가 커서 아침저녁엔 겉옷도 챙기세요"
     return s + (" · 우산도 챙기세요" if rainy else "")
 
 
@@ -190,19 +201,36 @@ def _air(place: dict) -> dict:
 
 # ---------------- 생활 지수 ----------------
 
-def _warning(now: datetime, region: dict) -> dict | None:
-    """발효 중인 기상특보. 지점이 서울(108, 수도권) 하나뿐이라 서울·인천·경기에서만 보임 —
-    다른 시도는 지점코드 표를 확인해야 함. 평소엔 비어 있고 특보가 있을 때만 줄이 뜸."""
-    if region["code"] not in ("11", "28", "41"):
-        return None
-    body = _http.get_json(
-        _cfg("KMA_WARNING_BASE_URL") + "/getWthrWrnList",
-        {"stnId": "108", "dataType": "JSON", "numOfRows": 5, "pageNo": 1},
-    )
-    items = _http.items_of(body)
-    if not items:
-        return None
-    return {"title": "기상특보(서울·수도권)", "meta": str(items[0].get("title") or items[0])[:30], "basis": "기상청 기상특보(서울 지점)"}
+WARNING_REGIONS = ("11", "28", "41")  # 서울·인천·경기(기상청 수도권 지점 108)만 지원
+
+
+def _warning(now: datetime, region: dict) -> dict:
+    """발효 중인 기상특보. 지점이 서울(108, 수도권) 하나뿐이라 서울·인천·경기에서만 제공함 — 다른 시도는
+    지점 코드 표를 확인해야 해서 "제공 안 함"으로 보여줌.
+    특보 현황(getPwnStatus)의 전국 현재 특보 글에서 "해제"가 아닌 주의보·경보 줄 중 우리 지역 이름이 든 것만 고름.
+    특보가 실제로 발효된 날의 글 모양은 못 봐서(오늘은 "없음"), 줄 단위로 방어적으로 읽음.
+    반환: {"supported", "items": [{"title", "text"}], "recent": 최근 통보 제목}."""
+    if region["code"] not in WARNING_REGIONS:
+        return {"supported": False, "items": [], "recent": None}
+    base = _cfg("KMA_WARNING_BASE_URL")
+    status = _http.items_of(_http.get_json(base + "/getPwnStatus", {"stnId": "108", "dataType": "JSON", "numOfRows": 5, "pageNo": 1}))
+    text = ""
+    if status:
+        text = "\n".join(str(status[0][k]) for k in ("t1", "t2", "t3", "t4", "t5", "t6", "t7", "other") if status[0].get(k))
+    keys = [k for k in (region["sido"], region.get("sgg")) if k]
+    items = []
+    for line in text.splitlines():
+        line = line.strip().lstrip("o").strip()
+        if line and ("주의보" in line or "경보" in line) and "해제" not in line and any(k in line for k in keys):
+            items.append({"title": line[:160], "text": None})
+    recent = None
+    try:
+        lst = _http.items_of(_http.get_json(base + "/getWthrWrnList", {"stnId": "108", "dataType": "JSON", "numOfRows": 1, "pageNo": 1}))
+        if lst:
+            recent = str(lst[0].get("title"))[:160]
+    except Exception:
+        pass
+    return {"supported": True, "items": items, "recent": recent}
 
 
 def _uv(now: datetime, region: dict) -> dict | None:
@@ -297,7 +325,7 @@ def fetch(code: str, sgg: str | None = None) -> dict:
     else:
         daily_src = _short((today - timedelta(days=1)).strftime("%Y%m%d"), "2300", nx, ny)
     merged = {k: {**daily_src.get(k, {}), **latest.get(k, {})} for k in set(daily_src) | set(latest)}
-    daily = _daily(merged, [today + timedelta(days=i) for i in range(3)])
+    daily = _daily(merged, [today + timedelta(days=i) for i in range(4)])  # 단기예보는 글피(+3일)까지 줌
 
     temp = float(ncst.get("T1H", "nan"))
     if math.isnan(temp):
@@ -363,7 +391,7 @@ def fetch(code: str, sgg: str | None = None) -> dict:
                 "weekday": WEEKDAYS[d.weekday()],
                 "date": f"{d.month}/{d.day}",
                 "is_today": d == today,
-                # 기상청이 단기예보(~2일 뒤)와 중기예보(4일 뒤~) 사이의 하루는 제공하지 않아 값이 비는 날이 있음
+                # 단기예보는 3일 뒤까지, 중기예보는 4일 뒤부터라 이어지지만, 어느 한쪽이 실패하면 값이 빌 수 있음
                 "high": row["high"] if row else None,
                 "low": row["low"] if row else None,
                 "condition": row["condition"] if row else None,
@@ -401,7 +429,7 @@ def fetch(code: str, sgg: str | None = None) -> dict:
         out["air_quality"] = {"pm10": "정보 없음", "pm25": "정보 없음"}
 
     life = []
-    for fn in (_warning, _uv, _sun, _pollen):
+    for fn in (_uv, _sun, _pollen):
         try:
             row = fn(now, region)
             if row:
@@ -421,6 +449,120 @@ def fetch(code: str, sgg: str | None = None) -> dict:
             out["next_holiday"] = nh
     except Exception:
         pass
+
+    # ---- 오늘의 생활 지수(아이콘·누르면 설명) ----
+    warning = {"supported": False, "items": []}
+    try:
+        warning = _warning(now, region)
+    except Exception:
+        warning = {"supported": region["code"] in WARNING_REGIONS, "items": [], "error": True}
+
+    day_hours = [allv.get((today.strftime("%Y%m%d"), f"{h:02d}00")) for h in range(9, 19)]
+    day_hours = [v for v in day_hours if v]
+    pop_day = max([int(v.get("POP", 0)) for v in day_hours] or [0])
+    rain_day = any(v.get("PTY", "0") != "0" for v in day_hours)
+    reh_vals = [float(v["REH"]) for v in day_hours if "REH" in v]
+    wind_vals = [float(v["WSD"]) for v in day_hours if "WSD" in v]
+    reh = round(sum(reh_vals) / len(reh_vals)) if reh_vals else None
+    wind = round(sum(wind_vals) / len(wind_vals), 1) if wind_vals else None
+    air = out.get("air_quality", {})
+    dust_bad = air.get("pm25") in ("나쁨", "매우나쁨") or air.get("pm10") in ("나쁨", "매우나쁨")
+
+    # 빨래: 오늘 낮(9~18시)에 잘 마르는 날인가 — 비·습도·미세먼지만 봄(내일·모레 날씨는 보지 않음)
+    laundry_lines = [f"낮(9~18시) 강수확률 최대 {pop_day}%" + (" · 비 예보 있음" if rain_day else "")]
+    if reh is not None:
+        laundry_lines.append(f"낮 평균 습도 {reh}% (60% 아래면 잘 말라요, 70% 넘으면 눅눅해요)")
+    if wind is not None:
+        laundry_lines.append(f"낮 평균 바람 {wind}m/s (살랑이는 바람이면 더 빨리 말라요)")
+    laundry_lines.append(f"미세먼지 {air.get('pm10', '정보 없음')} · 초미세먼지 {air.get('pm25', '정보 없음')}")
+    laundry_lines.append("판정 기준: 비 예보나 강수확률 50% 이상이면 별로, 강수확률 30% 이상·습도 70% 이상·미세먼지 나쁨이면 보통, 그 외는 좋음")
+    if rain_day or pop_day >= 50:
+        laundry_level, laundry_value = "bad", "별로예요"
+    elif pop_day >= 30 or (reh is not None and reh >= 70) or dust_bad:
+        laundry_level, laundry_value = "ok", "보통이에요"
+    else:
+        laundry_level, laundry_value = "good", "좋아요"
+
+    # 세차: 닦고 나서 곧 비가 오면 헛수고라서 앞으로 1~2일 비 예보를 봄
+    next24 = [h for h in hourly if not h["is_past"]][:24]
+    pop_next = max([h["pop"] for h in next24] or [0])
+    wet_next = any(any(k in (h["condition"] or "") for k in ("비", "눈", "소나기")) for h in next24)
+    d2 = daily.get(today + timedelta(days=2), {})
+    pop_d2 = d2.get("pop", 0)
+    wash_lines = [f"앞으로 24시간 강수확률 최대 {pop_next}%" + (" · 비/눈 예보 있음" if wet_next else "")]
+    if d2:
+        wash_lines.append(f"모레({(today + timedelta(days=2)).month}/{(today + timedelta(days=2)).day}) 강수확률 {pop_d2}%")
+    wash_lines.append("비가 오기 전에 닦으면 효과가 줄어서, 앞으로 하루이틀 맑을 때가 좋아요")
+    if wet_next or pop_next >= 40:
+        wash_level, wash_value = "bad", "별로예요"
+    elif pop_d2 >= 50:
+        wash_level, wash_value = "ok", "보통이에요"
+        wash_lines.append("오늘은 괜찮지만 모레쯤 비 예보가 있어요")
+    else:
+        wash_level, wash_value = "good", "좋아요"
+
+    GRADE_LEVEL = {"좋음": "good", "보통": "ok", "나쁨": "bad", "매우나쁨": "bad"}
+    uv_row = next((r for r in life if r["title"] == "자외선"), None)
+    sun_row = next((r for r in life if r["title"] == "일출 · 일몰"), None)
+    pollen_row = next((r for r in life if r["title"].startswith("꽃가루")), None)
+    term_row = next((r for r in life if r["title"] == "다음 절기"), None)
+    uv_val = None
+    if uv_row:
+        import re as _re
+
+        m = _re.search(r"\((\d+)\)", uv_row["meta"])
+        uv_val = int(m.group(1)) if m else None
+
+    indexes = [
+        {"key": "laundry", "title": "빨래", "value": laundry_value, "level": laundry_level, "detail": laundry_lines,
+         "source": "데일리컷 기준(공식 지수 아님) · 기상청 단기예보(강수확률·습도·바람) + 에어코리아 미세먼지로 계산"},
+        {"key": "carwash", "title": "세차", "value": wash_value, "level": wash_level, "detail": wash_lines,
+         "source": "데일리컷 기준(공식 지수 아님) · 기상청 단기예보 강수확률로 계산"},
+        {"key": "pm10", "title": "미세먼지", "value": air.get("pm10", "정보 없음"), "level": GRADE_LEVEL.get(air.get("pm10")),
+         "detail": [f"PM10 {air.get('pm10_value')}㎍/㎥" if air.get("pm10_value") is not None else "측정값 없음",
+                    f"{air.get('scope', '')} 측정소 {air.get('stations', '')}곳 평균", "등급 기준(환경부): 좋음 30 이하 · 보통 80 이하 · 나쁨 150 이하 · 매우나쁨 초과"],
+         "source": "에어코리아 실시간 측정값을 데일리컷이 평균내 환경부 기준으로 등급화"},
+        {"key": "pm25", "title": "초미세먼지", "value": air.get("pm25", "정보 없음"), "level": GRADE_LEVEL.get(air.get("pm25")),
+         "detail": [f"PM2.5 {air.get('pm25_value')}㎍/㎥" if air.get("pm25_value") is not None else "측정값 없음",
+                    f"{air.get('scope', '')} 측정소 {air.get('stations', '')}곳 평균", "등급 기준(환경부): 좋음 15 이하 · 보통 35 이하 · 나쁨 75 이하 · 매우나쁨 초과"],
+         "source": "에어코리아 실시간 측정값을 데일리컷이 평균내 환경부 기준으로 등급화"},
+    ]
+    if uv_row:
+        indexes.append(
+            {"key": "uv", "title": "자외선", "value": uv_row["meta"].split(" (")[0], "level": ("good" if (uv_val or 0) <= 2 else "ok" if (uv_val or 0) <= 5 else "bad"),
+             "detail": [f"오늘 낮(6~18시) 최고 자외선지수 {uv_val}", f"{region['sido']} 시도 단위 값이에요", "0~2 낮음 · 3~5 보통 · 6~7 높음 · 8~10 매우 높음 · 11 이상 위험",
+                        "지수가 6 이상이면 모자·선크림을 챙기세요"],
+             "source": "기상청 생활기상지수(자외선지수)"}
+        )
+    if pollen_row:
+        indexes.append({"key": "pollen", "title": "꽃가루", "value": pollen_row["meta"], "level": "bad",
+                        "detail": ["잡초류 꽃가루 위험지수", f"{region['sido']} 시도 단위 값이에요"], "source": "기상청 꽃가루농도위험지수"})
+    if sun_row:
+        indexes.append({"key": "sun", "title": "일출 · 일몰", "value": sun_row["meta"], "level": None,
+                        "detail": [f"{region['label']} 중심 좌표 기준", "앞이 일출, 뒤가 일몰 시각이에요"], "source": "한국천문연구원 출몰시각"})
+    if term_row:
+        indexes.append({"key": "term", "title": "다음 절기", "value": term_row["meta"], "level": None,
+                        "detail": ["24절기는 태양의 위치로 정하는 계절의 마디예요"], "source": "한국천문연구원 24절기"})
+    if out.get("next_holiday"):
+        nh = out["next_holiday"]
+        indexes.append({"key": "holiday", "title": "다음 공휴일", "value": f"D-{nh['d_day']}", "level": None,
+                        "detail": [f"{nh['name']} ({nh['date']})"], "source": "한국천문연구원 특일정보"})
+    # 기상특보: 서울·인천·경기만 제공
+    if not warning.get("supported"):
+        w_value, w_level, w_detail = "제공 안 함", None, ["기상특보는 지금 서울·인천·경기만 보여드려요", "다른 지역은 기상청 지점 정보를 추가하면 지원할 수 있어요"]
+    elif warning.get("items"):
+        w_value, w_level = f"{len(warning['items'])}건", "bad"
+        w_detail = [x for it in warning["items"] for x in ([it["title"]] + ([it["text"]] if it.get("text") else []))]
+    else:
+        w_value, w_level = ("확인 못 함" if warning.get("error") else "없음"), ("good" if not warning.get("error") else None)
+        w_detail = [f"{region['label']}에 발효 중인 특보가 없어요"] + ([f"참고: 최근 기상청 통보(전국) — {warning['recent']}"] if warning.get("recent") else [])
+    indexes.append({"key": "warning", "title": "기상특보", "value": w_value, "level": w_level, "detail": w_detail, "source": "기상청 기상특보(서울·인천·경기만)"})
+    out["indexes"] = indexes
+
+    # 옷차림: 낮 평균 기온 + 일교차 + 비 여부
+    day_temps = [float(v["TMP"]) for v in day_hours if "TMP" in v]
+    if day_temps:
+        out["outfit"] = _outfit(round(sum(day_temps) / len(day_temps)), rainy_now, (today_block["high"] or 0) - (today_block["low"] or 0))
     return out
 
 

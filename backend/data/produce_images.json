@@ -1,212 +1,478 @@
 {
  "배추": {
-  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/95/Napa_cabbages.png/960px-Napa_cabbages.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-  "page": "https://commons.wikimedia.org/wiki/File:Napa_cabbages.png",
-  "credit": "Bayartai",
-  "license": "CC0",
-  "asset": "assets/produce/p14.jpg"
+  "asset": "assets/produce/p14.jpg",
+  "credit": "Forest & Kim Starr",
+  "license": "CC BY 3.0",
+  "license_url": "https://creativecommons.org/licenses/by/3.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Starr_070730-7855_Brassica_rapa.jpg"
  },
  "무": {
-  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/2/23/Different_kinds_of_White_Radish.png/960px-Different_kinds_of_White_Radish.png?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-  "page": "https://commons.wikimedia.org/wiki/File:Different_kinds_of_White_Radish.png",
-  "credit": "KimYunmi",
+  "asset": "assets/produce/p12.jpg",
+  "credit": "Bff",
   "license": "CC BY-SA 4.0",
-  "asset": "assets/produce/p12.jpg"
+  "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Raphanus_sativus_subsp_acanthiformis_(Daikon)_Sasha20100915_091.jpg"
  },
  "양파": {
-  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a2/Mixed_onions.jpg/960px-Mixed_onions.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-  "page": "https://commons.wikimedia.org/wiki/File:Mixed_onions.jpg",
-  "credit": "Colin",
-  "license": "CC BY-SA 3.0",
-  "asset": "assets/produce/p22.jpg"
+  "asset": "assets/produce/p22.jpg",
+  "credit": "Maksym Kozlenko",
+  "license": "CC BY-SA 4.0",
+  "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Brown_onions.jpg"
  },
  "당근": {
-  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a2/Vegetable-Carrot-Bundle-wStalks.jpg/960px-Vegetable-Carrot-Bundle-wStalks.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-  "page": "https://commons.wikimedia.org/wiki/File:Vegetable-Carrot-Bundle-wStalks.jpg",
-  "credit": "Evan-Amos",
-  "license": "Public domain",
-  "asset": "assets/produce/p09.jpg"
+  "asset": "assets/produce/p09.jpg",
+  "credit": "domdomegg",
+  "license": "CC BY 4.0",
+  "license_url": "https://creativecommons.org/licenses/by/4.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Carrots_at_Ljubljana_Central_Market.JPG"
  },
  "감자": {
-  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/ab/Patates.jpg/960px-Patates.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-  "page": "https://commons.wikimedia.org/wiki/File:Patates.jpg",
-  "credit": "Scott Bauer, USDA ARS",
-  "license": "Public domain",
-  "asset": "assets/produce/p04.jpg"
+  "asset": "assets/produce/p04.jpg",
+  "credit": "DenesFeri",
+  "license": "CC BY-SA 4.0",
+  "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Solanales_-_Solanum_tuberosum_-_3.jpg"
  },
  "고구마": {
-  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/58/Ipomoea_batatas_006.JPG/960px-Ipomoea_batatas_006.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-  "page": "https://commons.wikimedia.org/wiki/File:Ipomoea_batatas_006.JPG",
-  "credit": "Llez",
-  "license": "CC BY-SA 3.0",
-  "asset": "assets/produce/p05.jpg"
+  "asset": "assets/produce/p05.jpg",
+  "credit": "Gaurav Dhwaj Khadka",
+  "license": "CC BY-SA 4.0",
+  "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Sweet_Potato.jpg"
  },
  "오이": {
-  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/96/ARS_cucumber.jpg/960px-ARS_cucumber.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-  "page": "https://commons.wikimedia.org/wiki/File:ARS_cucumber.jpg",
-  "credit": "Stephen Ausmus, USDA ARS",
-  "license": "Public domain",
-  "asset": "assets/produce/p23.jpg"
+  "asset": "assets/produce/p23.jpg",
+  "credit": "Nikodem Nijaki",
+  "license": "CC BY-SA 3.0",
+  "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Greek_yoghurt_cucumbers_garlic.jpg"
  },
  "호박": {
-  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/92/CSA-Striped-Zucchini.jpg/960px-CSA-Striped-Zucchini.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-  "page": "https://commons.wikimedia.org/wiki/File:CSA-Striped-Zucchini.jpg",
-  "credit": "Evan-Amos",
-  "license": "Public domain",
-  "asset": "assets/produce/p30.jpg"
+  "asset": "assets/produce/p30.jpg",
+  "credit": "nociveglia from Appennino Emiliano, Italy",
+  "license": "CC BY 2.0",
+  "license_url": "https://creativecommons.org/licenses/by/2.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Cucurbita_pepo_zucchine_and_tondo.jpg"
  },
  "상추": {
-  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/da/Iceberg_lettuce_in_SB.jpg/960px-Iceberg_lettuce_in_SB.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-  "page": "https://commons.wikimedia.org/wiki/File:Iceberg_lettuce_in_SB.jpg",
-  "credit": "en:User:Geographer",
-  "license": "CC BY 1.0",
-  "asset": "assets/produce/p17.jpg"
+  "asset": "assets/produce/p17.jpg",
+  "credit": "Leon Brooks",
+  "license": "Public domain",
+  "license_url": "",
+  "page": "https://commons.wikimedia.org/wiki/File:Hydroponic_lettuce_leaves_green.jpg"
  },
  "시금치": {
-  "url": "https://upload.wikimedia.org/wikipedia/commons/3/37/Spinacia_oleracea_Spinazie_bloeiend.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
-  "page": "https://commons.wikimedia.org/wiki/File:Spinacia_oleracea_Spinazie_bloeiend.jpg",
-  "credit": "Rasbak",
-  "license": "CC BY-SA 3.0",
-  "asset": "assets/produce/p20.jpg"
+  "asset": "assets/produce/p20.jpg",
+  "credit": "Nillerdk",
+  "license": "CC BY 3.0",
+  "license_url": "https://creativecommons.org/licenses/by/3.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Spinach_leaves.jpg"
  },
  "파": {
-  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/d/da/CSA-Red-Spring-Onions.jpg/960px-CSA-Red-Spring-Onions.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-  "page": "https://commons.wikimedia.org/wiki/File:CSA-Red-Spring-Onions.jpg",
-  "credit": "Evan-Amos",
-  "license": "Public domain",
-  "asset": "assets/produce/p28.jpg"
+  "asset": "assets/produce/p28.jpg",
+  "credit": "Daderot",
+  "license": "CC0",
+  "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+  "page": "https://commons.wikimedia.org/wiki/File:Scallions_in_supermarket_-_DSC04974-001.JPG"
  },
  "마늘": {
-  "url": "https://upload.wikimedia.org/wikipedia/commons/3/39/Allium_sativum_Woodwill_1793.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
-  "page": "https://commons.wikimedia.org/wiki/File:Allium_sativum_Woodwill_1793.jpg",
-  "credit": "Wikimedia Commons",
-  "license": "Public domain",
-  "asset": "assets/produce/p11.jpg"
+  "asset": "assets/produce/p11.jpg",
+  "credit": "Dubravko Sorić SoraZG on Flickr",
+  "license": "CC BY 2.0",
+  "license_url": "https://creativecommons.org/licenses/by/2.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Opened_garlic_bulb_with_garlic_clove.jpg"
  },
  "토마토": {
-  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/8/89/Tomato_je.jpg/960px-Tomato_je.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-  "page": "https://commons.wikimedia.org/wiki/File:Tomato_je.jpg",
+  "asset": "assets/produce/p27.jpg",
   "credit": "Softeis",
   "license": "CC BY-SA 3.0",
-  "asset": "assets/produce/p27.jpg"
+  "license_url": "http://creativecommons.org/licenses/by-sa/3.0/",
+  "page": "https://commons.wikimedia.org/wiki/File:Tomato_je.jpg"
  },
  "가지": {
-  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/76/Solanum_melongena_24_08_2012_%281%29.JPG/960px-Solanum_melongena_24_08_2012_%281%29.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-  "page": "https://commons.wikimedia.org/wiki/File:Solanum_melongena_24_08_2012_(1).JPG",
-  "credit": "Joydeep",
+  "asset": "assets/produce/p01.jpg",
+  "credit": "Grey Geezer",
   "license": "CC BY-SA 3.0",
-  "asset": "assets/produce/p01.jpg"
+  "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Aubergine-Varianten.JPG"
  },
  "깻잎": {
-  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/46/Perilla_frutescens_in_Gimpo.jpg/960px-Perilla_frutescens_in_Gimpo.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-  "page": "https://commons.wikimedia.org/wiki/File:Perilla_frutescens_in_Gimpo.jpg",
-  "credit": "Dalgial",
+  "asset": "assets/produce/p07.jpg",
+  "credit": "User:Dalgial",
   "license": "CC BY-SA 3.0",
-  "asset": "assets/produce/p07.jpg"
+  "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Perilla_frutescens%27_foliage.jpg"
  },
  "배": {
-  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/55/Nashi_pear.jpg/960px-Nashi_pear.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-  "page": "https://commons.wikimedia.org/wiki/File:Nashi_pear.jpg",
-  "credit": "Wikimedia Commons",
+  "asset": "assets/produce/p13.jpg",
+  "credit": "JJ Harrison (jjharrison89@facebook.com)",
   "license": "CC BY-SA 3.0",
-  "asset": "assets/produce/p13.jpg"
+  "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Pyrus_pyrifolia.jpg"
  },
  "단감": {
-  "url": "https://upload.wikimedia.org/wikipedia/commons/7/7f/Kaki_20041002.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
-  "page": "https://commons.wikimedia.org/wiki/File:Kaki_20041002.jpg",
-  "credit": "Sphl",
+  "asset": "assets/produce/p08.jpg",
+  "credit": "Joe Ravi",
   "license": "CC BY-SA 3.0",
-  "asset": "assets/produce/p08.jpg"
+  "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Fuyu_Persimmon_(Diospyros_Kaki).jpg"
  },
  "감귤": {
-  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/10/Citrus_reticulata_April_2013_Nordbaden.JPG/960px-Citrus_reticulata_April_2013_Nordbaden.JPG?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-  "page": "https://commons.wikimedia.org/wiki/File:Citrus_reticulata_April_2013_Nordbaden.JPG",
-  "credit": "4028mdk09",
-  "license": "CC BY-SA 3.0",
-  "asset": "assets/produce/p03.jpg"
+  "asset": "assets/produce/p03.jpg",
+  "credit": "Jacek Halicki",
+  "license": "CC BY-SA 4.0",
+  "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+  "page": "https://commons.wikimedia.org/wiki/File:2023_Mandarynki.jpg"
  },
  "포도": {
-  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/53/Grapes%2C_Rostov-on-Don%2C_Russia.jpg/960px-Grapes%2C_Rostov-on-Don%2C_Russia.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-  "page": "https://commons.wikimedia.org/wiki/File:Grapes,_Rostov-on-Don,_Russia.jpg",
-  "credit": "Vyacheslav Argenberg",
-  "license": "CC BY 4.0",
-  "asset": "assets/produce/p29.jpg"
+  "asset": "assets/produce/p29.jpg",
+  "credit": "Mahdiz",
+  "license": "CC BY-SA 3.0",
+  "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Redgrape.jpg"
  },
  "딸기": {
-  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4c/Garden_strawberry_%28Fragaria_%C3%97_ananassa%29_single2.jpg/960px-Garden_strawberry_%28Fragaria_%C3%97_ananassa%29_single2.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-  "page": "https://commons.wikimedia.org/wiki/File:Garden_strawberry_(Fragaria_%C3%97_ananassa)_single2.jpg",
+  "asset": "assets/produce/p10.jpg",
   "credit": "Ivar Leidus",
   "license": "CC BY-SA 4.0",
-  "asset": "assets/produce/p10.jpg"
+  "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Garden_strawberry_(Fragaria_%C3%97_ananassa)_single2.jpg"
  },
  "수박": {
-  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/4/47/Taiwan_2009_Tainan_City_Organic_Farm_Watermelon_FRD_7962.jpg/960px-Taiwan_2009_Tainan_City_Organic_Farm_Watermelon_FRD_7962.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-  "page": "https://commons.wikimedia.org/wiki/File:Taiwan_2009_Tainan_City_Organic_Farm_Watermelon_FRD_7962.jpg",
-  "credit": "Fred Hsu (Wikipedia:User:Fred Hsu on en.wikipedia)",
-  "license": "CC BY-SA 3.0",
-  "asset": "assets/produce/p19.jpg"
+  "asset": "assets/produce/p19.jpg",
+  "credit": "USDA photo by Scott Bauer",
+  "license": "Public domain",
+  "license_url": "",
+  "page": "https://commons.wikimedia.org/wiki/File:Watermelon.jpg"
  },
  "참외": {
-  "url": "https://upload.wikimedia.org/wikipedia/commons/4/45/Korean_melon1.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
-  "page": "https://commons.wikimedia.org/wiki/File:Korean_melon1.jpg",
-  "credit": "randychiu",
+  "asset": "assets/produce/p26.jpg",
+  "credit": "hutch",
   "license": "CC BY 2.0",
-  "asset": "assets/produce/p26.jpg"
+  "license_url": "https://creativecommons.org/licenses/by/2.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Korean_melon-Chamoe-01.jpg"
  },
  "복숭아": {
-  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/9/92/Illustration_Prunus_persica_clean_no_descr.jpg/960px-Illustration_Prunus_persica_clean_no_descr.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-  "page": "https://commons.wikimedia.org/wiki/File:Illustration_Prunus_persica_clean_no_descr.jpg",
-  "credit": "File:Illustration Prunus persica0.jpg: PLEASE COMPLETE AUTHOR INFORMATION\nderivative work: Kenraiz",
-  "license": "Public domain",
-  "asset": "assets/produce/p15.jpg"
+  "asset": "assets/produce/p15.jpg",
+  "credit": "Sonneifer",
+  "license": "CC BY-SA 3.0",
+  "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Japan_red_fruit_peach_packed_products_Aug-2012.jpg"
  },
  "고등어": {
-  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/7/7f/Scomber_scombrus_217326414.jpg/960px-Scomber_scombrus_217326414.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-  "page": "https://commons.wikimedia.org/wiki/File:Scomber_scombrus_217326414.jpg",
-  "credit": "Mikael Nyman",
-  "license": "CC BY 4.0",
-  "asset": "assets/produce/p06.jpg"
+  "asset": "assets/produce/p06.jpg",
+  "credit": "Jastrow",
+  "license": "Public domain",
+  "license_url": "",
+  "page": "https://commons.wikimedia.org/wiki/File:Maquereaux_etal.jpg"
  },
  "갈치": {
-  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/0/0f/Trichiurus_lepturus_Umitamago.jpg/960px-Trichiurus_lepturus_Umitamago.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-  "page": "https://commons.wikimedia.org/wiki/File:Trichiurus_lepturus_Umitamago.jpg",
-  "credit": "Totti",
-  "license": "CC BY-SA 4.0",
-  "asset": "assets/produce/p02.jpg"
- },
- "오징어": {
-  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/e/e1/Sepioteuthis_sepioidea_%28Caribbean_Reef_Squid%29.jpg/960px-Sepioteuthis_sepioidea_%28Caribbean_Reef_Squid%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-  "page": "https://commons.wikimedia.org/wiki/File:Sepioteuthis_sepioidea_(Caribbean_Reef_Squid).jpg",
-  "credit": "Nhobgood Nick Hobgood",
-  "license": "CC BY-SA 3.0",
-  "asset": "assets/produce/p24.jpg"
+  "asset": "assets/produce/p02.jpg",
+  "credit": "Fumikas Sagisavas",
+  "license": "CC0",
+  "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+  "page": "https://commons.wikimedia.org/wiki/File:Chilled_hairtail_fish.jpg"
  },
  "쇠고기": {
-  "url": "https://upload.wikimedia.org/wikipedia/commons/6/60/Standing-rib-roast.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail_unscaled",
-  "page": "https://commons.wikimedia.org/wiki/File:Standing-rib-roast.jpg",
-  "credit": "Michael C. Berch, aka MCB at en.wikipedia",
-  "license": "CC BY-SA 2.5",
-  "asset": "assets/produce/p18.jpg"
+  "asset": "assets/produce/p18.jpg",
+  "credit": "Jellaluna",
+  "license": "CC BY 2.0",
+  "license_url": "https://creativecommons.org/licenses/by/2.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Raw_beef_steak,_2011.jpg"
  },
  "우유": {
-  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/a/a5/Glass_of_Milk_%2833657535532%29.jpg/960px-Glass_of_Milk_%2833657535532%29.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-  "page": "https://commons.wikimedia.org/wiki/File:Glass_of_Milk_(33657535532).jpg",
-  "credit": "NIAID",
-  "license": "CC BY 2.0",
-  "asset": "assets/produce/p25.jpg"
+  "asset": "assets/produce/p25.jpg",
+  "credit": "Unisouth",
+  "license": "CC BY 3.0",
+  "license_url": "https://creativecommons.org/licenses/by/3.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Dairy_Crest_Semi_Skimmed_Milk_Bottle.jpg"
  },
  "사과": {
-  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/1/15/Red_Apple.jpg/960px-Red_Apple.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-  "page": "https://commons.wikimedia.org/wiki/File:Red_Apple.jpg",
+  "asset": "assets/produce/p16.jpg",
   "credit": "Abhijit Tembhekar from Mumbai, India",
   "license": "CC BY 2.0",
-  "asset": "assets/produce/p16.jpg"
+  "license_url": "https://creativecommons.org/licenses/by/2.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Red_Apple.jpg"
  },
  "양배추": {
-  "url": "https://thumb.wikimedia.org/wikipedia/commons/thumb/5/5d/Cabbage_heads.jpg/960px-Cabbage_heads.jpg?utm_source=commons.wikimedia.org&utm_campaign=imageinfo&utm_content=thumbnail",
-  "page": "https://commons.wikimedia.org/wiki/File:Cabbage_heads.jpg",
-  "credit": "Deborah Tjituka",
+  "asset": "assets/produce/p21.jpg",
+  "credit": "SAMSYAN FUXWOHJ",
   "license": "CC BY-SA 4.0",
-  "asset": "assets/produce/p21.jpg"
+  "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+  "page": "https://commons.wikimedia.org/wiki/File:HK_SKD_TKO_Tseung_Kwan_O_%E5%AF%8C%E5%BA%B7%E8%8A%B1%E5%9C%92_Beverly_Garden_Market_shop_leaf_vegetable_green_cabbage_January_2023_Px3.jpg"
+ },
+ "건고추": {
+  "asset": "assets/produce/p31.jpg",
+  "credit": "Twentyfour Students from Bangkok, Thailand",
+  "license": "CC BY-SA 2.0",
+  "license_url": "https://creativecommons.org/licenses/by-sa/2.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Dried_chili_peppers.jpg"
+ },
+ "고춧가루": {
+  "asset": "assets/produce/p32.jpg",
+  "credit": "Stacy Spensley",
+  "license": "CC BY 2.0",
+  "license_url": "https://creativecommons.org/licenses/by/2.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Gochugaru.jpg"
+ },
+ "녹두": {
+  "asset": "assets/produce/p33.jpg",
+  "credit": "Ivar Leidus",
+  "license": "CC BY-SA 4.0",
+  "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Mung_beans_(Vigna_radiata).jpg"
+ },
+ "느타리버섯": {
+  "asset": "assets/produce/p34.jpg",
+  "credit": "Zinnmann",
+  "license": "CC BY-SA 3.0",
+  "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
+  "page": "https://commons.wikimedia.org/wiki/File:20210719_Pleurotus_ostreatus_001-016.jpg"
+ },
+ "땅콩": {
+  "asset": "assets/produce/p35.jpg",
+  "credit": "Undeka 11",
+  "license": "CC BY-SA 4.0",
+  "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Raw_peanuts_with_skin_on_white_plate.jpg"
+ },
+ "레몬": {
+  "asset": "assets/produce/p36.jpg",
+  "credit": "André Karwath aka Aka",
+  "license": "CC BY-SA 2.5",
+  "license_url": "https://creativecommons.org/licenses/by-sa/2.5",
+  "page": "https://commons.wikimedia.org/wiki/File:Lemon.jpg"
+ },
+ "마른멸치": {
+  "asset": "assets/produce/p37.jpg",
+  "credit": "myllissa",
+  "license": "CC BY 2.0",
+  "license_url": "https://creativecommons.org/licenses/by/2.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Dried_anchovies.jpg"
+ },
+ "망고": {
+  "asset": "assets/produce/p38.jpg",
+  "credit": "Ivar Leidus",
+  "license": "CC BY-SA 4.0",
+  "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Mangos_-_single_and_halved.jpg"
+ },
+ "멜론": {
+  "asset": "assets/produce/p39.jpg",
+  "credit": "USDA photo by Scott Bauer. Image Number K7355-11.",
+  "license": "Public domain",
+  "license_url": "",
+  "page": "https://commons.wikimedia.org/wiki/File:Cucumis_melo_var._reticulatus_(photo_by_Scott_Bauer).jpg"
+ },
+ "물오징어": {
+  "asset": "assets/produce/p40.jpg",
+  "credit": "Jarek Tuszyński",
+  "license": "CC BY-SA 4.0",
+  "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+  "page": "https://commons.wikimedia.org/wiki/File:H-mart_-_fish_department_-_Squid_-_1.JPG"
+ },
+ "바나나": {
+  "asset": "assets/produce/p41.jpg",
+  "credit": "Krzysztof Golik",
+  "license": "CC BY-SA 4.0",
+  "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Bananas_on_black_background_02.jpg"
+ },
+ "방울토마토": {
+  "asset": "assets/produce/p42.jpg",
+  "credit": "Luc Viatour",
+  "license": "CC BY-SA 3.0",
+  "license_url": "http://creativecommons.org/licenses/by-sa/3.0/",
+  "page": "https://commons.wikimedia.org/wiki/File:Tomates_cerises_Luc_Viatour.jpg"
+ },
+ "보리쌀": {
+  "asset": "assets/produce/p43.jpg",
+  "credit": "Johann Jaritz",
+  "license": "CC BY-SA 4.0",
+  "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+  "page": "https://commons.wikimedia.org/wiki/File:P%C3%B6rtschach_Graupen_in_Sch%C3%BCssel_26022015_8673.jpg"
+ },
+ "부추": {
+  "asset": "assets/produce/p44.jpg",
+  "credit": "Fumikas Sagisavas",
+  "license": "CC0",
+  "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+  "page": "https://commons.wikimedia.org/wiki/File:Garlic_chives_yellow.jpg"
+ },
+ "붉은고추": {
+  "asset": "assets/produce/p45.jpg",
+  "credit": "Vyacheslav Argenberg",
+  "license": "CC BY 4.0",
+  "license_url": "https://creativecommons.org/licenses/by/4.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Shan_Hills,_Myanmar,_Red_chili_pepper_plant.jpg"
+ },
+ "브로콜리": {
+  "asset": "assets/produce/p46.jpg",
+  "credit": "David",
+  "license": "Public domain",
+  "license_url": "",
+  "page": "https://commons.wikimedia.org/wiki/File:Basket_of_broccoli_in_Singapore_market.jpg"
+ },
+ "블루베리": {
+  "asset": "assets/produce/p47.jpg",
+  "credit": "Kyle McDonald from Brooklyn, New York, USA",
+  "license": "CC BY 2.0",
+  "license_url": "https://creativecommons.org/licenses/by/2.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Blueberries_(3443106972).jpg"
+ },
+ "삼치": {
+  "asset": "assets/produce/p48.jpg",
+  "credit": "Tristan Wang570",
+  "license": "CC BY-SA 4.0",
+  "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+  "page": "https://commons.wikimedia.org/wiki/File:A_catch_of_Narrow-banded_Spanish_Mackerel.jpg"
+ },
+ "새송이버섯": {
+  "asset": "assets/produce/p49.jpg",
+  "credit": "Wolfgang H. Wögerer",
+  "license": "CC BY-SA 3.0",
+  "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Pleurotus_eryngii_(de_Kr%C3%A4uterseitling)_cultivated_in_Korea,_sold_in_Austria.crop.jpg"
+ },
+ "생강": {
+  "asset": "assets/produce/p50.jpg",
+  "credit": "Sanjay Acharya",
+  "license": "CC BY-SA 4.0",
+  "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Ginger_Root.jpg"
+ },
+ "쌀": {
+  "asset": "assets/produce/p51.jpg",
+  "credit": "ch1310",
+  "license": "CC0",
+  "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+  "page": "https://commons.wikimedia.org/wiki/File:Short-grain_rice_(japonica).jpg"
+ },
+ "아보카도": {
+  "asset": "assets/produce/p52.jpg",
+  "credit": "Ivar Leidus",
+  "license": "CC BY-SA 4.0",
+  "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Avocado_Hass_-_single_and_halved.jpg"
+ },
+ "알배기배추": {
+  "asset": "assets/produce/p53.jpg",
+  "credit": "Comedora",
+  "license": "CC BY-SA 4.0",
+  "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Brassica_rapa_3.jpg"
+ },
+ "오렌지": {
+  "asset": "assets/produce/p54.jpg",
+  "credit": "Evan-Amos",
+  "license": "CC BY-SA 3.0",
+  "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Orange-Fruit-Pieces.jpg"
+ },
+ "찹쌀": {
+  "asset": "assets/produce/p55.jpg",
+  "credit": "국립국어원",
+  "license": "CC BY-SA 2.0 kr",
+  "license_url": "https://creativecommons.org/licenses/by-sa/2.0/kr/deed.en",
+  "page": "https://commons.wikimedia.org/wiki/File:Chapssal_(glutinous_rice).jpg"
+ },
+ "키위": {
+  "asset": "assets/produce/p56.jpg",
+  "credit": "Luc Viatour",
+  "license": "CC BY-SA 2.5",
+  "license_url": "https://creativecommons.org/licenses/by-sa/2.5",
+  "page": "https://commons.wikimedia.org/wiki/File:Kiwi_(Actinidia_chinensis)_1_Luc_Viatour.jpg"
+ },
+ "파인애플": {
+  "asset": "assets/produce/p57.jpg",
+  "credit": "UneksAbdullahi",
+  "license": "CC BY-SA 4.0",
+  "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Pineapple-fruit.jpg"
+ },
+ "파프리카": {
+  "asset": "assets/produce/p58.jpg",
+  "credit": "Nikodem Nijaki",
+  "license": "CC BY-SA 3.0",
+  "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Capsicum_annuum_fruits_IMGP0049.jpg"
+ },
+ "팥": {
+  "asset": "assets/produce/p59.jpg",
+  "credit": "維基小霸王",
+  "license": "CC BY-SA 4.0",
+  "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Adzuki_beans_01.jpg"
+ },
+ "풋고추": {
+  "asset": "assets/produce/p60.jpg",
+  "credit": "GTSPACE",
+  "license": "CC BY-SA 4.0",
+  "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Chili_3.jpg"
+ },
+ "피망": {
+  "asset": "assets/produce/p61.jpg",
+  "credit": "Fructibus",
+  "license": "CC0",
+  "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+  "page": "https://commons.wikimedia.org/wiki/File:Green_bell_pepper_2017_A.jpg"
+ },
+ "현미": {
+  "asset": "assets/produce/p62.jpg",
+  "credit": "Bebada",
+  "license": "CC BY-SA 4.0",
+  "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Roasted_brown_rice.jpg"
+ },
+ "혼식곡": {
+  "asset": "assets/produce/p63.jpg",
+  "credit": "Badagnani",
+  "license": "CC BY 3.0",
+  "license_url": "https://creativecommons.org/licenses/by/3.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Japgokbapdry.jpg"
+ },
+ "명태": {
+  "asset": "assets/produce/p64.jpg",
+  "credit": "Unknown authorUnknown author",
+  "license": "Public domain",
+  "license_url": "",
+  "page": "https://commons.wikimedia.org/wiki/File:Alaska_pollock_2.jpg"
+ },
+ "미나리": {
+  "asset": "assets/produce/p65.jpg",
+  "credit": "Comedora",
+  "license": "CC BY-SA 4.0",
+  "license_url": "https://creativecommons.org/licenses/by-sa/4.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Oenanthe_javanica_2.jpg"
+ },
+ "열무": {
+  "asset": "assets/produce/p66.jpg",
+  "credit": "경빈마마",
+  "license": "CC BY 4.0",
+  "license_url": "https://creativecommons.org/licenses/by/4.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Yeolmu_(Korean_radish).jpg"
+ },
+ "참깨": {
+  "asset": "assets/produce/p67.jpg",
+  "credit": "국립국어원",
+  "license": "CC BY-SA 2.0 kr",
+  "license_url": "https://creativecommons.org/licenses/by-sa/2.0/kr/deed.en",
+  "page": "https://commons.wikimedia.org/wiki/File:Black_sesame.jpg"
+ },
+ "콩": {
+  "asset": "assets/produce/p68.jpg",
+  "credit": "Veganbaking.net from USA",
+  "license": "CC BY-SA 2.0",
+  "license_url": "https://creativecommons.org/licenses/by-sa/2.0",
+  "page": "https://commons.wikimedia.org/wiki/File:Black_Soybeans_(5392351124).jpg"
+ },
+ "팽이버섯": {
+  "asset": "assets/produce/p69.jpg",
+  "credit": "Wikimedia Commons",
+  "license": "CC BY-SA 3.0",
+  "license_url": "https://creativecommons.org/licenses/by-sa/3.0",
+  "page": "https://commons.wikimedia.org/wiki/File:EnokitakeJapaneseMushroom.jpg"
  }
 }

@@ -3,6 +3,7 @@ import '../api_client.dart';
 import '../region.dart';
 import '../theme.dart';
 import '../widgets/basket_hero.dart';
+import '../widgets/metric_chart.dart';
 import '../widgets/components.dart';
 import '../widgets/culture_calendar.dart';
 import '../widgets/finance_sheet.dart';
@@ -73,7 +74,9 @@ List<Widget> _rankSections(BuildContext context, Map<String, dynamic> data, List
           trailing: trailing,
           stub: !_isLive(data, key),
           children: [
-            for (final it in (data[key] as List).cast<Map<String, dynamic>>()) financeLine(context, it),
+            ExpandableList(
+              children: [for (final it in (data[key] as List).cast<Map<String, dynamic>>()) financeLine(context, it)],
+            ),
           ],
         ),
   ];
@@ -97,22 +100,12 @@ Widget marketScreen(ApiClient api, Region region, BuildContext shellContext) => 
         final List<Widget> listing;
 
         if (basket != null && catalogRaw != null) {
-          final pct = (basket['change_pct'] as num).toDouble();
-          final flat = pct.abs() < 0.5;
-          final emphasis = flat ? '비슷해요' : '${pct.abs().toStringAsFixed(1)}% ${pct < 0 ? '내렸어요' : '올랐어요'}';
-          hero = PageHero(
-            section: Section.market,
+          hero = BasketHero(
+            chartItems: (data['chart_items'] as Map<String, dynamic>?) ?? const {},
+            suggestions: (basket['items'] as List).cast<String>(),
             eyebrow: '생활 · ${region.label}',
             onEyebrowTap: () => showRegionPicker(shellContext),
-            headline: flat ? '이번 주 장바구니는 지난주와 $emphasis' : '이번 주 장바구니, 지난주보다 $emphasis',
-            emphasis: emphasis,
             source: _sourceLabel(data['source'] as String?, true),
-            body: [
-              BasketBody(
-                basket: basket,
-                chartItems: (data['chart_items'] as Map<String, dynamic>?) ?? const {},
-              ),
-            ],
           );
           listing = [
             ShoppingCatalog(
@@ -281,17 +274,14 @@ Widget cultureScreen(ApiClient api, Region region, BuildContext shellContext) =>
         }
 
         // 행사 달력이 실데이터로 들어오면 맨 위는 "이번 주말 N개 행사"(박스오피스는 KOBIS 키 전까지 예시라 아래로)
-        Widget? weekendHero() {
-          if (events == null) return null;
+        Widget weekendHero(List<Map<String, dynamic>> events, bool useLocal) {
           final now = DateTime.now();
           final today = DateTime(now.year, now.month, now.day);
           final sat = today.weekday == DateTime.sunday ? today : today.add(Duration(days: (DateTime.saturday - today.weekday) % 7));
           final sun = today.weekday == DateTime.sunday ? today : sat.add(const Duration(days: 1));
           String iso(DateTime d) => '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
           final inWeekend = events.where((e) => (e['start'] as String).compareTo(iso(sun)) <= 0 && (e['end'] as String).compareTo(iso(sat)) >= 0).toList();
-          final local = inWeekend.where((e) => e['local'] == true).toList();
-          final useLocal = region.sgg != null && local.isNotEmpty;
-          final list = useLocal ? local : inWeekend;
+          final list = inWeekend;
           final scopeName = useLocal ? region.label : region.name;
           final label = today.weekday == DateTime.sunday ? '오늘' : '이번 주말(${sat.month}/${sat.day}~${sun.day})';
           final emphasis = '${list.length}개 행사';
@@ -302,49 +292,77 @@ Widget cultureScreen(ApiClient api, Region region, BuildContext shellContext) =>
             headline: list.isEmpty ? '$label $scopeName에는 열리는 행사가 없어요' : '$label $scopeName에서 $emphasis가 열려요',
             emphasis: list.isEmpty ? null : emphasis,
             source: '한국관광공사 · 한국문화정보원',
+            headlineLines: 2,
             body: [
               BigNumber(to: list.length, unit: '개 행사'),
               const SizedBox(height: 14),
-              for (final e in list.take(3)) eventLine(context, api, e),
-              if (list.length > 3)
-                Padding(
-                  padding: const EdgeInsets.only(top: 10),
-                  child: Text('나머지 ${list.length - 3}개는 아래 달력에서 날짜를 눌러 보세요', style: const TextStyle(fontSize: 11, color: AppColors.inkSoft)),
+              // 범위(시군구/시도 전체)를 바꿔도 화면이 팍팍 움직이지 않게 목록 3줄 + 안내 한 줄 자리를 고정으로 잡아 둠(행사가 없으면 안내만)
+              ConstrainedBox(
+                constraints: BoxConstraints(minHeight: list.isEmpty ? 0 : 2 * 72 + 32),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    for (final e in list.take(2)) eventLine(context, api, e),
+                    if (list.length > 2)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 10),
+                        child: Text('외 ${list.length - 2}개', style: const TextStyle(fontSize: 11, color: AppColors.inkSoft)),
+                      ),
+                  ],
                 ),
+              ),
             ],
           );
         }
 
-        final calendarWidget = events == null
-            ? null
-            : CultureCalendar(
-                api: api,
-                events: events,
-                scopeLabel: scope == null ? region.label : (scope['sgg'] == null ? '${scope['sido']} 전체' : '${scope['sgg']} 우선 · 나머지 ${scope['sido']}'),
-              );
+        // 지역은 맨 위 "문화 · ○○ ▾"에서만 고름: 시군구를 골랐고 거기 행사가 있으면 그 시군구만, 아니면 시도 전체
+        final hasLocal = events != null && region.sgg != null && events.any((e) => e['local'] == true);
+        final Widget scopedCulture = events == null
+            ? const SizedBox.shrink()
+            : Builder(builder: (context) {
+                final scoped = hasLocal ? events.where((e) => e['local'] == true).toList() : events;
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    weekendHero(scoped, hasLocal),
+                    if (region.sgg != null && !hasLocal)
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(0, 14, 0, 0),
+                        child: Text(
+                          '${region.sgg}에는 등록된 행사가 없어서 ${region.name} 전체를 보여드려요.',
+                          style: const TextStyle(fontSize: 11, color: AppColors.inkSoft),
+                        ),
+                      ),
+                    CultureCalendar(api: api, events: scoped),
+                  ],
+                );
+              });
         return [
-          weekendHero() ?? legacyHero,
-          ?calendarWidget,
+          events == null ? legacyHero : scopedCulture,
           ListSection(
             title: '박스오피스',
-            trailing: '어제 기준',
+            trailing: data['box_office_date'] == null ? '어제 기준' : '${DateTime.parse(data['box_office_date'] as String).month}/${DateTime.parse(data['box_office_date'] as String).day} 기준',
             stub: !_isLive(data, 'box_office'),
             children: [
-              for (final it in (events != null ? allBoxOffice : rest)) RankRow(rank: it['rank'] as int, title: it['title'] as String, meta: it['meta'] as String),
+              ExpandableList(
+                children: [for (final it in (events != null ? allBoxOffice : rest)) RankRow(rank: it['rank'] as int, title: it['title'] as String, meta: it['meta'] as String)],
+              ),
             ],
           ),
-          ListSection(
-            title: '진행 중인 전시·공연',
-            trailing: _isLive(data, 'performances') ? nearbyFor('performances') : null,
-            stub: !_isLive(data, 'performances'),
-            children: [for (final it in performances) listLine(it)],
-          ),
-          ListSection(
-            title: '곧 열리는 축제',
-            trailing: _isLive(data, 'festivals') ? nearbyFor('festivals') : null,
-            stub: !_isLive(data, 'festivals'),
-            children: [for (final it in festivals) listLine(it)],
-          ),
+          if (events == null) ...[
+            ListSection(
+              title: '진행 중인 전시·공연',
+              trailing: _isLive(data, 'performances') ? nearbyFor('performances') : null,
+              stub: !_isLive(data, 'performances'),
+              children: [for (final it in performances) listLine(it)],
+            ),
+            ListSection(
+              title: '곧 열리는 축제',
+              trailing: _isLive(data, 'festivals') ? nearbyFor('festivals') : null,
+              stub: !_isLive(data, 'festivals'),
+              children: [for (final it in festivals) listLine(it)],
+            ),
+          ],
           // 2026-09-29: 국내 3대 차트(멜론/지니/벅스)·가온(써클차트) 전부
           // 공식 오픈 API가 없어서 못 넣음(스크래핑은 이용약관 위반 소지) —
           // 공식 API가 있는 Spotify·유튜브만 근사치로 넣고, "국내 차트"가
@@ -379,6 +397,24 @@ Widget moneyScreen(ApiClient api) => SectionScreen(
         final stats = (data['stats'] as List).cast<Map<String, dynamic>>();
         // 뒤집으면 보이는 면: 실데이터면 서버가 준 back, 아니면 스텁의 다른 통화
         final backRows = ((data['back'] ?? data['fx_others']) as List? ?? const []).cast<Map<String, dynamic>>();
+        final chartItems = ((data['chart_items'] as List?) ?? const []).cast<Map<String, dynamic>>();
+        if (heroLive && chartItems.isNotEmpty) {
+          // 실데이터: 뒤집는 카드 대신 칩(코스피·코스닥·금·물가)으로 차트를 고름
+          final chartLabels = {for (final c in chartItems) c['label']};
+          final others = [for (final s in stats) if (!chartLabels.contains(s['label']) && s['label'] != '소비자물가') s];
+          return [
+            MetricHero(items: chartItems, source: _sourceLabel(hero['source'] as String?, heroLive)),
+            if (others.isNotEmpty)
+              ListSection(title: '기름값', trailing: '리터당', stub: !_isLive(data, 'stats'), children: _priceRows(others)),
+            ..._rankSections(context, data, const [
+              ('deposits', '정기예금 최고금리', '12개월 · 우대 포함'),
+              ('savings', '적금 최고금리', '12개월 · 우대 포함'),
+              ('loans_mortgage', '주택담보대출 최저금리', '낮은 순'),
+              ('loans_rent', '전세자금대출 최저금리', '낮은 순'),
+              ('loans_credit', '신용대출 금리', '신용등급 평균 · 낮은 순'),
+            ]),
+          ];
+        }
         final points = [
           for (final e in (hero['series'] as List).cast<Map<String, dynamic>>())
             ChartPoint(DateTime.parse(e['date'] as String).day, (e['value'] as num).toDouble()),

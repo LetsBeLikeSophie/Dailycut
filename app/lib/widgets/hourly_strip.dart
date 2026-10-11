@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../theme.dart';
+import 'weather_icon.dart';
 
 /// 시간대별 날씨 가로 스크롤. 오늘 0시~모레 0시(1시간 간격)를 한 줄에 두고, 열 때 "지금" 칸이
 /// 왼쪽 가까이에 오도록 스크롤해둠 — 왼쪽으로 밀면 오늘 지난 시각, 오른쪽으로 밀면 내일·모레.
@@ -25,7 +26,8 @@ class _HourlyStripState extends State<HourlyStrip> {
     if (nowIndex > 0) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!_controller.hasClients) return;
-        final target = (nowIndex * _cellW - 16).clamp(0.0, _controller.position.maxScrollExtent);
+        // "지금"이 두 번째 칸에 오게(앞쪽에 지난 시각이 있다는 게 보이도록) 한 칸 전부터 보여줌
+        final target = ((nowIndex - 1) * _cellW).clamp(0.0, _controller.position.maxScrollExtent);
         _controller.jumpTo(target);
       });
     }
@@ -54,7 +56,7 @@ class _HourlyStripState extends State<HourlyStrip> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SizedBox(
-          height: 92,
+          height: 116,
           child: ListView.builder(
             controller: _controller,
             scrollDirection: Axis.horizontal,
@@ -93,6 +95,8 @@ class _HourlyStripState extends State<HourlyStrip> {
                         ),
                       ),
                     ),
+                    const SizedBox(height: 8),
+                    WeatherIcon(h['condition'] as String?, size: 20),
                     const SizedBox(height: 6),
                     Text(
                       '${h['temp']}°',
@@ -113,12 +117,6 @@ class _HourlyStripState extends State<HourlyStrip> {
             },
           ),
         ),
-        const SizedBox(height: 4),
-        if (widget.hours.any((h) => h['date'] != null))
-          const Text(
-            '오늘 0시 ~ 모레 0시 · 옆으로 밀어보세요 · 지난 시각은 예보값이에요',
-            style: TextStyle(fontSize: 11, color: AppColors.inkSoft),
-          ),
       ],
     );
   }

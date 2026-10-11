@@ -18,7 +18,7 @@ price_history에 저장해서 이번 달 추이를 쌓아감(서버를 켠 날�
 from __future__ import annotations
 
 import json
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from functools import lru_cache
 from pathlib import Path
 
@@ -33,9 +33,17 @@ HERO = "배추"
 # 장바구니 지수를 이루는 대표 품목(자주 사는 채소·과일). 지난주 가격 대비 평균 변화로 계산함.
 BASKET = ["배추", "무", "양파", "당근", "감자", "오이", "사과", "배"]
 CATEGORY = {"채소류": "채소", "과일류": "과일", "수산물": "수산", "축산물": "축산", "식량작물": "곡물·감자류", "특용작물": "곡물·감자류"}
-CATEGORY_ORDER = ["채소", "과일", "수산", "축산", "곡물·감자류"]
+CATEGORY_ORDER = ["채소", "과일", "수산", "곡물·두류", "양념", "축산"]
+# aT의 분류(채소류·식량작물·특용작물)는 장 보는 사람 기준과 달라서 이름으로 다시 나눔(2026-10-11):
+# 수박·멜론은 과일, 감자·고구마·버섯은 채소, 쌀·콩·팥 같은 건 곡물·두류, 마늘·생강·고추·깨는 양념.
+NAME_CATEGORY = {
+    **{n: "과일" for n in ("수박", "멜론", "참외", "딸기", "복숭아", "단감")},
+    **{n: "채소" for n in ("감자", "고구마", "느타리버섯", "새송이버섯", "팽이버섯")},
+    **{n: "곡물·두류" for n in ("쌀", "현미", "찹쌀", "보리쌀", "혼식곡", "콩", "팥", "녹두", "땅콩")},
+    **{n: "양념" for n in ("마늘", "깐마늘(국산)", "생강", "붉은고추", "건고추", "고춧가루", "참깨")},
+}
 ALIAS = {"깐마늘(국산)": "마늘"}  # aT 품목 이름 → 가이드 이름
-IMAGE_KEY = {"물오징어": "오징어"}  # 가이드 이름 → 사진 파일 이름(사진은 일반 이름으로 저장함)
+IMAGE_KEY: dict[str, str] = {}  # (v2부터 사진 키 = 품목 이름 그대로, 예외가 생기면 여기에)
 
 
 @lru_cache(maxsize=1)
@@ -71,7 +79,12 @@ def _fetch_all() -> list[dict]:
 def _collect(rows: list[dict]) -> dict[str, dict]:
     """품목별로 소매·상품 등급 품종들의 평균을 냄(품종마다 가격 차이가 커서)."""
     by_name: dict[str, list[dict]] = {}
+    # 조사일이 최신보다 10일 넘게 오래된 품목(예: 2010년 조사값)은 지금 가격이 아니라서 뺌
+    newest = max((r["exmn_ymd"] for r in rows if r.get("exmn_ymd")), default="")
+    cutoff = (datetime.strptime(newest, "%Y%m%d") - timedelta(days=10)).strftime("%Y%m%d") if newest else ""
     for r in rows:
+        if r.get("exmn_ymd", "") < cutoff:
+            continue
         if r.get("se_cd") == "01" and _f(r.get("exmn_dd_prc")):
             by_name.setdefault(r["item_nm"], []).append(r)
     out: dict[str, dict] = {}
@@ -98,8 +111,10 @@ def _collect(rows: list[dict]) -> dict[str, dict]:
             "now": avg("exmn_dd_prc"),
             "d1": adjusted("dd1_bfr_prc"),
             "w1": adjusted("ww1_bfr_prc"),
+            "m1": adjusted("mm1_bfr_prc"),
+            "y1": adjusted("yy1_bfr_prc"),
             "unit": f"{size if size != '1' else ''}{unit}",
-            "category": CATEGORY.get(sel[0].get("ctgry_nm"), "기타"),
+            "category": NAME_CATEGORY.get(name, CATEGORY.get(sel[0].get("ctgry_nm"), "기타")),
         }
     return out
 
@@ -174,10 +189,23 @@ def run() -> dict:
 
     # 가격 이력 저장(조사일, 1일 전, 1주 전) — 전 품목
     hist = []
+    def _back(d, key):
+        if key == "m1":  # 1개월 전 = 달력상 한 달 전(없는 날짜면 그 달 말일)
+            y, m = (d.year, d.month - 1) if d.month > 1 else (d.year - 1, 12)
+            last = (date(y + (m == 12), m % 12 + 1, 1) - timedelta(days=1)).day
+            return d.replace(year=y, month=m, day=min(d.day, last))
+        if key == "y1":
+            try:
+                return d.replace(year=d.year - 1)
+            except ValueError:
+                return d.replace(year=d.year - 1, day=28)
+        return d - timedelta(days={"now": 0, "d1": 1, "w1": 7}[key])
+
+    # aT 소매가 API는 조사일 기준 1일·1주·1개월·1년 전 값까지 줌 → 쌓기 시작 전의 점도 한 번에 채워짐
     for name, c in data.items():
-        for key, delta in (("now", 0), ("d1", 1), ("w1", 7)):
+        for key in ("now", "d1", "w1", "m1", "y1"):
             if c.get(key):
-                hist.append({"item": name, "day": (c["day"] - timedelta(days=delta)).isoformat(), "price": c[key], "unit": c["unit"]})
+                hist.append({"item": name, "day": _back(c["day"], key).isoformat(), "price": c[key], "unit": c["unit"]})
     store.record_prices(SOURCE, hist)
 
     h = data[HERO]
@@ -187,12 +215,12 @@ def run() -> dict:
     catalog = _catalog(data, month, day)
     basket = _basket(data, month_start)
 
+    # 전 품목 차트(내 장바구니용): 기본 장바구니 품목이 먼저, 나머지는 이름순
     chart_items = {}
-    for n in BASKET:
-        if n not in data:
-            continue
+    ordered = [n for n in BASKET if n in data] + sorted(n for n in data if n not in BASKET)
+    for n in ordered:
         c = data[n]
-        chart_items[n] = {
+        chart_items[ALIAS.get(n, n)] = {
             "unit": f"원/{_sub(c['unit'])}",
             "price": round(c["now"]),
             "week_ago": round(c["w1"]) if c["w1"] else None,

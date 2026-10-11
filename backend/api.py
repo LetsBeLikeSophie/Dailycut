@@ -15,9 +15,11 @@ import random
 from datetime import date, datetime, timedelta
 
 import functools
+import re
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 
 import config  # noqa: F401  (.env를 읽어 환경변수에 채움)
 import geo
@@ -79,9 +81,10 @@ def live_geo(source):
         def wrapper(*args, **kwargs):
             stub = fn(*args, **kwargs)
             live = source.get(geo.region(kwargs.get("sido"))["code"], kwargs.get("sgg"))
+            before = set(stub.get("live_keys", []))  # 안쪽 데코레이터(예: live_merge)가 이미 덮어쓴 필드
             if not live:
-                return {**stub, "live_keys": []}
-            return {**stub, **live, "live_keys": sorted(live.keys())}
+                return {**stub, "live_keys": sorted(before)}
+            return {**stub, **live, "live_keys": sorted(before | set(live.keys()))}
 
         return wrapper
 
@@ -138,11 +141,17 @@ def regions():
     return {"default": geo.DEFAULT_SIDO, "regions": geo.regions_tree()}
 
 
-@app.get("/region")
-def region_of(lat: float, lon: float):
+class Coord(BaseModel):
+    lat: float
+    lon: float
+
+
+@app.post("/region")
+def region_of(c: Coord):
     """좌표 → 시도·시군구. 앱이 위치 권한을 받았을 때 지역을 정하려고 딱 한 번 부름(이후엔 지역 이름만 씀).
-    가장 가까운 측정소의 주소로 찾고, 못 찾으면 가장 가까운 시도청 소재지(시도만)."""
-    la, lo = round(lat, 2), round(lon, 2)  # 좌표는 저장하지 않음, 정규화만 함
+    가장 가까운 측정소의 주소로 찾고, 못 찾으면 가장 가까운 시도청 소재지(시도만).
+    2026-10-11: GET ?lat=&lon=은 nginx 접속 로그에 좌표가 그대로 남아서 POST 본문으로 바꿈(본문은 로그에 안 남음)."""
+    la, lo = round(c.lat, 2), round(c.lon, 2)  # 좌표는 저장하지 않음, 정규화만 함
     code, sgg = None, None
     try:
         from sources import _http
@@ -164,6 +173,35 @@ def region_of(lat: float, lon: float):
     code = code or geo.nearest_sido(la, lo)
     pl = geo.place(code, sgg)
     return {"code": pl["code"], "sgg": pl["sgg"], "label": pl["label"]}
+
+
+class UsageEvent(BaseModel):
+    n: str  # 이벤트 이름(예: tab_view)
+    p: str = ""  # 값(예: money) — 항목 이름·시도 코드 같은 "무엇을"만. 개인 정보 금지
+
+
+class UsageBatch(BaseModel):
+    events: list[UsageEvent]
+
+
+_USAGE_OK = re.compile(r"^[0-9A-Za-z_가-힣·\-\. ]{1,30}$")
+_USAGE_NAMES = {
+    "tab_view", "region_pick", "culture_kind", "culture_open", "market_open", "produce_open", "basket_add",
+    "basket_remove", "money_metric", "money_range", "life_open", "sources_open", "life_edit", "location_ask",
+}
+
+
+@app.post("/events")
+def usage_events(b: UsageBatch):
+    """익명 이용 통계(어느 탭·칩·품목이 얼마나 쓰이는지). 사용자·기기 ID, 좌표, 검색어는 받지 않음 —
+    허용된 이벤트 이름과 짧은 값만 받아 (날짜, 이벤트, 값)별 횟수만 올림. 한 번에 50개까지."""
+    rows = []
+    for e in b.events[:50]:
+        if e.n in _USAGE_NAMES and (e.p == "" or _USAGE_OK.match(e.p)):
+            rows.append((e.n, e.p))
+    if rows:
+        store.record_usage(rows)
+    return {"ok": True, "n": len(rows)}
 
 
 @app.get("/health")
@@ -365,6 +403,7 @@ def market(sido: str | None = None, sgg: str | None = None):
 # + KOPIS 공연예술통합전산망 + TourAPI 지역 축제
 @app.get("/culture")
 @live_geo(culture_src)
+@live_merge("boxoffice")
 def culture(sido: str | None = None, sgg: str | None = None):
     return {
         "hero": {
