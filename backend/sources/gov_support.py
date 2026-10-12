@@ -12,6 +12,7 @@
 from __future__ import annotations
 
 import re
+import time
 from datetime import date, datetime
 
 import requests
@@ -21,7 +22,7 @@ import geo
 import jobs
 from sources import _http
 
-URL = "https://api.odcloud.kr/api/gov24/v3/serviceList"
+URL = (config.get_key("GOV24_BENEFIT_BASE_URL") or "https://api.odcloud.kr/api/gov24/v3") + "/serviceList"
 PER_PAGE = 1000
 MAX_PAGES = 15
 
@@ -110,13 +111,17 @@ def run() -> dict:
     return {"support_all": items, "support_total": len(items), "support_at": datetime.now().isoformat(timespec="minutes")}
 
 
-_mem: dict = {"at": None, "items": []}
+_mem: dict = {"at": None, "items": [], "checked": 0.0}
 
 
 def _items() -> list[dict]:
-    live = jobs.get_live("gov_support") or {}
-    if live.get("support_at") != _mem["at"]:
-        _mem["at"], _mem["items"] = live.get("support_at"), live.get("support_all") or []
+    """전체 목록(약 6MB)을 요청마다 다시 읽지 않게 메모리에 두고 5분에 한 번만 새로 확인함."""
+    now = time.time()
+    if now - _mem["checked"] > 300 or not _mem["items"]:  # 비어 있으면(아직 수집 전) 매번 다시 확인
+        _mem["checked"] = now
+        live = jobs.get_live("gov_support") or {}
+        if live.get("support_at") != _mem["at"]:
+            _mem["at"], _mem["items"] = live.get("support_at"), live.get("support_all") or []
     return _mem["items"]
 
 
@@ -148,8 +153,13 @@ def query(sido: str | None, sgg: str | None, scope: str = "all", field: str | No
     pool = {"local": local, "central": central}.get(scope, local + central)
     if field:
         pool = [i for i in pool if field in i["field"]]
-    # 우리 지역 서비스를 먼저, 그 안에서는 조회수 순
-    pool = sorted(pool, key=lambda i: (0 if id(i) in local_ids else 1, -i["views"]))
+    # 우리 시군구 → 우리 시도 → 중앙부처 순, 같은 묶음 안에서는 조회수 순
+    def tier(i: dict) -> int:
+        if id(i) not in local_ids:
+            return 2
+        return 0 if sgg and sgg in i["org"] else 1
+
+    pool = sorted(pool, key=lambda i: (tier(i), -i["views"]))
     fields: dict[str, int] = {}
     for i in local + central:
         for f in re.split(r"[,·/]", i["field"]):
