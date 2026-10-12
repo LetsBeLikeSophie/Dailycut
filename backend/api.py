@@ -28,6 +28,7 @@ import sources  # noqa: F401  (수집 작업 등록)
 import store
 from sources import boxoffice as boxoffice_src
 from sources import culture as culture_src
+from sources import gov_support as gov_support_src
 from sources import markets as markets_src
 from sources import weather as weather_src
 
@@ -112,6 +113,13 @@ def culture_detail(id: str):
 
         d = {**d, "image": "/proxy/image?u=" + quote(d["image"], safe="")}
     return d
+
+
+@app.get("/support")
+def support(sido: str | None = None, sgg: str | None = None, scope: str = "all", field: str | None = None, limit: int = 30):
+    """정부 지원·혜택(행정안전부 공공서비스 정보). 지역(시도·시군구)만으로 거르고 개인 조건은 받지 않음.
+    수집이 안 됐으면(키 미승인) live=False, items=[] — 화면은 섹션을 숨김(예시 데이터 없음)."""
+    return gov_support_src.query(sido, sgg, scope if scope in ("all", "local", "central") else "all", field, min(max(limit, 1), 60))
 
 
 @app.get("/movie/detail")

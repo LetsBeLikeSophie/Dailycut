@@ -19,6 +19,7 @@ class ApiClient {
   Future<Map<String, dynamic>> market({String? sido, String? sgg}) => _getJson('/market', {'sido': sido, 'sgg': sgg});
   Future<Map<String, dynamic>> culture({String? sido, String? sgg}) => _getJson('/culture', {'sido': sido, 'sgg': sgg});
   Future<Map<String, dynamic>> regions() => _getJson('/regions');
+  Future<Map<String, dynamic>> support({String? sido, String? sgg, String scope = 'all'}) => _getJson('/support', {'sido': sido, 'sgg': sgg, 'scope': scope});
   Future<Map<String, dynamic>> movieDetail(String code) => _getJson('/movie/detail', {'code': code});
   Future<Map<String, dynamic>> cultureDetail(String id) => _getJson('/culture/detail', {'id': id});
   Future<Map<String, dynamic>> marketDetail({required String name, String? sigungu}) => _getJson('/market/detail', {'name': name, 'sigungu': sigungu});

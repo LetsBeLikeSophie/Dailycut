@@ -12,6 +12,7 @@ import '../widgets/livestock_sheet.dart';
 import '../widgets/reels_links.dart';
 import '../widgets/culture_calendar.dart';
 import '../widgets/finance_sheet.dart';
+import '../widgets/gov_support.dart';
 import '../widgets/market_list.dart';
 import '../widgets/shopping_catalog.dart';
 
@@ -493,6 +494,7 @@ Widget moneyScreen(ApiClient api) => SectionScreen(
               ('loans_rent', '전세자금대출 최저금리', '낮은 순'),
               ('loans_credit', '신용대출 금리', '신용등급 평균 · 낮은 순'),
             ]),
+            GovSupportSection(api: api), // 정부 지원·혜택(키 승인 전에는 스스로 숨음)
           ];
         }
         final points = [
