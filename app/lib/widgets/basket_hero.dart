@@ -111,7 +111,7 @@ class _BasketHeroState extends State<BasketHero> {
     final headline = isTotal
         ? (changeKey == 'flat' ? '이번 주 장바구니는 지난주와 $emphasis' : '이번 주 장바구니, 지난주보다 $emphasis')
         : (changeKey == 'flat' ? '$label은 지난주와 $emphasis' : '$label, 지난주보다 $emphasis');
-    final deltaText = pct == null ? '지난주 가격 없음' : '${changeLabel(changeKey)} 지난주보다 ${pct >= 0 ? '+' : ''}${pct.toStringAsFixed(1)}%';
+    final deltaText = pct == null ? '지난주 가격 없음' : '${changeLabel(changeKey)} 지난주 대비 ${pct >= 0 ? '+' : ''}${pct.toStringAsFixed(1)}%';
 
     return PageHero(
       section: Section.market,

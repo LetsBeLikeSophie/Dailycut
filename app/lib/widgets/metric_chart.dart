@@ -118,7 +118,7 @@ class _MetricHeroState extends State<MetricHero> {
         : (rg.months <= 3 ? '${firstDate.month}/${firstDate.day}' : "${firstDate.year}.${firstDate.month}");
     final deltaText = points.length < 2
         ? '이 기간엔 기록이 하나뿐이에요'
-        : '${changeLabel(diffKey)} $agoText보다 ${diff >= 0 ? '+' : '-'}${formatNumber(diff.abs(), decimals: diffDecimals)}${unit == '%' ? '%p' : suffix}';
+        : '${changeLabel(diffKey)} $agoText 대비 ${diff >= 0 ? '+' : '-'}${formatNumber(diff.abs(), decimals: diffDecimals)}${unit == '%' ? '%p' : suffix}';
 
     final verb = switch (change) { 'up' => '올랐어요', 'down' => '내렸어요', _ => '그대로예요' };
     final when = (it['when'] as String?) ?? '마지막 거래일엔';

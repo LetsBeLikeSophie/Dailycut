@@ -8,6 +8,8 @@ import '../widgets/basket_hero.dart';
 import '../widgets/metric_chart.dart';
 import '../widgets/components.dart';
 import '../widgets/box_office.dart';
+import '../widgets/livestock_sheet.dart';
+import '../widgets/reels_links.dart';
 import '../widgets/culture_calendar.dart';
 import '../widgets/finance_sheet.dart';
 import '../widgets/market_list.dart';
@@ -122,10 +124,10 @@ Widget marketScreen(ApiClient api, Region region, BuildContext shellContext) => 
                 title: '축산물 시세',
                 trailing: data['livestock_date'] == null
                     ? '평년 대비'
-                    : '${DateTime.parse(data['livestock_date'] as String).month}/${DateTime.parse(data['livestock_date'] as String).day} 기준 · 평년 대비',
+                    : '${DateTime.parse(data['livestock_date'] as String).month}/${DateTime.parse(data['livestock_date'] as String).day} 기준 · 지난주 대비',
                 children: [
                   ExpandableList(
-                    children: _priceRows((data['livestock'] as List).cast<Map<String, dynamic>>()),
+                    children: [for (final it in (data['livestock'] as List).cast<Map<String, dynamic>>()) livestockLine(context, it)],
                   ),
                 ],
               ),
@@ -185,15 +187,17 @@ Widget marketScreen(ApiClient api, Region region, BuildContext shellContext) => 
                 const SeasonLegend(),
               ],
             ),
-            ListSection(title: '채소·과일 시세', trailing: '전주 대비', stub: true, children: _priceRows(items)),
+            ListSection(title: '채소·과일 시세', trailing: '지난주 대비', stub: true, children: [ExpandableList(children: _priceRows(items))]),
           ];
         }
 
         return [
           hero,
           ...listing,
-          ListSection(title: '축산물 시세(계란·돼지고기)', trailing: '전주 대비', stub: !_isLive(data, 'livestock'), children: _priceRows(livestock)),
-          ListSection(title: '생필품 물가지수', trailing: '전월 대비', stub: !_isLive(data, 'essentials'), children: _priceRows(essentials)),
+          // 실데이터(소·돼지)는 위 listing 안의 "축산물 시세"가 보여주므로, 예시 구간은 실데이터가 없을 때만
+          if (!_isLive(data, 'livestock'))
+            ListSection(title: '축산물 시세(계란·돼지고기)', trailing: '지난주 대비', stub: true, children: [ExpandableList(children: _priceRows(livestock))]),
+          ListSection(title: '생필품 물가지수', trailing: '전월 대비', stub: !_isLive(data, 'essentials'), children: [ExpandableList(children: _priceRows(essentials))]),
           MarketList(
             api: api,
             markets: marketsNearby,
@@ -328,25 +332,6 @@ Widget cultureScreen(ApiClient api, Region region, BuildContext shellContext) =>
                   ],
                 ),
               ),
-              // 영화 한 줄: 문화 탭 맨 위에서 "이번 주말 뭐 하지"와 함께 영화 1위도 바로 보이게
-              if (_isLive(data, 'box_office') && allBoxOffice.isNotEmpty && allBoxOffice.first['code'] != null)
-                GestureDetector(
-                  onTap: () => showMovieSheet(context, api, {...(data['box_office_sets']?['daily|all'] as List? ?? const [{}]).first as Map<String, dynamic>}),
-                  behavior: HitTestBehavior.opaque,
-                  child: Padding(
-                    padding: const EdgeInsets.only(top: 14),
-                    child: Row(
-                      children: [
-                        const Icon(Icons.movie_outlined, size: 17),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text('영화 1위 · ${allBoxOffice.first['title']}', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700), overflow: TextOverflow.ellipsis),
-                        ),
-                        const Icon(Icons.chevron_right, size: 18, color: AppColors.inkSoft),
-                      ],
-                    ),
-                  ),
-                ),
             ],
           );
         }
@@ -410,6 +395,8 @@ Widget cultureScreen(ApiClient api, Region region, BuildContext shellContext) =>
               body: const [],
             );
 
+        Widget reelsLinks() => const ReelsLinksSection();
+
         final musicSections = <Widget>[
           // 2026-09-29: 국내 3대 차트(멜론/지니/벅스)·가온(써클차트) 전부
           // 공식 오픈 API가 없어서 못 넣음(스크래핑은 이용약관 위반 소지) —
@@ -421,16 +408,17 @@ Widget cultureScreen(ApiClient api, Region region, BuildContext shellContext) =>
             trailing: 'Spotify 기준',
             stub: !_isLive(data, 'spotify_top'),
             children: [
-              for (final it in spotifyTop) RankRow(rank: it['rank'] as int, title: it['title'] as String, meta: it['meta'] as String),
+              ExpandableList(children: [for (final it in spotifyTop) RankRow(rank: it['rank'] as int, title: it['title'] as String, meta: it['meta'] as String)]),
             ],
           ),
           ListSection(
             title: '유튜브 인기 급상승 음악',
             stub: !_isLive(data, 'youtube_trending'),
             children: [
-              for (final it in youtubeTrending) RankRow(rank: it['rank'] as int, title: it['title'] as String, meta: it['meta'] as String),
+              ExpandableList(children: [for (final it in youtubeTrending) RankRow(rank: it['rank'] as int, title: it['title'] as String, meta: it['meta'] as String)]),
             ],
           ),
+          reelsLinks(),
         ];
 
         if (events != null && data['box_office_sets'] != null) {
@@ -458,20 +446,20 @@ Widget cultureScreen(ApiClient api, Region region, BuildContext shellContext) =>
               title: '박스오피스',
               trailing: '어제 기준',
               stub: !_isLive(data, 'box_office'),
-              children: [for (final it in (events != null ? allBoxOffice : rest)) RankRow(rank: it['rank'] as int, title: it['title'] as String, meta: it['meta'] as String)],
+              children: [ExpandableList(children: [for (final it in (events != null ? allBoxOffice : rest)) RankRow(rank: it['rank'] as int, title: it['title'] as String, meta: it['meta'] as String)])],
             ),
           if (events == null) ...[
             ListSection(
               title: '진행 중인 전시·공연',
               trailing: _isLive(data, 'performances') ? nearbyFor('performances') : null,
               stub: !_isLive(data, 'performances'),
-              children: [for (final it in performances) listLine(it)],
+              children: [ExpandableList(children: [for (final it in performances) listLine(it)])],
             ),
             ListSection(
               title: '곧 열리는 축제',
               trailing: _isLive(data, 'festivals') ? nearbyFor('festivals') : null,
               stub: !_isLive(data, 'festivals'),
-              children: [for (final it in festivals) listLine(it)],
+              children: [ExpandableList(children: [for (final it in festivals) listLine(it)])],
             ),
           ],
           ...musicSections,
@@ -551,7 +539,7 @@ Widget moneyScreen(ApiClient api) => SectionScreen(
             ListSection(
               title: '기준 지표',
               stub: !_isLive(data, 'stats'),
-              children: _priceRows(stats),
+              children: [ExpandableList(children: _priceRows(stats))],
             ),
           ..._rankSections(context, data, const [
             ('deposits', '정기예금 최고금리', '12개월 · 우대 포함'),
@@ -596,10 +584,10 @@ Widget aiScreen(ApiClient api) => SectionScreen(
             title: '이번 주 인기 논문',
             stub: !_isLive(data, 'papers'),
             children: [
-              for (final it in papers) RankRow(rank: 0, title: it['title'] as String, meta: it['meta'] as String),
+              ExpandableList(children: [for (final it in papers) RankRow(rank: 0, title: it['title'] as String, meta: it['meta'] as String)]),
             ],
           ),
-          ListSection(title: '이번 달 새 모델', stub: !_isLive(data, 'new_models'), children: _priceRows(models)),
+          ListSection(title: '이번 달 새 모델', stub: !_isLive(data, 'new_models'), children: [ExpandableList(children: _priceRows(models))]),
         ];
       },
     );

@@ -44,22 +44,43 @@ def run() -> dict:
                 used_day = used_day or day
                 break
         today_rows = [i for i in items if i.get("standYmd") != "평년"]
+        # 지난주 같은 요일 값(전주 대비용) — 없으면 비교 없이 표시
+        try:
+            prev_items = _fetch(kind, used_day - timedelta(days=7)) if used_day else []
+        except Exception:
+            prev_items = []
+        prev = {(i["itemNm"], i["grdNm"]): int(float(i["ntslPrc"])) for i in prev_items if i.get("standYmd") != "평년" and i.get("ntslPrc")}
         normal = {(i["itemNm"], i["grdNm"]): i for i in items if i.get("standYmd") == "평년"}
         part_rank = {p: n for n, p in enumerate(ORDER[kname])}
         for it in sorted(today_rows, key=lambda i: (part_rank.get(i["itemNm"], 99), i["grdNm"] != "1+등급")):
             price = int(float(it["ntslPrc"]))
             base = normal.get((it["itemNm"], it["grdNm"]))
             norm = int(float(base["ntslPrc"])) if base and base.get("ntslPrc") else None
-            pct = round((price - norm) / norm * 100, 1) if norm else None
+            norm_pct = round((price - norm) / norm * 100, 1) if norm else None
+            week = prev.get((it["itemNm"], it["grdNm"]))
+            pct = round((price - week) / week * 100, 1) if week else None  # 행에는 지난주 대비만 보이고, 평년 대비는 상세 시트에
             grade = "" if it["grdNm"] in ("구분없음", "") else f" {it['grdNm']}"
             label = f"{kname} {it['itemNm']}{grade}"
             rows_out.append(
                 {
                     "label": label,
-                    "sub": f"100g" + (f" · 평년 {norm:,}원" if norm else ""),
+                    "sub": "100g",
                     "value": f"{price:,}원",
                     "change": "flat" if pct is None or abs(pct) < 0.5 else ("up" if pct > 0 else "down"),
                     "pct": abs(pct) if pct is not None else None,
+                    # 상세 시트용
+                    "detail": {
+                        "price": price,
+                        "week": week,
+                        "week_pct": pct,
+                        "normal": norm,
+                        "normal_pct": norm_pct,
+                        "min": int(float(it["minPrc"])) if it.get("minPrc") else None,
+                        "max": int(float(it["maxPrc"])) if it.get("maxPrc") else None,
+                        "kind": kname,
+                        "part": it["itemNm"],
+                        "grade": "" if it["grdNm"] in ("구분없음", "") else it["grdNm"],
+                    },
                 }
             )
             hist.append({"item": label, "day": day.isoformat(), "price": price, "unit": "100g"})

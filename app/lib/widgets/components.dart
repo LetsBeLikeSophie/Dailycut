@@ -1311,7 +1311,8 @@ class ArrowSelector extends StatelessWidget {
 }
 
 
-/// 화면 안 큰 구역 전환(예: 문화 탭의 행사·전시 / 영화 / 음악): 한 줄 가득 채운 분할 버튼.
+/// 화면 안 큰 구역 전환(예: 문화 탭의 행사·전시 / 영화 / 음악): 상자 없이 글자만, 고른 것은 굵게 + 밑줄.
+/// 앱의 여백 많은 편집체 분위기에 맞춰 버튼 느낌을 뺌.
 class SegmentToggle extends StatelessWidget {
   const SegmentToggle({super.key, required this.labels, required this.index, required this.onChanged});
 
@@ -1321,27 +1322,34 @@ class SegmentToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 38,
-      decoration: BoxDecoration(border: Border.all(color: AppColors.ink), borderRadius: BorderRadius.circular(10)),
+    return Padding(
+      padding: const EdgeInsets.only(top: 6, bottom: 4),
       child: Row(
         children: [
-          for (var i = 0; i < labels.length; i++)
-            Expanded(
-              child: GestureDetector(
-                onTap: () => onChanged(i),
-                behavior: HitTestBehavior.opaque,
+          for (var i = 0; i < labels.length; i++) ...[
+            GestureDetector(
+              onTap: () => onChanged(i),
+              behavior: HitTestBehavior.opaque,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 8),
                 child: Container(
-                  margin: const EdgeInsets.all(2),
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(color: i == index ? AppColors.ink : null, borderRadius: BorderRadius.circular(8)),
+                  padding: const EdgeInsets.only(bottom: 3),
+                  decoration: BoxDecoration(
+                    border: Border(bottom: BorderSide(color: i == index ? AppColors.ink : Colors.transparent, width: 2)),
+                  ),
                   child: Text(
                     labels[i],
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: i == index ? Colors.white : AppColors.ink),
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: i == index ? FontWeight.w700 : FontWeight.w400,
+                      color: i == index ? AppColors.ink : AppColors.inkSoft,
+                    ),
                   ),
                 ),
               ),
             ),
+            if (i < labels.length - 1) const SizedBox(width: 26),
+          ],
         ],
       ),
     );
