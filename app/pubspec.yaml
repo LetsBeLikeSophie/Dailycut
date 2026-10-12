@@ -39,6 +39,7 @@ dependencies:
   geolocator: ^14.1.1
   shared_preferences: ^2.5.6
   url_launcher: ^6.3.3
+  web: ^1.1.0 # 광고 iframe(웹)용
 
 dev_dependencies:
   flutter_test:

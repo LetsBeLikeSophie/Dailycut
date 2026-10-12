@@ -7,6 +7,7 @@ import '../theme.dart';
 import '../widgets/basket_hero.dart';
 import '../widgets/metric_chart.dart';
 import '../widgets/components.dart';
+import '../widgets/ad_slot.dart';
 import '../widgets/box_office.dart';
 import '../widgets/livestock_sheet.dart';
 import '../widgets/reels_links.dart';
@@ -119,6 +120,7 @@ Widget marketScreen(ApiClient api, Region region, BuildContext shellContext) => 
               guide: (data['guide'] as Map<String, dynamic>?) ?? const {},
               asOf: data['as_of'] as String?,
             ),
+            const AdSlot(), // 광고(ADFIT_UNIT을 빌드에 줬을 때만 보임)
             // 축산물(소·돼지 부위별 소비자가격, 평년 대비) — 키가 있고 수집이 되면 보임
             if (_isLive(data, 'livestock'))
               ListSection(
@@ -430,9 +432,9 @@ Widget cultureScreen(ApiClient api, Region region, BuildContext shellContext) =>
               builder: (context, index, toggle) => Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: switch (index) {
-                  1 => [movieHero(toggle), BoxOfficeSection(api: api, data: data, stub: !_isLive(data, 'box_office'))],
+                  1 => [movieHero(toggle), BoxOfficeSection(api: api, data: data, stub: !_isLive(data, 'box_office')), const AdSlot()],
                   2 => [musicHero(toggle), ...musicSections],
-                  _ => [scopedCulture(toggle)],
+                  _ => [scopedCulture(toggle), const AdSlot()],
                 },
               ),
             ),
@@ -494,6 +496,7 @@ Widget moneyScreen(ApiClient api) => SectionScreen(
               ('loans_rent', '전세자금대출 최저금리', '낮은 순'),
               ('loans_credit', '신용대출 금리', '신용등급 평균 · 낮은 순'),
             ]),
+            const AdSlot(),
             GovSupportSection(api: api), // 정부 지원·혜택(키 승인 전에는 스스로 숨음)
           ];
         }

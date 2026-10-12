@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../analytics.dart';
 import '../theme.dart';
+import 'ad_slot.dart';
 
 /// 앱이 쓰는 공공데이터·외부 데이터 출처(이용 조건 표기 포함). 화면마다 출처를 길게 적는 대신
 /// 작은 ⓘ → 이 시트에서 한 번에 보여줌. 새 데이터를 붙이면 여기에 한 줄 추가.
@@ -66,6 +67,15 @@ Future<void> showSourcesSheet(BuildContext context, {String? current}) {
               '공공데이터포털(data.go.kr)에서 제공하는 공공데이터를 가공해 보여드려요. 이용 조건은 데이터마다 달라요.',
               style: TextStyle(fontSize: 11, color: AppColors.inkSoft, height: 1.6),
             ),
+            if (kAdsEnabled) ...[
+              const SizedBox(height: 22),
+              Text('광고', style: AppTheme.subheading),
+              const SizedBox(height: 6),
+              const Text(
+                '화면에 "광고"라고 표시된 배너는 카카오 애드핏이 제공해요. 광고 사업자가 광고 제공을 위해 기기 정보나 쿠키를 사용할 수 있고, 이는 위 익명 통계와 별개예요.',
+                style: TextStyle(fontSize: 12, color: AppColors.inkSoft, height: 1.6),
+              ),
+            ],
             const SizedBox(height: 22),
             Text('앱 개선을 위한 익명 통계', style: AppTheme.subheading),
             const SizedBox(height: 6),
