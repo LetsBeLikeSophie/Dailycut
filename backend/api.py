@@ -358,7 +358,7 @@ def _price_row(label: str, price: int, change: str, pct: float, sub: str | None 
 
 
 @app.get("/market")
-@live_merge("market", regional=markets_src)
+@live_merge(("market", "livestock"), regional=markets_src)
 def market(sido: str | None = None, sgg: str | None = None):
     # 2026-10-10: 추이 차트 X축을 "이번 달 1일~말일" 고정축으로 바꿈 — 시리즈는
     # 이번 달 1일부터 오늘까지의 일별 값만 보내고(미래 날짜는 비워둠), 지난주

@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import '../analytics.dart';
 import '../api_client.dart';
+import '../local_prefs.dart';
 import '../region.dart';
 import '../theme.dart';
 import '../widgets/basket_hero.dart';
@@ -114,6 +116,19 @@ Widget marketScreen(ApiClient api, Region region, BuildContext shellContext) => 
               guide: (data['guide'] as Map<String, dynamic>?) ?? const {},
               asOf: data['as_of'] as String?,
             ),
+            // 축산물(소·돼지 부위별 소비자가격, 평년 대비) — 키가 있고 수집이 되면 보임
+            if (_isLive(data, 'livestock'))
+              ListSection(
+                title: '축산물 시세',
+                trailing: data['livestock_date'] == null
+                    ? '평년 대비'
+                    : '${DateTime.parse(data['livestock_date'] as String).month}/${DateTime.parse(data['livestock_date'] as String).day} 기준 · 평년 대비',
+                children: [
+                  ExpandableList(
+                    children: _priceRows((data['livestock'] as List).cast<Map<String, dynamic>>()),
+                  ),
+                ],
+              ),
           ];
         } else {
           // 예시 데이터(서버에 키가 없을 때): 예전 화면
@@ -275,7 +290,7 @@ Widget cultureScreen(ApiClient api, Region region, BuildContext shellContext) =>
         }
 
         // 행사 달력이 실데이터로 들어오면 맨 위는 "이번 주말 N개 행사"(박스오피스는 KOBIS 키 전까지 예시라 아래로)
-        Widget weekendHero(List<Map<String, dynamic>> events, bool useLocal) {
+        Widget weekendHero(List<Map<String, dynamic>> events, bool useLocal, [Widget? toggle]) {
           final now = DateTime.now();
           final today = DateTime(now.year, now.month, now.day);
           final sat = today.weekday == DateTime.sunday ? today : today.add(Duration(days: (DateTime.saturday - today.weekday) % 7));
@@ -294,6 +309,7 @@ Widget cultureScreen(ApiClient api, Region region, BuildContext shellContext) =>
             emphasis: list.isEmpty ? null : emphasis,
             source: '한국관광공사 · 한국문화정보원',
             headlineLines: 2,
+            topExtra: toggle,
             body: [
               BigNumber(to: list.length, unit: '개 행사'),
               const SizedBox(height: 14),
@@ -337,14 +353,14 @@ Widget cultureScreen(ApiClient api, Region region, BuildContext shellContext) =>
 
         // 지역은 맨 위 "문화 · ○○ ▾"에서만 고름: 시군구를 골랐고 거기 행사가 있으면 그 시군구만, 아니면 시도 전체
         final hasLocal = events != null && region.sgg != null && events.any((e) => e['local'] == true);
-        final Widget scopedCulture = events == null
+        Widget scopedCulture([Widget? toggle]) => events == null
             ? const SizedBox.shrink()
             : Builder(builder: (context) {
                 final scoped = hasLocal ? events.where((e) => e['local'] == true).toList() : events;
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    weekendHero(scoped, hasLocal),
+                    weekendHero(scoped, hasLocal, toggle),
                     if (region.sgg != null && !hasLocal)
                       Padding(
                         padding: const EdgeInsets.fromLTRB(0, 14, 0, 0),
@@ -357,8 +373,84 @@ Widget cultureScreen(ApiClient api, Region region, BuildContext shellContext) =>
                   ],
                 );
               });
+        // 문화 탭이 길어져서 큰 구역을 전환으로 나눔: 행사·전시 / 영화 / 음악(예시)
+        Widget movieHero(Widget toggle) {
+          final stat = hero['stat'] as String;
+          final sm = RegExp(r'^([\d,\.]+)\s*(.*)$').firstMatch(stat);
+          final title = '‘${hero['title']}’';
+          return PageHero(
+            section: Section.culture,
+            eyebrow: '문화 · ${region.label}',
+            onEyebrowTap: () => showRegionPicker(shellContext),
+            headline: '${hero['label'] ?? '어제 박스오피스 1위'}는 $title',
+            emphasis: title,
+            headlineLines: 2,
+            source: _sourceLabel(hero['source'] as String?, _isLive(data, 'hero')),
+            topExtra: toggle,
+            body: [
+              if (sm != null)
+                BigNumber(to: num.parse(sm.group(1)!.replaceAll(',', '')), unit: sm.group(2)!.isEmpty ? null : sm.group(2))
+              else
+                Text(stat, style: AppTheme.displaySerif(size: 24)),
+              const SizedBox(height: 4),
+              Text('${hero['stat_label']}', style: const TextStyle(fontSize: 13, color: AppColors.inkSoft)),
+            ],
+          );
+        }
+
+        Widget musicHero(Widget toggle) => PageHero(
+              section: Section.culture,
+              eyebrow: '문화 · ${region.label}',
+              onEyebrowTap: () => showRegionPicker(shellContext),
+              headline: '요즘 많이 듣는 음악',
+              emphasis: '음악',
+              headlineLines: 2,
+              stub: !_isLive(data, 'spotify_top'),
+              topExtra: toggle,
+              body: const [],
+            );
+
+        final musicSections = <Widget>[
+          // 2026-09-29: 국내 3대 차트(멜론/지니/벅스)·가온(써클차트) 전부
+          // 공식 오픈 API가 없어서 못 넣음(스크래핑은 이용약관 위반 소지) —
+          // 공식 API가 있는 Spotify·유튜브만 근사치로 넣고, "국내 차트"가
+          // 아니라는 걸 라벨에서 명확히 함(Spotify는 국내 점유율이 낮아서
+          // 실제 국내 인기 순위와 차이 날 수 있음).
+          ListSection(
+            title: '오늘의 음악',
+            trailing: 'Spotify 기준',
+            stub: !_isLive(data, 'spotify_top'),
+            children: [
+              for (final it in spotifyTop) RankRow(rank: it['rank'] as int, title: it['title'] as String, meta: it['meta'] as String),
+            ],
+          ),
+          ListSection(
+            title: '유튜브 인기 급상승 음악',
+            stub: !_isLive(data, 'youtube_trending'),
+            children: [
+              for (final it in youtubeTrending) RankRow(rank: it['rank'] as int, title: it['title'] as String, meta: it['meta'] as String),
+            ],
+          ),
+        ];
+
+        if (events != null && data['box_office_sets'] != null) {
+          return [
+            SegmentedHost(
+              labels: const ['행사·전시', '영화', '음악'],
+              prefKey: 'culture_seg',
+              builder: (context, index, toggle) => Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: switch (index) {
+                  1 => [movieHero(toggle), BoxOfficeSection(api: api, data: data, stub: !_isLive(data, 'box_office'))],
+                  2 => [musicHero(toggle), ...musicSections],
+                  _ => [scopedCulture(toggle)],
+                },
+              ),
+            ),
+          ];
+        }
         return [
-          events == null ? legacyHero : scopedCulture,
+          events == null ? legacyHero : scopedCulture(),
           if (data['box_office_sets'] != null)
             BoxOfficeSection(api: api, data: data, stub: !_isLive(data, 'box_office'))
           else
@@ -382,26 +474,7 @@ Widget cultureScreen(ApiClient api, Region region, BuildContext shellContext) =>
               children: [for (final it in festivals) listLine(it)],
             ),
           ],
-          // 2026-09-29: 국내 3대 차트(멜론/지니/벅스)·가온(써클차트) 전부
-          // 공식 오픈 API가 없어서 못 넣음(스크래핑은 이용약관 위반 소지) —
-          // 공식 API가 있는 Spotify·유튜브만 근사치로 넣고, "국내 차트"가
-          // 아니라는 걸 라벨에서 명확히 함(Spotify는 국내 점유율이 낮아서
-          // 실제 국내 인기 순위와 차이 날 수 있음).
-          ListSection(
-            title: '오늘의 음악',
-            trailing: 'Spotify 기준',
-            stub: !_isLive(data, 'spotify_top'),
-            children: [
-              for (final it in spotifyTop) RankRow(rank: it['rank'] as int, title: it['title'] as String, meta: it['meta'] as String),
-            ],
-          ),
-          ListSection(
-            title: '유튜브 인기 급상승 음악',
-            stub: !_isLive(data, 'youtube_trending'),
-            children: [
-              for (final it in youtubeTrending) RankRow(rank: it['rank'] as int, title: it['title'] as String, meta: it['meta'] as String),
-            ],
-          ),
+          ...musicSections,
         ];
       },
     );
@@ -530,3 +603,43 @@ Widget aiScreen(ApiClient api) => SectionScreen(
         ];
       },
     );
+
+
+/// 큰 구역 전환(분할 버튼)을 한 줄 위에 두고, 고른 구역의 내용을 builder가 그림. 마지막으로 고른 구역은 기기에 기억함.
+class SegmentedHost extends StatefulWidget {
+  const SegmentedHost({super.key, required this.labels, required this.prefKey, required this.builder});
+
+  final List<String> labels;
+  final String prefKey;
+  final Widget Function(BuildContext context, int index, Widget toggle) builder;
+
+  @override
+  State<SegmentedHost> createState() => _SegmentedHostState();
+}
+
+class _SegmentedHostState extends State<SegmentedHost> {
+  int _index = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    LocalPrefs.getString(widget.prefKey).then((v) {
+      final i = v == null ? -1 : widget.labels.indexOf(v);
+      if (i >= 0 && mounted) setState(() => _index = i);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final toggle = SegmentToggle(
+      labels: widget.labels,
+      index: _index,
+      onChanged: (i) {
+        setState(() => _index = i);
+        LocalPrefs.setString(widget.prefKey, widget.labels[i]);
+        Analytics.instance.track('culture_kind', 'seg-${widget.labels[i]}');
+      },
+    );
+    return widget.builder(context, _index, toggle);
+  }
+}

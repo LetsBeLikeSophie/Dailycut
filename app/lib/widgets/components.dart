@@ -173,7 +173,10 @@ class PageHero extends StatelessWidget {
     this.stub = false,
     this.onEyebrowTap,
     this.headlineLines = 0,
+    this.topExtra,
   });
+
+  final Widget? topExtra; // 지역 줄 바로 아래(제목 위)에 놓는 전환 버튼 등
 
   final int headlineLines; // 제목이 짧아도 이 줄 수만큼 자리를 비워 둠(고른 항목이 바뀔 때 화면이 위아래로 안 출렁이게)
   final VoidCallback? onEyebrowTap; // 있으면 눈썹 글(예: '오늘 · 서울 ▾')을 눌러 지역 선택
@@ -201,6 +204,7 @@ class PageHero extends StatelessWidget {
     final front = _HeroFrame(
       section: section,
       source: source,
+      topExtra: topExtra,
       onEyebrowTap: onEyebrowTap,
       eyebrow: eyebrow ?? t.label,
       headline: ConstrainedBox(
@@ -232,7 +236,8 @@ class PageHero extends StatelessWidget {
         child: _HeroFrame(
           section: section,
           source: source,
-              onEyebrowTap: onEyebrowTap,
+          topExtra: topExtra,
+          onEyebrowTap: onEyebrowTap,
           eyebrow: eyebrow ?? t.label,
           headline: Text(
             backTitle ?? '',
@@ -260,9 +265,11 @@ class _HeroFrame extends StatelessWidget {
     required this.child,
     this.onEyebrowTap,
     this.source,
+    this.topExtra,
   });
 
   final String? source;
+  final Widget? topExtra;
   final VoidCallback? onEyebrowTap;
   final Section section;
   final String eyebrow;
@@ -322,6 +329,7 @@ class _HeroFrame extends StatelessWidget {
                 ),
               ),
             ),
+            if (topExtra != null) ...[const SizedBox(height: 10), topExtra!],
             const SizedBox(height: 8),
             headline,
             const SizedBox(height: 22),
@@ -1298,6 +1306,44 @@ class ArrowSelector extends StatelessWidget {
         ),
         arrow(Icons.chevron_right, 1),
       ],
+    );
+  }
+}
+
+
+/// 화면 안 큰 구역 전환(예: 문화 탭의 행사·전시 / 영화 / 음악): 한 줄 가득 채운 분할 버튼.
+class SegmentToggle extends StatelessWidget {
+  const SegmentToggle({super.key, required this.labels, required this.index, required this.onChanged});
+
+  final List<String> labels;
+  final int index;
+  final ValueChanged<int> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 38,
+      decoration: BoxDecoration(border: Border.all(color: AppColors.ink), borderRadius: BorderRadius.circular(10)),
+      child: Row(
+        children: [
+          for (var i = 0; i < labels.length; i++)
+            Expanded(
+              child: GestureDetector(
+                onTap: () => onChanged(i),
+                behavior: HitTestBehavior.opaque,
+                child: Container(
+                  margin: const EdgeInsets.all(2),
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(color: i == index ? AppColors.ink : null, borderRadius: BorderRadius.circular(8)),
+                  child: Text(
+                    labels[i],
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: i == index ? Colors.white : AppColors.ink),
+                  ),
+                ),
+              ),
+            ),
+        ],
+      ),
     );
   }
 }

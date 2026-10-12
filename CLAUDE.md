@@ -279,6 +279,13 @@ claude.ai/artifact/17gytwYuXMFkF4vx8tWv65 (사용 중 · 일부만 · 미사용 
   성인물이 섞여서 일부러 안 씀). 화면: `widgets/box_office.dart`. 포스터는 KOBIS에 없음 — KMDb(한국영상자료원) 키 신청 후 한국영화만
   붙이는 안, TMDB는 상업 이용 시 별도 계약 필요. 키는 `.env`의 `KOBIS_KEY`(서버 .env에도 추가함).
 
+- **축산물 시세 (2026-10-12)**: `sources/livestock.py` — 축산물품질평가원 `/grade/consumerPriceDaily?standYmd=&judgeKind=4301|4304`
+  (소·돼지 부위별 100g당 소비자가격 + 평년 대비). 경로는 공공데이터포털의 API 상세(`POST /tcs/dss/selectApiDetailFunction.do`,
+  oprtinSeqNo 53662~53670)에서 찾음 — 월별 `consumerPriceMonth`, 순별 `consumerPriceTenDays`, 연도별 `consumerPriceYear`,
+  재고 `grade/LPStock`, 검수확인 `confirm/…`. **계란·닭은 소비자가격이 없음**(검수확인정보뿐). aT 소매가의 축산물은 2017~2022년에서 멈춤.
+  소비자원 참가격(생필품)은 상품목록(`getProductInfoSvc.do`)만 되고 가격 조회는 아직 0건.
+- **문화 탭 구역 전환**: 지역 줄 아래 `행사·전시 / 영화 / 음악(예시)` 분할 버튼(`SegmentToggle`, `SegmentedHost`, 마지막 선택 기억).
+
 ## 톤/작업 스타일
 
 이슈팝과 같은 방식 유지 — 감으로 값 정하지 말고 실제로 돌려서 확인, 코드에
