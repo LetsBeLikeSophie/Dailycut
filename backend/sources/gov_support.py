@@ -227,15 +227,20 @@ def _clean_profile(p: dict | None) -> dict | None:
     return prof if any(prof.values()) else None
 
 
-def query(sido: str | None, sgg: str | None, scope: str = "all", field: str | None = None, limit: int = 30, profile: dict | None = None) -> dict:
-    """지역(시도·시군구)과 구분으로 거른 지원 서비스. scope: all | local(우리 지역) | central(중앙부처).
-    수집이 안 됐으면(키 미승인 등) live=False, items=[] — 화면은 섹션을 숨김."""
-    allitems = _items()
-    if not allitems:
-        return {"live": False, "items": [], "fields": []}
+_pool_cache: dict = {"at": None, "by": {}}
+
+
+def _pools(sido: str | None, sgg: str | None, allitems: list[dict]):
+    """지역(시도·시군구)별로 우리 지역/중앙부처 분류와 분야 목록을 한 번만 계산해 둠(수집이 새로 되면 비움).
+    요청마다 1만 건 × 시군구 이름 수백 개를 비교하면 0.6초 넘게 걸려서 빈 화면이 길어졌음."""
+    if _pool_cache["at"] != _mem["at"]:
+        _pool_cache["at"], _pool_cache["by"] = _mem["at"], {}
+    key = (sido, sgg)
+    hit = _pool_cache["by"].get(key)
+    if hit:
+        return hit
     region = geo.region(sido)
     prefixes = tuple(region.get("prefixes") or (region["name"],))
-
     sgg_names = _all_sgg(region["code"])
 
     def is_local(i: dict) -> bool:
@@ -252,6 +257,25 @@ def query(sido: str | None, sgg: str | None, scope: str = "all", field: str | No
     local = [i for i in allitems if is_local(i)]
     local_ids = {id(i) for i in local}
     central = [i for i in allitems if id(i) not in local_ids and is_central(i)]
+    fields: dict[str, int] = {}
+    for i in local + central:
+        for f in re.split(r"[,·/]", i["field"]):
+            f = f.strip()
+            if f:
+                fields[f] = fields.get(f, 0) + 1
+    top_fields = [f for f, _ in sorted(fields.items(), key=lambda kv: -kv[1])[:8]]
+    out = (local, local_ids, central, top_fields, region["name"] + (f" {sgg}" if sgg else ""))
+    _pool_cache["by"][key] = out
+    return out
+
+
+def query(sido: str | None, sgg: str | None, scope: str = "all", field: str | None = None, limit: int = 30, profile: dict | None = None) -> dict:
+    """지역(시도·시군구)과 구분으로 거른 지원 서비스. scope: all | local(우리 지역) | central(중앙부처).
+    수집이 안 됐으면(키 미승인 등) live=False, items=[] — 화면은 섹션을 숨김."""
+    allitems = _items()
+    if not allitems:
+        return {"live": False, "items": [], "fields": []}
+    local, local_ids, central, top_fields, region = _pools(sido, sgg, allitems)
     pool = {"local": local, "central": central}.get(scope, local + central)
     if field:
         pool = [i for i in pool if field in i["field"]]
@@ -269,13 +293,6 @@ def query(sido: str | None, sgg: str | None, scope: str = "all", field: str | No
         pool = sorted(pool, key=lambda i: (tier(i), -_fit(i.get("c"), prof), -i["views"]))
     else:
         pool = sorted(pool, key=lambda i: (tier(i), -i["views"]))
-    fields: dict[str, int] = {}
-    for i in local + central:
-        for f in re.split(r"[,·/]", i["field"]):
-            f = f.strip()
-            if f:
-                fields[f] = fields.get(f, 0) + 1
-    top_fields = [f for f, _ in sorted(fields.items(), key=lambda kv: -kv[1])[:8]]
     return {
         "live": True,
         "total": len(pool),
@@ -284,7 +301,7 @@ def query(sido: str | None, sgg: str | None, scope: str = "all", field: str | No
         "local_count": len(local),
         "items": [{k: v for k, v in i.items() if k != "c"} for i in pool[:limit]],
         "fields": top_fields,
-        "region": region["name"] + (f" {sgg}" if sgg else ""),
+        "region": region,
     }
 
 

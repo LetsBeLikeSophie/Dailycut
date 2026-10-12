@@ -1362,3 +1362,33 @@ class SegmentToggle extends StatelessWidget {
     );
   }
 }
+
+/// 기간 칩("1개월")과 같은 모양의 알약 칩 — 고르기/걸러 보기용. 선택되면 검정 바탕.
+class PillChip extends StatelessWidget {
+  const PillChip({super.key, required this.label, required this.selected, required this.onTap, this.vertical = 8});
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+  final double vertical;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 14, vertical: vertical),
+        decoration: BoxDecoration(
+          color: selected ? AppColors.ink : AppColors.background,
+          border: Border.all(color: selected ? AppColors.ink : AppColors.line),
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: Text(
+          label,
+          style: TextStyle(fontSize: 13, fontWeight: selected ? FontWeight.w700 : FontWeight.w500, color: selected ? Colors.white : AppColors.ink),
+        ),
+      ),
+    );
+  }
+}

@@ -485,6 +485,7 @@ Widget moneyScreen(ApiClient api) => SectionScreen(
           // 실데이터: 뒤집는 카드 대신 칩(코스피·코스닥·금·물가)으로 차트를 고름
           final chartLabels = {for (final c in chartItems) c['label']};
           final others = [for (final s in stats) if (!chartLabels.contains(s['label']) && s['label'] != '소비자물가') s];
+          GovSupportSection.prefetch(api); // 혜택 구역을 눌렀을 때 바로 보이게 미리 받아 둠(같은 요청은 다시 안 보냄)
           return [
             MetricHero(items: chartItems, source: _sourceLabel(hero['source'] as String?, heroLive)),
             if (others.isNotEmpty)

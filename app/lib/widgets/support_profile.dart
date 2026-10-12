@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import '../analytics.dart';
 import '../local_prefs.dart';
 import '../theme.dart';
+import 'components.dart';
 
 /// 정부 지원 "내 조건" — 나이·성별·소득구간·해당 특성. 이 기기에만 저장함(로그인 없음).
 /// 서버로는 목록을 거를 때 요청 본문으로만 보내고, 서버는 저장·로그하지 않음.
@@ -27,7 +28,7 @@ class SupportProfile extends ChangeNotifier {
     if (_loaded) return;
     _loaded = true;
     final raw = await LocalPrefs.getString(_key);
-    if (raw == null) return;
+    if (raw == null || raw.isEmpty) return;
     try {
       final m = jsonDecode(raw) as Map<String, dynamic>;
       age = m['age'] as int?;
@@ -77,7 +78,7 @@ class SupportProfile extends ChangeNotifier {
         'traits': traits.toList(),
       };
 
-  /// 칩에 보여줄 한 줄 요약.
+  /// 한 줄 요약(예: "34세 · 여 · 근로자").
   String get summary {
     final parts = <String>[
       if (age != null) '$age세',
@@ -144,28 +145,24 @@ class _ProfileSheetState extends State<_ProfileSheet> {
     super.dispose();
   }
 
-  Widget _chip(String label, bool on, VoidCallback onTap) => GestureDetector(
-        onTap: onTap,
-        behavior: HitTestBehavior.opaque,
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-          decoration: BoxDecoration(
-            color: on ? AppColors.ink : AppColors.background,
-            border: Border.all(color: on ? AppColors.ink : AppColors.line),
-            borderRadius: BorderRadius.circular(999),
-          ),
-          child: Text(label, style: TextStyle(fontSize: 13, fontWeight: on ? FontWeight.w700 : FontWeight.w500, color: on ? Colors.white : AppColors.ink)),
-        ),
-      );
-
-  Widget _group(String title, Widget body, {String? hint}) => Padding(
-        padding: const EdgeInsets.only(top: 22),
+  /// 묶음: 소제목(+ 오른쪽 작은 보충 글) 아래에 선택지. 다른 목록의 소제목과 같은 글자 크기.
+  Widget _group(String title, Widget body, {String? note}) => Padding(
+        padding: const EdgeInsets.only(top: 32),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(title, style: AppTheme.subheading),
-            if (hint != null) Padding(padding: const EdgeInsets.only(top: 3), child: Text(hint, style: const TextStyle(fontSize: 12, color: AppColors.inkSoft, height: 1.5))),
-            const SizedBox(height: 10),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.baseline,
+              textBaseline: TextBaseline.alphabetic,
+              children: [
+                Text(title, style: AppTheme.subheading),
+                if (note != null) ...[
+                  const SizedBox(width: 8),
+                  Text(note, style: const TextStyle(fontSize: 11, color: AppColors.inkSoft)),
+                ],
+              ],
+            ),
+            const SizedBox(height: 14),
             body,
           ],
         ),
@@ -175,90 +172,99 @@ class _ProfileSheetState extends State<_ProfileSheet> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: SingleChildScrollView(
-        padding: EdgeInsets.fromLTRB(20, 4, 20, 24 + MediaQuery.of(context).viewInsets.bottom),
+        padding: EdgeInsets.fromLTRB(20, 4, 20, 28 + MediaQuery.of(context).viewInsets.bottom),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('내 조건', style: AppTheme.displaySerif(size: 24, fontWeight: FontWeight.w700)),
+            Text('내 조건', style: AppTheme.displaySerif(size: 26, fontWeight: FontWeight.w700)),
             const SizedBox(height: 6),
-            const Text(
-              '고른 항목에 맞는 지원만 추려서 보여줘요. 이 기기에만 저장되고, 서버에는 목록을 거를 때만 전달될 뿐 저장되지 않아요. 비워 둔 항목은 따지지 않아요.',
-              style: TextStyle(fontSize: 12, color: AppColors.inkSoft, height: 1.6),
-            ),
+            const Text('이 기기에만 저장돼요', style: TextStyle(fontSize: 12, color: AppColors.inkSoft)),
             _group(
               '만 나이',
               SizedBox(
-                width: 120,
+                width: 110,
                 child: TextField(
                   controller: _age,
                   keyboardType: TextInputType.number,
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(3)],
-                  decoration: const InputDecoration(isDense: true, hintText: '예: 34', suffixText: '세', border: OutlineInputBorder()),
+                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+                  cursorColor: AppColors.ink,
+                  decoration: const InputDecoration(
+                    isDense: true,
+                    hintText: '34',
+                    hintStyle: TextStyle(fontSize: 20, fontWeight: FontWeight.w400, color: AppColors.line),
+                    suffixText: '세',
+                    suffixStyle: TextStyle(fontSize: 14, color: AppColors.inkSoft),
+                    contentPadding: EdgeInsets.symmetric(vertical: 8),
+                    enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.line)),
+                    focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.ink, width: 2)),
+                  ),
                 ),
               ),
             ),
             _group(
               '성별',
-              Wrap(spacing: 8, runSpacing: 8, children: [
-                _chip('남', _gender == 'm', () => setState(() => _gender = _gender == 'm' ? null : 'm')),
-                _chip('여', _gender == 'f', () => setState(() => _gender = _gender == 'f' ? null : 'f')),
+              Wrap(spacing: 8, runSpacing: 10, children: [
+                PillChip(label: '남', selected: _gender == 'm', vertical: 9, onTap: () => setState(() => _gender = _gender == 'm' ? null : 'm')),
+                PillChip(label: '여', selected: _gender == 'f', vertical: 9, onTap: () => setState(() => _gender = _gender == 'f' ? null : 'f')),
               ]),
             ),
             _group(
-              '소득 수준',
-              Wrap(spacing: 8, runSpacing: 8, children: [
-                for (var i = 1; i <= 5; i++) _chip(const ['50% 이하', '75% 이하', '100% 이하', '200% 이하', '200% 초과'][i - 1], _income == i, () => setState(() => _income = _income == i ? null : i)),
-              ]),
-              hint: '기준 중위소득 대비(가구원 수 기준)예요. 잘 모르겠으면 비워 두세요.',
-            ),
-            _group(
-              '해당되는 것 (여러 개 선택)',
-              Wrap(spacing: 8, runSpacing: 8, children: [
-                for (final e in kTraitLabels.entries) _chip(e.value, _traits.contains(e.key), () => setState(() => _traits.contains(e.key) ? _traits.remove(e.key) : _traits.add(e.key))),
-              ]),
-              hint: '특정 대상만 받는 지원(학생·농업인 등)은 여기서 고른 것에만 나와요.',
-            ),
-            const SizedBox(height: 26),
-            Row(
-              children: [
-                if (_p.isSet)
-                  Expanded(
-                    child: GestureDetector(
-                      onTap: () async {
-                        final nav = Navigator.of(context);
-                        await _p.clear();
-                        nav.pop();
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(vertical: 13),
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(border: Border.all(color: AppColors.line), borderRadius: BorderRadius.circular(8)),
-                        child: const Text('조건 지우기', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600)),
-                      ),
-                    ),
+              '소득',
+              Wrap(spacing: 8, runSpacing: 10, children: [
+                for (var i = 1; i <= 5; i++)
+                  PillChip(
+                    label: const ['50% 이하', '75% 이하', '100% 이하', '200% 이하', '200% 초과'][i - 1],
+                    selected: _income == i,
+                    vertical: 9,
+                    onTap: () => setState(() => _income = _income == i ? null : i),
                   ),
-                if (_p.isSet) const SizedBox(width: 10),
-                Expanded(
-                  flex: 2,
-                  child: GestureDetector(
-                    onTap: () async {
-                      final nav = Navigator.of(context);
-                      final a = int.tryParse(_age.text);
-                      await _p.save(age: a != null && a <= 120 ? a : null, gender: _gender, income: _income, traits: _traits);
-                      nav.pop();
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 13),
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(color: AppColors.ink, borderRadius: BorderRadius.circular(8)),
-                      child: const Text('이 조건으로 보기', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: Colors.white)),
-                    ),
+              ]),
+              note: '기준 중위소득 대비',
+            ),
+            _group(
+              '해당되는 것',
+              Wrap(spacing: 8, runSpacing: 10, children: [
+                for (final e in kTraitLabels.entries)
+                  PillChip(
+                    label: e.value,
+                    selected: _traits.contains(e.key),
+                    vertical: 9,
+                    onTap: () => setState(() => _traits.contains(e.key) ? _traits.remove(e.key) : _traits.add(e.key)),
+                  ),
+              ]),
+              note: '여러 개 선택',
+            ),
+            const SizedBox(height: 36),
+            GestureDetector(
+              onTap: () async {
+                final nav = Navigator.of(context);
+                final a = int.tryParse(_age.text);
+                await _p.save(age: a != null && a <= 120 ? a : null, gender: _gender, income: _income, traits: _traits);
+                nav.pop();
+              },
+              child: Container(
+                padding: const EdgeInsets.symmetric(vertical: 15),
+                alignment: Alignment.center,
+                decoration: BoxDecoration(color: AppColors.ink, borderRadius: BorderRadius.circular(8)),
+                child: const Text('이 조건으로 보기', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white)),
+              ),
+            ),
+            if (_p.isSet)
+              Center(
+                child: GestureDetector(
+                  onTap: () async {
+                    final nav = Navigator.of(context);
+                    await _p.clear();
+                    nav.pop();
+                  },
+                  behavior: HitTestBehavior.opaque,
+                  child: const Padding(
+                    padding: EdgeInsets.fromLTRB(20, 18, 20, 4),
+                    child: Text('조건 지우기', style: TextStyle(fontSize: 13, color: AppColors.inkSoft, decoration: TextDecoration.underline)),
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            const Text('실제로 받을 수 있는지는 기관의 심사로 정해져요. 여기선 가능성이 있는 것만 추려 보여줘요.', style: TextStyle(fontSize: 11, color: AppColors.inkSoft, height: 1.6)),
+              ),
           ],
         ),
       ),
