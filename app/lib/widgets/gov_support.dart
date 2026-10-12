@@ -6,6 +6,7 @@ import '../api_client.dart';
 import '../region.dart';
 import '../theme.dart';
 import 'components.dart';
+import 'support_profile.dart';
 
 /// 머니 탭 "정부 지원·혜택"(행정안전부 공공서비스 정보). 선택한 지역만으로 걸러 보여주고 개인 조건은 받지 않음.
 /// 서버가 아직 데이터를 못 받았으면(키 승인 전 등) 섹션 전체를 숨김 — 예시 데이터는 보여주지 않음.
@@ -24,17 +25,26 @@ class _GovSupportSectionState extends State<GovSupportSection> {
 
   Region get _region => RegionStore.instance.current;
 
-  Future<Map<String, dynamic>> _load() => widget.api.support(sido: _region.code, sgg: _region.sgg, scope: _scope);
+  SupportProfile get _prof => SupportProfile.instance;
+
+  Future<Map<String, dynamic>> _load() => _prof.isSet
+      ? widget.api.supportSearch(sido: _region.code, sgg: _region.sgg, scope: _scope, profile: _prof.toRequest())
+      : widget.api.support(sido: _region.code, sgg: _region.sgg, scope: _scope);
 
   @override
   void initState() {
     super.initState();
     RegionStore.instance.addListener(_regionChanged); // 지역을 바꾸면 그 지역 기준으로 다시 받음
+    _prof.addListener(_regionChanged); // "내 조건"을 바꾸면 그 조건으로 다시 받음
+    _prof.load().then((_) {
+      if (mounted && _prof.isSet) setState(() => _future = _load()); // 저장된 조건이 있으면 처음부터 적용
+    });
   }
 
   @override
   void dispose() {
     RegionStore.instance.removeListener(_regionChanged);
+    _prof.removeListener(_regionChanged);
     super.dispose();
   }
 
@@ -55,6 +65,10 @@ class _GovSupportSectionState extends State<GovSupportSection> {
           title: '정부 지원·혜택',
           trailing: '$regionName 기준',
           children: [
+            Padding(
+              padding: const EdgeInsets.only(top: 12),
+              child: _profileRow(context, d),
+            ),
             Padding(
               padding: const EdgeInsets.only(top: 12, bottom: 4),
               child: Wrap(
@@ -95,6 +109,44 @@ class _GovSupportSectionState extends State<GovSupportSection> {
           ],
         );
       },
+    );
+  }
+
+  Widget _profileRow(BuildContext context, Map<String, dynamic> d) {
+    final set = _prof.isSet;
+    return Row(
+      children: [
+        Expanded(
+          child: GestureDetector(
+            onTap: () => showSupportProfileSheet(context),
+            behavior: HitTestBehavior.opaque,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+              decoration: BoxDecoration(
+                color: set ? AppColors.ink.withValues(alpha: 0.08) : AppColors.background,
+                border: Border.all(color: set ? AppColors.ink : AppColors.line),
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.tune, size: 16, color: set ? AppColors.ink : AppColors.inkSoft),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      set ? _prof.summary : '내 조건으로 맞춰 보기',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(fontSize: 13, fontWeight: set ? FontWeight.w700 : FontWeight.w500, color: set ? AppColors.ink : AppColors.ink),
+                    ),
+                  ),
+                  if (set && d['filtered'] == true)
+                    Text('${d['total']}개 / ${d['unfiltered_total']}개', style: const TextStyle(fontSize: 11, color: AppColors.inkSoft)),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 

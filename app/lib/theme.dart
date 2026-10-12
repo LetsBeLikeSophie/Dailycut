@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 /// 기획 문서 "디자인 방향 v6" 표 그대로 옮긴 토큰.
 /// https://claude.ai/artifact/U8h2Ukqj5FfBkLaPGVgtBZ
@@ -96,7 +95,7 @@ class AppTheme {
         seedColor: AppColors.ink,
         brightness: Brightness.light,
       ),
-      fontFamily: GoogleFonts.notoSansKr().fontFamily,
+      fontFamily: 'NotoSansKR',
     );
     return base.copyWith(
       textTheme: base.textTheme.apply(
@@ -128,7 +127,8 @@ class AppTheme {
     FontWeight? fontWeight,
     double height = 1.4,
   }) =>
-      GoogleFonts.notoSerifKr(
+      TextStyle(
+        fontFamily: 'NotoSerifKR',
         fontSize: size,
         color: AppColors.ink,
         letterSpacing: letterSpacing,

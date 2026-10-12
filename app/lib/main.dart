@@ -53,7 +53,7 @@ class _RootShellState extends State<RootShell> {
   Widget _regional(Widget Function(Region) build) {
     final store = RegionStore.instance;
     if (!store.ready) return const Center(child: CircularProgressIndicator());
-    return KeyedSubtree(key: ValueKey(store.current.code), child: build(store.current));
+    return KeyedSubtree(key: ValueKey('${store.current.code}/${store.current.sgg ?? ''}'), child: build(store.current));
   }
 
   @override

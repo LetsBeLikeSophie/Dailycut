@@ -122,6 +122,26 @@ def support(sido: str | None = None, sgg: str | None = None, scope: str = "all",
     return gov_support_src.query(sido, sgg, scope if scope in ("all", "local", "central") else "all", field, min(max(limit, 1), 60))
 
 
+class SupportProfile(BaseModel):
+    """정부 지원 "내 조건" — 선택 항목만. 저장·로그 안 함(본문으로만 받음)."""
+    sido: str | None = None
+    sgg: str | None = None
+    scope: str = "all"
+    age: int | None = None
+    gender: str | None = None  # m | f
+    income: int | None = None  # 1~5 기준중위소득 구간
+    traits: list[str] = []
+
+
+@app.post("/support/search")
+def support_search(body: SupportProfile):
+    """조건(나이·성별·소득구간·해당 특성)으로 좁힌 정부 지원. 조건은 이 요청에서만 쓰고 어디에도 남기지 않음."""
+    scope = body.scope if body.scope in ("all", "local", "central") else "all"
+    return gov_support_src.query(
+        body.sido, body.sgg, scope, None, 40, {"age": body.age, "gender": body.gender, "income": body.income, "traits": body.traits[:20]}
+    )
+
+
 @app.get("/movie/detail")
 def movie_detail(code: str):
     """영화 상세(KOBIS: 감독·출연·장르·상영시간·등급·제작국). code는 박스오피스 항목의 code."""
@@ -202,7 +222,7 @@ class UsageBatch(BaseModel):
 _USAGE_OK = re.compile(r"^[0-9A-Za-z_가-힣·\-\. ]{1,30}$")
 _USAGE_NAMES = {
     "tab_view", "region_pick", "culture_kind", "culture_open", "market_open", "produce_open", "basket_add",
-    "basket_remove", "money_metric", "money_range", "life_open", "sources_open", "life_edit", "location_ask",
+    "basket_remove", "support_profile", "support_trait", "money_metric", "money_range", "life_open", "sources_open", "life_edit", "location_ask",
 }
 
 

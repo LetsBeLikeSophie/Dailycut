@@ -1,7 +1,6 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../theme.dart';
 import 'sources_info.dart';
@@ -122,7 +121,8 @@ class BigNumber extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final still = MediaQuery.maybeOf(context)?.disableAnimations ?? false;
-    final big = GoogleFonts.notoSerifKr(
+    final big = const TextStyle(
+      fontFamily: 'NotoSerifKR',
       fontSize: 60,
       fontWeight: FontWeight.w900,
       height: 1.05,
@@ -141,7 +141,8 @@ class BigNumber extends StatelessWidget {
             if (unit != null)
               TextSpan(
                 text: '  $unit',
-                style: GoogleFonts.notoSansKr(
+                style: const TextStyle(
+                  fontFamily: 'NotoSansKR',
                   fontSize: 13,
                   fontWeight: FontWeight.w500,
                   letterSpacing: 0,
@@ -196,8 +197,11 @@ class PageHero extends StatelessWidget {
     final t = sectionThemes[section]!;
     Widget hint(String text) => Padding(
       padding: const EdgeInsets.only(top: 16),
-      child: Text(
-        '↻ $text',
+      child: Text.rich(
+        TextSpan(children: [
+          const WidgetSpan(alignment: PlaceholderAlignment.middle, child: Icon(Icons.refresh, size: 13, color: AppColors.inkSoft)),
+          TextSpan(text: ' $text'),
+        ]),
         style: const TextStyle(fontSize: 11, color: AppColors.inkSoft),
       ),
     );
@@ -320,8 +324,11 @@ class _HeroFrame extends StatelessWidget {
               behavior: HitTestBehavior.opaque,
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Text(
-                  onEyebrowTap == null ? eyebrow : '$eyebrow ▾',
+                child: Text.rich(
+                  TextSpan(children: [
+                    TextSpan(text: eyebrow),
+                    if (onEyebrowTap != null) const WidgetSpan(alignment: PlaceholderAlignment.middle, child: Icon(Icons.arrow_drop_down, size: 18)),
+                  ]),
                   style: const TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,

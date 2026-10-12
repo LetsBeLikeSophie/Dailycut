@@ -27,3 +27,6 @@ backend/*.db
 backend/.env
 !.env.example
 !backend/.env.example
+
+scratch_fonts/
+scratch_cond.pkl

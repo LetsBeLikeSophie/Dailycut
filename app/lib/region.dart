@@ -78,20 +78,30 @@ class RegionStore extends ChangeNotifier {
       if (saved != null) {
         current = _sidoByCode(saved).withSgg(prefs.getString(_prefSgg));
         source = 'saved';
-      } else {
-        final loc = await LocationService.get();
-        if (loc.real) {
-          // 좌표는 지역을 알아내는 이 한 번에만 서버로 보내고, 이후엔 지역 이름만 씀
-          final r = await api.resolveRegion(lat: loc.lat, lon: loc.lon);
-          current = _sidoByCode(r['code'] as String?).withSgg(r['sgg'] as String?);
-          source = 'gps';
-        }
       }
     } catch (_) {
-      // 위치/저장소 오류면 기본(서울)으로
+      // 저장소 오류면 기본(서울)으로
     }
+    // 2026-10-12: 위치 권한 확인(허용 창 + 최대 8초)이 끝나길 기다렸다가 데이터를 받던 걸 바꿈 — 첫 방문자는 그동안
+    // 빈 화면만 봤음. 이제 기본 지역(서울)으로 바로 보여주고, 위치는 뒤에서 알아내서 맞으면 그 지역으로 바꿈.
     ready = true;
     notifyListeners();
+    if (source == 'default') _locate(api);
+  }
+
+  Future<void> _locate(ApiClient api) async {
+    try {
+      final loc = await LocationService.get();
+      if (!loc.real || source != 'default') return; // 위치를 못 받았거나, 그 사이 사용자가 지역을 직접 골랐으면 그대로
+      // 좌표는 지역을 알아내는 이 한 번에만 서버로 보내고, 이후엔 지역 이름만 씀
+      final r = await api.resolveRegion(lat: loc.lat, lon: loc.lon);
+      if (source != 'default') return;
+      current = _sidoByCode(r['code'] as String?).withSgg(r['sgg'] as String?);
+      source = 'gps';
+      notifyListeners();
+    } catch (_) {
+      // 위치 오류면 기본(서울) 유지
+    }
   }
 
   Future<void> choose(Region r) async {

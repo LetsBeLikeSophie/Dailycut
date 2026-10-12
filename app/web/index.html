@@ -18,21 +18,39 @@
 
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="description" content="A new Flutter project.">
+  <meta name="description" content="오늘 날씨·장바구니 물가·행사·금리·정부 지원까지, 하루에 필요한 생활 정보를 공공데이터로 한 번에.">
 
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
-  <meta name="apple-mobile-web-app-title" content="dailycut">
+  <meta name="apple-mobile-web-app-title" content="데일리컷">
   <link rel="apple-touch-icon" href="icons/Icon-192.png">
 
   <!-- Favicon -->
   <link rel="icon" type="image/png" href="favicon.png"/>
 
-  <title>dailycut</title>
+  <title>데일리컷</title>
   <link rel="manifest" href="manifest.json">
+  <style>
+    /* 2026-10-12: 앱 엔진(약 3MB)이 뜨기 전 빈 흰 화면을 없애려는 스플래시. 첫 프레임이 그려지면 지움. */
+    html, body { margin: 0; background: #fff; }
+    #splash { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px;
+      background: #fff; color: #191919; z-index: 10; transition: opacity .25s ease; font-family: "Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif; }
+    #splash.done { opacity: 0; pointer-events: none; }
+    #splash .mark { font-size: 30px; font-weight: 800; letter-spacing: -0.5px; }
+    #splash .sub { font-size: 13px; color: #8b8b8b; }
+    #splash .bar { width: 120px; height: 2px; background: #ebebeb; overflow: hidden; border-radius: 2px; }
+    #splash .bar i { display: block; width: 40%; height: 100%; background: #191919; animation: slide 1.1s ease-in-out infinite; }
+    @keyframes slide { 0% { transform: translateX(-100%); } 100% { transform: translateX(300%); } }
+    @media (prefers-reduced-motion: reduce) { #splash .bar i { animation: none; width: 100%; } }
+  </style>
 </head>
 <body>
+  <div id="splash" role="status" aria-label="불러오는 중">
+    <div class="mark">데일리컷</div>
+    <div class="bar"><i></i></div>
+    <div class="sub">오늘 필요한 정보를 모으는 중</div>
+  </div>
   <!--
     You can customize the "flutter_bootstrap.js" script.
     This is useful to provide a custom configuration to the Flutter loader
@@ -41,6 +59,14 @@
     For more details:
     * https://docs.flutter.dev/platform-integration/web/initialization
   -->
+  <script>
+    window.addEventListener('flutter-first-frame', function () {
+      var el = document.getElementById('splash');
+      if (!el) return;
+      el.classList.add('done');
+      setTimeout(function () { el.remove(); }, 400);
+    });
+  </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

@@ -35,7 +35,6 @@ dependencies:
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
   http: ^1.6.0
-  google_fonts: ^9.0.0
   geolocator: ^14.1.1
   shared_preferences: ^2.5.6
   url_launcher: ^6.3.3
@@ -67,6 +66,23 @@ flutter:
   assets:
     - assets/shapes/
     - assets/produce/
+
+  # 2026-10-12: 첫 로드가 느린 주범이 구글 폰트를 런타임에 통째로 받아오던 것(굵기마다 한글 전체 폰트 4~6MB)이라
+  # KS X 1001 한글 2,350자 + 영문·기호만 남긴 서브셋을 앱에 직접 넣음(굵기당 약 0.5MB, 압축하면 절반).
+  # 서브셋에 없는 글자(희귀 한자·옛한글 등)는 기존처럼 폴백 폰트로 그려짐. 만든 법: 아래 CLAUDE.md "첫 로드" 항목.
+  fonts:
+    - family: NotoSansKR
+      fonts:
+        - asset: assets/fonts/NotoSansKR-400-r2.ttf
+          weight: 400
+        - asset: assets/fonts/NotoSansKR-700-r2.ttf
+          weight: 700
+    - family: NotoSerifKR
+      fonts:
+        - asset: assets/fonts/NotoSerifKR-700-r2.ttf
+          weight: 700
+        - asset: assets/fonts/NotoSerifKR-900-r2.ttf
+          weight: 900
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

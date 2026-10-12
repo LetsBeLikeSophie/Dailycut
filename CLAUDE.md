@@ -296,6 +296,19 @@ claude.ai/artifact/17gytwYuXMFkF4vx8tWv65 (사용 중 · 일부만 · 미사용 
   아직 화면에 붙이지 않음 — 청약 일정/공공주택 공고 섹션 후보.
   비슷한 API: 중앙부처복지서비스(15090532, 100건), 지자체복지서비스(15108347, 1,000건), 온통청년 청년정책(15143273).
 
+- **정부 혜택 "내 조건" 필터 (2026-10-12)**: 행안부 API의 `/supportConditions`(서비스 전체에 연령·성별·소득구간·대상특성이 코드로 붙어 있음)를 같이 받아
+  `gov_support.py`가 서비스에 줄여서 붙여 둠(`c`). 코드 뜻은 서비스명 키워드와 대조해서 확정(모듈 docstring 참고; JA04xx 가구유형·사업체 조건은 뜻 미확인이라 안 씀).
+  `POST /support/search`(지역+나이·성별·소득 1~5·특성들)가 거르고 "나를 콕 집은 서비스"(좁은 연령대·내 특성 전용)를 위로 올림. 조건은 **본문으로만** 받고 저장·로그 안 함.
+  앱은 `widgets/support_profile.dart`(SupportProfile: 기기 로컬 저장, 시트 UI) — 조건은 서버 통계에 보내지 않고, 연령대·성별과 직업·학생 특성(농업인·근로자 등)의 횟수만
+  `support_profile`/`support_trait` 이벤트로 셈(소득·장애·질병·보훈은 안 보냄). 실제 자격 심사가 아니라 "가능성 있는 것만 추림"이라고 화면에 밝힘.
+- **머니 탭 아래쪽 구역 전환 (2026-10-12)**: 차트·기름값 아래를 `SegmentedHost`로 `금리·대출 / 정부 혜택` 둘로 나눔(마지막 선택 기억, 문화 탭과 같은 방식).
+- **첫 로드 개선 (2026-10-12)**: 원인은 ①구글 폰트를 런타임에 통째로(굵기마다 4~6MB) 받던 것 ②새 방문자는 위치 권한 확인(최대 8초)이 끝나야 데이터 요청을 시작하던 것.
+  → ①한글 서브셋 폰트(KS X 1001 2,350자, `app/assets/fonts/`, 만든 법 `app/tools/make_fonts.py`)를 앱에 넣고 `google_fonts` 패키지 제거(합계 gzip 약 1.1MB),
+  ②`RegionStore.init`이 바로 기본 지역(서울)으로 보여주고 위치는 뒤에서 확인해 바꿈, ③`web/index.html`에 HTML 스플래시(첫 프레임에서 제거).
+  서버 nginx: `font/ttf·application/wasm·application/octet-stream` gzip 추가, `assets/assets/fonts/Noto*.ttf`는 30일 immutable 캐시 → **폰트를 바꾸면 파일 이름의 `-rN`을 올릴 것**.
+  남은 비용(첫 방문 한 번): canvaskit.wasm(gstatic CDN, 압축 약 2MB)·main.dart.js(gzip 0.85MB). 폰트에 없는 글자(희귀 한자 등)는 폴백 폰트.
+  ▾·↻ 같은 기호는 폰트에 없을 수 있어 아이콘으로 그림.
+
 - **광고(카카오 애드핏, 웹) 준비됨 (2026-10-12)**: `widgets/ad_slot.dart`의 `AdSlot` + `web/ad.html`(애드핏 스크립트 페이지, 같은 도메인 iframe).
   광고 단위 ID가 없으면 칸이 아예 안 그려짐. 켜는 법: 애드핏에서 사이트(itssophie.dev/dailycut) 등록·승인 → 광고 단위(320x100 등) 생성 →
   `flutter build web … --dart-define=ADFIT_UNIT=DAN-xxxx --dart-define=ADFIT_SIZE=320x100`. 칸 위치: 생활(장보기 시세 아래)·문화(행사/영화 구역 아래)·머니(금리 아래).

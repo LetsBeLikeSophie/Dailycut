@@ -489,15 +489,29 @@ Widget moneyScreen(ApiClient api) => SectionScreen(
             MetricHero(items: chartItems, source: _sourceLabel(hero['source'] as String?, heroLive)),
             if (others.isNotEmpty)
               ListSection(title: '기름값', trailing: '리터당', stub: !_isLive(data, 'stats'), children: _priceRows(others)),
-            ..._rankSections(context, data, const [
-              ('deposits', '정기예금 최고금리', '12개월 · 우대 포함'),
-              ('savings', '적금 최고금리', '12개월 · 우대 포함'),
-              ('loans_mortgage', '주택담보대출 최저금리', '낮은 순'),
-              ('loans_rent', '전세자금대출 최저금리', '낮은 순'),
-              ('loans_credit', '신용대출 금리', '신용등급 평균 · 낮은 순'),
-            ]),
-            const AdSlot(),
-            GovSupportSection(api: api), // 정부 지원·혜택(키 승인 전에는 스스로 숨음)
+            // 2026-10-12: 문화 탭처럼 아래쪽을 "금리·대출 / 정부 혜택" 두 구역으로 나눠 한 번에 하나만 보임
+            SegmentedHost(
+              labels: const ['금리·대출', '정부 혜택'],
+              prefKey: 'money_seg',
+              trackName: 'money_metric',
+              builder: (context, index, toggle) => Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Padding(padding: const EdgeInsets.only(top: 36), child: toggle),
+                  if (index == 0)
+                    ..._rankSections(context, data, const [
+                      ('deposits', '정기예금 최고금리', '12개월 · 우대 포함'),
+                      ('savings', '적금 최고금리', '12개월 · 우대 포함'),
+                      ('loans_mortgage', '주택담보대출 최저금리', '낮은 순'),
+                      ('loans_rent', '전세자금대출 최저금리', '낮은 순'),
+                      ('loans_credit', '신용대출 금리', '신용등급 평균 · 낮은 순'),
+                    ])
+                  else
+                    GovSupportSection(api: api), // 키 승인 전·수집 전에는 스스로 숨음
+                  const AdSlot(),
+                ],
+              ),
+            ),
           ];
         }
         final points = [
@@ -600,10 +614,11 @@ Widget aiScreen(ApiClient api) => SectionScreen(
 
 /// 큰 구역 전환(분할 버튼)을 한 줄 위에 두고, 고른 구역의 내용을 builder가 그림. 마지막으로 고른 구역은 기기에 기억함.
 class SegmentedHost extends StatefulWidget {
-  const SegmentedHost({super.key, required this.labels, required this.prefKey, required this.builder});
+  const SegmentedHost({super.key, required this.labels, required this.prefKey, required this.builder, this.trackName = 'culture_kind'});
 
   final List<String> labels;
   final String prefKey;
+  final String trackName; // 통계 이벤트 이름(허용 목록에 있는 것)
   final Widget Function(BuildContext context, int index, Widget toggle) builder;
 
   @override
@@ -630,7 +645,7 @@ class _SegmentedHostState extends State<SegmentedHost> {
       onChanged: (i) {
         setState(() => _index = i);
         LocalPrefs.setString(widget.prefKey, widget.labels[i]);
-        Analytics.instance.track('culture_kind', 'seg-${widget.labels[i]}');
+        Analytics.instance.track(widget.trackName, 'seg-${widget.labels[i]}');
       },
     );
     return widget.builder(context, _index, toggle);

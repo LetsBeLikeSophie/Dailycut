@@ -20,6 +20,16 @@ class ApiClient {
   Future<Map<String, dynamic>> culture({String? sido, String? sgg}) => _getJson('/culture', {'sido': sido, 'sgg': sgg});
   Future<Map<String, dynamic>> regions() => _getJson('/regions');
   Future<Map<String, dynamic>> support({String? sido, String? sgg, String scope = 'all'}) => _getJson('/support', {'sido': sido, 'sgg': sgg, 'scope': scope});
+  /// "내 조건"으로 좁힌 정부 지원. 조건은 본문(POST)으로만 보냄 — 주소창 쿼리에 넣으면 서버 접속 로그에 남기 때문.
+  Future<Map<String, dynamic>> supportSearch({String? sido, String? sgg, String scope = 'all', required Map<String, dynamic> profile}) async {
+    final res = await http.post(
+      Uri.parse('$baseUrl/support/search'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({'sido': sido, 'sgg': sgg, 'scope': scope, ...profile}),
+    );
+    if (res.statusCode != 200) throw Exception('/support/search 응답 실패: ${res.statusCode}');
+    return jsonDecode(utf8.decode(res.bodyBytes)) as Map<String, dynamic>;
+  }
   Future<Map<String, dynamic>> movieDetail(String code) => _getJson('/movie/detail', {'code': code});
   Future<Map<String, dynamic>> cultureDetail(String id) => _getJson('/culture/detail', {'id': id});
   Future<Map<String, dynamic>> marketDetail({required String name, String? sigungu}) => _getJson('/market/detail', {'name': name, 'sigungu': sigungu});
