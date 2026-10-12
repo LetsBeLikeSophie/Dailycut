@@ -8,19 +8,25 @@ import '../local_prefs.dart';
 import '../theme.dart';
 import 'components.dart';
 
-/// 정부 지원 "내 조건" — 나이·성별·소득구간·해당 특성. 이 기기에만 저장함(로그인 없음).
-/// 서버로는 목록을 거를 때 요청 본문으로만 보내고, 서버는 저장·로그하지 않음.
+/// 정부 지원 "내 조건" — 생년월일(만 나이 계산용)·성별·소득구간·해당 특성. 이 기기에만 저장함(로그인 없음).
+/// 생년월일은 기기 안에서 만 나이를 계산하는 데만 쓰고 서버로 보내지 않음 — 서버엔 계산된 나이(숫자)만, 목록을 거를 때
+/// 요청 본문으로 보내고, 서버는 저장·로그하지 않음. 그래서 서비스가 개인정보를 "수집"하는 게 아님(동의 절차 불필요).
+/// 나중에 로그인·서버 저장을 붙이면 그땐 개인정보 처리방침·동의가 필요해짐.
 class SupportProfile extends ChangeNotifier {
   SupportProfile._();
   static final SupportProfile instance = SupportProfile._();
 
   static const _key = 'support_profile_v1';
 
-  int? age;
+  String? birth; // 'YYYY-MM-DD'(이 기기에만 저장)
+  int? _legacyAge; // 예전 버전에서 직접 입력해 저장한 나이(생년월일이 없을 때만 씀)
   String? gender; // m | f
   int? income; // 1~5 기준중위소득 구간
   final Set<String> traits = {};
   bool _loaded = false;
+
+  /// 오늘 기준 만 나이(생년월일이 없거나 틀리면 null). 저장하지 않고 쓸 때마다 계산해서 생일이 지나면 자동으로 바뀜.
+  int? get age => birth == null ? _legacyAge : ageFromBirth(birth!);
 
   bool get isSet => age != null || gender != null || income != null || traits.isNotEmpty;
 
@@ -31,7 +37,8 @@ class SupportProfile extends ChangeNotifier {
     if (raw == null || raw.isEmpty) return;
     try {
       final m = jsonDecode(raw) as Map<String, dynamic>;
-      age = m['age'] as int?;
+      birth = m['birth'] as String?;
+      _legacyAge = birth == null ? m['age'] as int? : null;
       gender = m['gender'] as String?;
       income = m['income'] as int?;
       traits
@@ -41,8 +48,9 @@ class SupportProfile extends ChangeNotifier {
     } catch (_) {}
   }
 
-  Future<void> save({int? age, String? gender, int? income, required Set<String> traits}) async {
-    this.age = age;
+  Future<void> save({String? birth, String? gender, int? income, required Set<String> traits}) async {
+    this.birth = birth;
+    _legacyAge = null;
     this.gender = gender;
     this.income = income;
     this.traits
@@ -51,8 +59,9 @@ class SupportProfile extends ChangeNotifier {
     await LocalPrefs.setString(_key, jsonEncode(toJson()));
     notifyListeners();
     // 통계는 횟수만: 연령대·성별과, 민감하지 않은 직업·학생 특성만(소득·장애·질병·보훈은 보내지 않음)
-    if (age != null || gender != null) {
-      Analytics.instance.track('support_profile', '${age == null ? "na" : "${age ~/ 10 * 10}s"}_${gender ?? "na"}');
+    final a = age; // 생년월일 자체는 보내지 않고 10살 단위 연령대만
+    if (a != null || gender != null) {
+      Analytics.instance.track('support_profile', '${a == null ? "na" : "${a ~/ 10 * 10}s"}_${gender ?? "na"}');
     }
     for (final k in traits.where(kOpenTraits.contains)) {
       Analytics.instance.track('support_trait', k);
@@ -60,7 +69,8 @@ class SupportProfile extends ChangeNotifier {
   }
 
   Future<void> clear() async {
-    age = null;
+    birth = null;
+    _legacyAge = null;
     gender = null;
     income = null;
     traits.clear();
@@ -68,7 +78,7 @@ class SupportProfile extends ChangeNotifier {
     notifyListeners();
   }
 
-  Map<String, dynamic> toJson() => {'age': age, 'gender': gender, 'income': income, 'traits': traits.toList()};
+  Map<String, dynamic> toJson() => {'birth': birth, 'gender': gender, 'income': income, 'traits': traits.toList()};
 
   /// 서버로 보낼 본문의 조건 부분(지역은 호출하는 쪽에서 붙임).
   Map<String, dynamic> toRequest() => {
@@ -88,6 +98,26 @@ class SupportProfile extends ChangeNotifier {
     ];
     return parts.join(' · ');
   }
+}
+
+/// 'YYYY-MM-DD' → 오늘 기준 만 나이. 형식이 틀리거나 미래면 null.
+int? ageFromBirth(String iso, {DateTime? today}) {
+  final b = DateTime.tryParse(iso);
+  if (b == null) return null;
+  final t = today ?? DateTime.now();
+  var age = t.year - b.year;
+  if (t.month < b.month || (t.month == b.month && t.day < b.day)) age--;
+  return age < 0 || age > 120 ? null : age;
+}
+
+/// 연·월·일 숫자 → 'YYYY-MM-DD'. 없는 날짜(2월 30일 등)·미래·1900년 이전이면 null.
+String? birthFromParts(String y, String m, String d, {DateTime? today}) {
+  final yy = int.tryParse(y), mm = int.tryParse(m), dd = int.tryParse(d);
+  if (yy == null || mm == null || dd == null || y.length != 4 || yy < 1900) return null;
+  final date = DateTime(yy, mm, dd);
+  if (date.year != yy || date.month != mm || date.day != dd) return null; // 2월 30일 → 3월 2일로 넘어가는 경우 걸러냄
+  if (date.isAfter(today ?? DateTime.now())) return null;
+  return '${y.padLeft(4, '0')}-${mm.toString().padLeft(2, '0')}-${dd.toString().padLeft(2, '0')}';
 }
 
 /// 통계로 보내도 되는(민감하지 않은) 특성만.
@@ -134,16 +164,45 @@ class _ProfileSheet extends StatefulWidget {
 
 class _ProfileSheetState extends State<_ProfileSheet> {
   final _p = SupportProfile.instance;
-  late final TextEditingController _age = TextEditingController(text: _p.age?.toString() ?? '');
+  late final TextEditingController _y = TextEditingController(text: _p.birth?.substring(0, 4) ?? '');
+  late final TextEditingController _m = TextEditingController(text: _p.birth == null ? '' : int.parse(_p.birth!.substring(5, 7)).toString());
+  late final TextEditingController _d = TextEditingController(text: _p.birth == null ? '' : int.parse(_p.birth!.substring(8, 10)).toString());
   late String? _gender = _p.gender;
   late int? _income = _p.income;
   late final Set<String> _traits = {..._p.traits};
 
   @override
   void dispose() {
-    _age.dispose();
+    _y.dispose();
+    _m.dispose();
+    _d.dispose();
     super.dispose();
   }
+
+  String? get _birth => birthFromParts(_y.text, _m.text, _d.text);
+  bool get _birthTyped => _y.text.isNotEmpty || _m.text.isNotEmpty || _d.text.isNotEmpty;
+
+  Widget _numField(TextEditingController c, String hint, String suffix, double width, int maxLen) => SizedBox(
+        width: width,
+        child: TextField(
+          controller: c,
+          keyboardType: TextInputType.number,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(maxLen)],
+          onChanged: (_) => setState(() {}),
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+          cursorColor: AppColors.ink,
+          decoration: InputDecoration(
+            isDense: true,
+            hintText: hint,
+            hintStyle: const TextStyle(fontSize: 20, fontWeight: FontWeight.w400, color: AppColors.line),
+            suffixText: suffix,
+            suffixStyle: const TextStyle(fontSize: 14, color: AppColors.inkSoft),
+            contentPadding: const EdgeInsets.symmetric(vertical: 8),
+            enabledBorder: const UnderlineInputBorder(borderSide: BorderSide(color: AppColors.line)),
+            focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: AppColors.ink, width: 2)),
+          ),
+        ),
+      );
 
   /// 묶음: 소제목(+ 오른쪽 작은 보충 글) 아래에 선택지. 다른 목록의 소제목과 같은 글자 크기.
   Widget _group(String title, Widget body, {String? note}) => Padding(
@@ -178,29 +237,31 @@ class _ProfileSheetState extends State<_ProfileSheet> {
           children: [
             Text('내 조건', style: AppTheme.displaySerif(size: 26, fontWeight: FontWeight.w700)),
             const SizedBox(height: 6),
-            const Text('이 기기에만 저장돼요', style: TextStyle(fontSize: 12, color: AppColors.inkSoft)),
+            const Text('이 기기에만 저장되고, 서버로는 계산된 만 나이만 전달돼요', style: TextStyle(fontSize: 12, color: AppColors.inkSoft)),
             _group(
-              '만 나이',
-              SizedBox(
-                width: 110,
-                child: TextField(
-                  controller: _age,
-                  keyboardType: TextInputType.number,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(3)],
-                  style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
-                  cursorColor: AppColors.ink,
-                  decoration: const InputDecoration(
-                    isDense: true,
-                    hintText: '34',
-                    hintStyle: TextStyle(fontSize: 20, fontWeight: FontWeight.w400, color: AppColors.line),
-                    suffixText: '세',
-                    suffixStyle: TextStyle(fontSize: 14, color: AppColors.inkSoft),
-                    contentPadding: EdgeInsets.symmetric(vertical: 8),
-                    enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.line)),
-                    focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: AppColors.ink, width: 2)),
+              '생년월일',
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      _numField(_y, '1990', '년', 86, 4),
+                      const SizedBox(width: 18),
+                      _numField(_m, '5', '월', 60, 2),
+                      const SizedBox(width: 18),
+                      _numField(_d, '12', '일', 60, 2),
+                    ],
                   ),
-                ),
+                  const SizedBox(height: 10),
+                  Text(
+                    _birth != null
+                        ? '만 ${ageFromBirth(_birth!)}세'
+                        : (_birthTyped && _y.text.length == 4 && _m.text.isNotEmpty && _d.text.isNotEmpty ? '날짜를 다시 확인해 주세요' : ''),
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: _birth != null ? AppColors.ink : AppColors.up),
+                  ),
+                ],
               ),
+              note: '만 나이를 계산하는 데만 쓰여요',
             ),
             _group(
               '성별',
@@ -239,8 +300,7 @@ class _ProfileSheetState extends State<_ProfileSheet> {
             GestureDetector(
               onTap: () async {
                 final nav = Navigator.of(context);
-                final a = int.tryParse(_age.text);
-                await _p.save(age: a != null && a <= 120 ? a : null, gender: _gender, income: _income, traits: _traits);
+                await _p.save(birth: _birth, gender: _gender, income: _income, traits: _traits);
                 nav.pop();
               },
               child: Container(

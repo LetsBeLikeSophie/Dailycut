@@ -26,14 +26,18 @@ class MarketList extends StatefulWidget {
 enum _Sort { facilities, name, sigungu }
 
 class _MarketListState extends State<MarketList> {
-  static const _filters = ['전체', '주차장', '아케이드', '휴게실', '카트', '수유실'];
+  static const _filters = ['주차장', '아케이드', '휴게실', '카트', '수유실'];
   static const _limit = kListLimit;
-  String _filter = '전체';
+  // 여러 개를 골라 겹쳐 걸 수 있고(고른 시설을 모두 갖춘 시장만), 다시 누르면 풀림. 비어 있으면 "전체".
+  final Set<String> _selected = {};
   _Sort _sort = _Sort.facilities;
   bool _showAll = false;
 
   List<Map<String, dynamic>> get _rows {
-    var rows = widget.markets.where((m) => _filter == '전체' || ((m['facilities'] as List?) ?? const []).contains(_filter)).toList();
+    var rows = widget.markets.where((m) {
+      final have = ((m['facilities'] as List?) ?? const []).cast<String>();
+      return _selected.every(have.contains);
+    }).toList();
     switch (_sort) {
       case _Sort.facilities:
         rows.sort((a, b) {
@@ -66,12 +70,20 @@ class _MarketListState extends State<MarketList> {
             spacing: 8,
             runSpacing: 8,
             children: [
+              _MiniPill(
+                label: '전체',
+                selected: _selected.isEmpty,
+                onTap: () => setState(() {
+                  _selected.clear();
+                  _showAll = false;
+                }),
+              ),
               for (final f in _filters)
                 _MiniPill(
                   label: f,
-                  selected: _filter == f,
+                  selected: _selected.contains(f),
                   onTap: () => setState(() {
-                    _filter = f;
+                    _selected.contains(f) ? _selected.remove(f) : _selected.add(f);
                     _showAll = false;
                   }),
                 ),
