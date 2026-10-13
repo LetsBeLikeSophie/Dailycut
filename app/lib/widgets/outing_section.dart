@@ -102,6 +102,8 @@ class _OutingSectionState extends State<OutingSection> {
                 style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
               ),
             ],
+            if (d['scope_note'] != null)
+              Padding(padding: const EdgeInsets.only(top: 12), child: Text(d['scope_note'] as String, style: const TextStyle(fontSize: 11, color: AppColors.inkSoft, height: 1.6))),
             const SizedBox(height: 14),
             Container(height: 1, color: AppColors.hair),
             ExpandableList(

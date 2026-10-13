@@ -272,6 +272,7 @@ def housing(kind: str, sido: str | None, sgg: str | None, limit: int = 60) -> di
     today = _kst.today()
     region = geo.region(sido)
     prefixes = tuple(region.get("prefixes") or (region["name"],))
+    terms = geo.sgg_terms(sido, sgg)
 
     def in_region(it: dict) -> bool:
         r = it.get("region") or ""
@@ -282,7 +283,8 @@ def housing(kind: str, sido: str | None, sgg: str | None, limit: int = 60) -> di
         if not in_region(it) or (it["end"] and it["end"] < today.isoformat()):
             continue
         group, tag, span = _state(it.get("start", ""), it.get("end", ""), today)
-        near = bool(sgg and (sgg in (it.get("addr") or "") or sgg in (it.get("sgg") or "") or sgg in it["name"]))
+        hay = " ".join([it.get("addr") or "", it.get("sgg") or "", it["name"]])
+        near = any(t in hay for t in terms)
         if kind == "apply":
             sub = " · ".join(x for x in (it["kind"], it["addr"].split(" ", 2)[1] if it["addr"].count(" ") >= 1 else it["region"], f"{it['households']}세대" if it.get("households") else "") if x)
             detail = _detail_rows([
@@ -306,8 +308,16 @@ def housing(kind: str, sido: str | None, sgg: str | None, limit: int = 60) -> di
             "id": it["id"], "name": it["name"], "sub": sub, "tag": tag, "span": span, "detail": detail, "url": it.get("url") or "", "link_label": link_label,
         }))
     rows.sort(key=lambda r: (r[1], r[0], r[2]))
+    scope_note = None
+    label = region["name"]
+    if sgg:  # 그 시군구 공고가 있으면 그것만, 없으면 시도 전체(안내 글 포함)
+        near_rows = [r for r in rows if r[0] == 0]
+        if near_rows:
+            rows, label = near_rows, f"{region['name']} {sgg}"
+        else:
+            scope_note = f"{sgg}에는 접수 중인 공고가 없어서 {region['name']} 전체를 보여드려요."
     out = [r[3] for r in rows]
-    return {"live": True, "total": len(out), "items": out[:limit], "region": region["name"] + (f" {sgg}" if sgg else "")}
+    return {"live": True, "total": len(out), "items": out[:limit], "region": label, "scope_note": scope_note}
 
 
 def _usage_group(it: dict) -> str:

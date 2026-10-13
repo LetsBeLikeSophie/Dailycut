@@ -66,6 +66,22 @@ def _in_region(text: str, region: dict) -> bool:
     return any(p in text for p in prefixes)
 
 
+def _has(terms: list[str], *texts) -> bool:
+    hay = " ".join(str(t or "") for t in texts)
+    return any(t in hay for t in terms)
+
+
+def _scope(rows: list, sgg: str | None, region: dict) -> tuple[list, str, str | None]:
+    """시군구를 골랐고 그 시군구 항목이 있으면 그것만, 없으면 시도 전체(안내 글 포함). rows의 첫 칸은 0=그 시군구, 1=그 밖."""
+    base = region["name"]
+    if not sgg:
+        return rows, base, None
+    near = [r for r in rows if r[0] == 0]
+    if near:
+        return near, f"{base} {sgg}", None
+    return rows, base, f"{sgg}에는 없어서 {base} 전체를 보여드려요."
+
+
 def _item(id_: str, name: str, sub: str, tag: str, span: str, detail: list[tuple[str, str | None]], url: str, link_label: str) -> dict:
     return {
         "id": id_, "name": name, "sub": sub, "tag": tag, "span": span,
@@ -116,6 +132,7 @@ def library(sido: str | None, sgg: str | None) -> dict:
     for r in rooms:
         by_lib.setdefault((r.get("stdgCd") or "", _clean(r.get("pblibNm"))), []).append(r)
     wd = _kst.today().weekday()
+    terms = geo.sgg_terms(sido, sgg)
     out = []
     for lib in info:
         if not _in_region(lib.get("ctpvNm") or "", region):
@@ -132,7 +149,7 @@ def library(sido: str | None, sgg: str | None) -> dict:
             f"{r.get('rdrmNm') or '열람실'}" + (f" · {r['bldgFlrExpln']}" if r.get("bldgFlrExpln") else "") + (f" — {r['rmndSeatCnt']}/{r['tseatCnt']}석 남음" if _fresh(r.get("totDt", "")) else " — 실시간 정보 없음")
             for r in rs[:8]
         )
-        near = bool(sgg and sgg in (lib.get("sggNm") or ""))
+        near = _has(terms, lib.get("sggNm"), lib.get("pblibRoadNmAddr"))
         item = _item(
             f"lb{lib.get('stdgCd')}{lib['pblibId']}",
             _clean(lib.get("pblibNm")),
@@ -152,7 +169,8 @@ def library(sido: str | None, sgg: str | None) -> dict:
         )
         out.append((0 if near else 1, 0 if fresh else 1, -remain, item["name"], item))
     out.sort(key=lambda t: t[:4])
-    return {"live": True, "total": len(out), "items": [t[4] for t in out], "region": region["name"] + (f" {sgg}" if sgg else ""), "note": "열람실 남은 좌석은 도서관이 보내 주는 값이고, 갱신이 오래된 곳은 빼고 보여요."}
+    out, label, scope_note = _scope(out, sgg, region)
+    return {"live": True, "total": len(out), "items": [t[4] for t in out], "region": label, "scope_note": scope_note, "note": "열람실 남은 좌석은 도서관이 보내 주는 값이고, 갱신이 오래된 곳은 빼고 보여요."}
 
 
 # ---------------- 캠핑 ----------------
@@ -173,6 +191,7 @@ def _camps() -> list[dict]:
 def camp(sido: str | None, sgg: str | None) -> dict:
     camps = _cache.cached("places", "places:camps", 1440, lambda: {"v": _camps()})["v"]
     region = geo.region(sido)
+    terms = geo.sgg_terms(sido, sgg)
     out = []
     for c in camps:
         if not _in_region(c.get("doNm") or "", region):
@@ -180,7 +199,7 @@ def camp(sido: str | None, sgg: str | None) -> dict:
         sites = [
             f"{label} {c[k]}" for k, label in (("gnrlSiteCo", "일반"), ("autoSiteCo", "자동차"), ("glampSiteCo", "글램핑"), ("caravSiteCo", "카라반"), ("indvdlCaravSiteCo", "개인카라반")) if str(c.get(k) or "0") not in ("", "0")
         ]
-        near = bool(sgg and sgg[:2] in (c.get("sigunguNm") or ""))
+        near = _has(terms, c.get("sigunguNm"), c.get("addr1"))
         pet = _clean(c.get("animalCmgCl"))
         item = _item(
             f"cp{c['contentId']}",
@@ -204,7 +223,8 @@ def camp(sido: str | None, sgg: str | None) -> dict:
         )
         out.append((0 if near else 1, item["name"], item))
     out.sort(key=lambda t: t[:2])
-    return {"live": True, "total": len(out), "items": [t[2] for t in out[:150]], "region": region["name"] + (f" {sgg}" if sgg else ""), "note": "운영 중인 캠핑장만이에요. 예약·운영 여부는 누리집에서 꼭 확인해 주세요."}
+    out, label, scope_note = _scope(out, sgg, region)
+    return {"live": True, "total": len(out), "items": [t[2] for t in out[:150]], "region": label, "scope_note": scope_note, "note": "운영 중인 캠핑장만이에요. 예약·운영 여부는 누리집에서 꼭 확인해 주세요."}
 
 
 # ---------------- 반려동물 · 웰니스 ----------------
@@ -233,12 +253,13 @@ def pet(sido: str | None, sgg: str | None) -> dict:
     area = _tour_area(sido)
     rows = _cache.cached("places", f"places:pet:{area}", 1440, lambda: {"v": _pet(area)})["v"]
     region = geo.region(sido)
+    terms = geo.sgg_terms(sido, sgg)
     out = []
     for x in rows:
         addr = _clean(x.get("addr1"))
         if not _in_region(addr[:14], region):
             continue
-        near = bool(sgg and sgg in addr)
+        near = _has(terms, addr)
         kind = CONTENT_TYPE.get(str(x.get("contenttypeid")), "")
         item = _item(
             f"pt{x['contentid']}", _clean(x.get("title")), " · ".join(p for p in (kind, addr) if p), "", "",
@@ -246,7 +267,8 @@ def pet(sido: str | None, sgg: str | None) -> dict:
         )
         out.append((0 if near else 1, kind != "관광지", item["name"], item))
     out.sort(key=lambda t: t[:3])
-    return {"live": True, "total": len(out), "items": [t[3] for t in out[:150]], "region": region["name"] + (f" {sgg}" if sgg else ""), "note": "반려동물 동반 가능 여부와 조건(크기·종류 제한 등)은 방문 전에 시설에 확인해 주세요."}
+    out, label, scope_note = _scope(out, sgg, region)
+    return {"live": True, "total": len(out), "items": [t[3] for t in out[:150]], "region": label, "scope_note": scope_note, "note": "반려동물 동반 가능 여부와 조건(크기·종류 제한 등)은 방문 전에 시설에 확인해 주세요."}
 
 
 def _wellness(area: str) -> list[dict]:
@@ -259,17 +281,19 @@ def wellness(sido: str | None, sgg: str | None) -> dict:
     area = _tour_area(sido)
     rows = _cache.cached("places", f"places:well:{area}", 1440, lambda: {"v": _wellness(area)})["v"]
     region = geo.region(sido)
+    terms = geo.sgg_terms(sido, sgg)
     out = []
     for x in rows:
         addr = _clean(x.get("baseAddr"))
         if not _in_region(addr[:14], region):
             continue
-        near = bool(sgg and sgg in addr)
+        near = _has(terms, addr)
         kind = CONTENT_TYPE.get(str(x.get("contentTypeId")), "")
         item = _item(f"wl{x['contentId']}", _clean(x.get("title")), " · ".join(p for p in (kind, addr) if p), "", "", [("종류", kind), ("주소", addr)], _map(_clean(x.get("title"))), "지도에서 보기")
         out.append((0 if near else 1, item["name"], item))
     out.sort(key=lambda t: t[:2])
-    return {"live": True, "total": len(out), "items": [t[2] for t in out], "region": region["name"] + (f" {sgg}" if sgg else ""), "note": "한국관광공사가 선정한 웰니스 관광지예요(온천·스파·명상·자연치유 등)."}
+    out, label, scope_note = _scope(out, sgg, region)
+    return {"live": True, "total": len(out), "items": [t[2] for t in out], "region": label, "scope_note": scope_note, "note": "한국관광공사가 선정한 웰니스 관광지예요(온천·스파·명상·자연치유 등)."}
 
 
 # ---------------- 걷기길 ----------------
@@ -284,6 +308,7 @@ def _trails() -> list[dict]:
 def trail(sido: str | None, sgg: str | None) -> dict:
     rows = _cache.cached("places", "places:trails", 1440, lambda: {"v": _trails()})["v"]
     region = geo.region(sido)
+    terms = geo.sgg_terms(sido, sgg)
     out = []
     level = {"1": "쉬움", "2": "보통", "3": "어려움"}
     for x in rows:
@@ -293,7 +318,7 @@ def trail(sido: str | None, sgg: str | None) -> dict:
         mins = int(x["crsTotlRqrmHour"]) if str(x.get("crsTotlRqrmHour") or "").isdigit() else 0
         dur = (f"{mins // 60}시간 " if mins >= 60 else "") + (f"{mins % 60}분" if mins % 60 else "") if mins else ""
         km = x.get("crsDstnc")
-        near = bool(sgg and sgg in sigun)
+        near = _has(terms, sigun)
         item = _item(
             f"tr{x['crsIdx']}", _clean(x.get("crsKorNm")), " · ".join(p for p in (sigun, f"{km}km" if km else "", dur.strip()) if p), level.get(str(x.get("crsLevel")), ""), "",
             [("지역", sigun), ("거리", f"{km}km" if km else None), ("소요 시간", dur.strip()), ("난이도", level.get(str(x.get("crsLevel")))), ("형태", _clean(x.get("crsCycle"))),
@@ -302,7 +327,8 @@ def trail(sido: str | None, sgg: str | None) -> dict:
         )
         out.append((0 if near else 1, item["name"], item))
     out.sort(key=lambda t: t[:2])
-    return {"live": True, "total": len(out), "items": [t[2] for t in out], "region": region["name"] + (f" {sgg}" if sgg else ""), "note": "한국관광공사 두루누비의 걷기길·자전거길 코스예요."}
+    out, label, scope_note = _scope(out, sgg, region)
+    return {"live": True, "total": len(out), "items": [t[2] for t in out], "region": label, "scope_note": scope_note, "note": "한국관광공사 두루누비의 걷기길·자전거길 코스예요."}
 
 
 def query(kind: str, sido: str | None, sgg: str | None) -> dict:

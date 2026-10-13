@@ -137,6 +137,11 @@ def weekend_days(today: date) -> list[date]:
 def weekend(sido: str | None, sgg: str | None, weekly: list[dict], limit: int = 12) -> dict:
     """토·일별 "예상 집중도가 낮은 관광지" 목록 + 그날 날씨(주간 날씨에서)."""
     data = get(sido, sgg)
+    scope_note = None
+    if not data and sgg:  # 그 시군구에 관광지 데이터가 없으면 시도 전체로
+        data = get(sido, None)
+        scope_note = f"{sgg}에는 집중률 예측이 있는 관광지가 없어서 {geo.region(sido)['name']} 전체를 보여드려요."
+        sgg = None
     if not data:
         return {"live": False, "days": []}
     today = _kst.today()
@@ -161,7 +166,7 @@ def weekend(sido: str | None, sgg: str | None, weekly: list[dict], limit: int = 
         )
     if not days:
         return {"live": False, "days": []}
-    return {"live": True, "days": days, "at": data["at"], "region": geo.place(sido, sgg)["label"]}
+    return {"live": True, "days": days, "at": data["at"], "region": geo.place(sido, sgg)["label"], "scope_note": scope_note}
 
 
 def _warm() -> dict:

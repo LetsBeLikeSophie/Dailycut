@@ -217,6 +217,14 @@ def find_sigungu(code: str, name: str | None) -> dict | None:
     return None
 
 
+def sgg_terms(sido: str | None, sgg: str | None) -> list[str]:
+    """고른 시군구를 데이터의 글자와 맞출 때 쓸 이름들: 시군구 이름 + 별칭(예: 성남시 → 분당구·수정구·중원구)."""
+    if not sgg:
+        return []
+    sg = find_sigungu(region(sido)["code"], sgg)
+    return [sg["name"], *sg.get("aliases", [])] if sg else [sgg]
+
+
 def place(sido: str | None, sgg: str | None = None) -> dict:
     """앱이 고른 지역 → 각 소스가 쓸 값. 시군구를 고르면 그 중심 좌표·측정소, 아니면 시도 전체(시도청 좌표).
     label은 화면에 표시할 이름("서울 중구" / "서울")."""
