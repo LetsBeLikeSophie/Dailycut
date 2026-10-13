@@ -121,9 +121,12 @@ class _MetricHeroState extends State<MetricHero> {
         : '${changeLabel(diffKey)} $agoText 대비 ${diff >= 0 ? '+' : '-'}${formatNumber(diff.abs(), decimals: diffDecimals)}${unit == '%' ? '%p' : suffix}';
 
     final verb = switch (change) { 'up' => '올랐어요', 'down' => '내렸어요', _ => '그대로예요' };
-    final when = (it['when'] as String?) ?? '마지막 거래일엔';
     final emphasis = monthly ? '${formatNumber((it['value'] as num).abs(), decimals: decimals)}% $verb' : verb;
-    final headline = monthly ? '물가는 $when $emphasis' : '${it['label']}, $when $verb';
+    // 2026-10-13: "코스피, 마지막 거래일엔 내렸어요"(뉴스 느낌) → "어제 코스피는 내렸어요". 날짜는 마지막 기록일 기준이라
+    // 정확함(어제/오늘/요일/월·일). 물가는 월 1회 통계라 "1년 전보다"를 그대로 둠.
+    final headline = monthly
+        ? '물가는 ${(it['when'] as String?) ?? '1년 전보다'} $emphasis'
+        : '${_dayWord(series.isEmpty ? null : DateTime.tryParse(series.last['date'] as String), today)} ${_topic(it['label'] as String)} $verb';
 
     return PageHero(
       section: Section.money,
@@ -209,4 +212,22 @@ class _Pill extends StatelessWidget {
       ),
     );
   }
+}
+
+/// 기록 날짜를 말로: 오늘·어제·(이번 주면) 요일·그 밖엔 월/일. 날짜를 모르면 "지난 거래일".
+String _dayWord(DateTime? d, DateTime now) {
+  if (d == null) return '지난 거래일';
+  final days = DateTime(now.year, now.month, now.day).difference(DateTime(d.year, d.month, d.day)).inDays;
+  if (days <= 0) return '오늘';
+  if (days == 1) return '어제';
+  if (days < 7) return '${const ['월', '화', '수', '목', '금', '토', '일'][d.weekday - 1]}요일';
+  return '${d.month}/${d.day}';
+}
+
+/// 주제어 + 은/는(받침에 따라). 금은 "금값은"으로.
+String _topic(String label) {
+  final w = label == '금' ? '금값' : label;
+  final last = w.codeUnitAt(w.length - 1);
+  final hasBatchim = last >= 0xAC00 && last <= 0xD7A3 && (last - 0xAC00) % 28 != 0;
+  return '$w${hasBatchim ? '은' : '는'}';
 }
