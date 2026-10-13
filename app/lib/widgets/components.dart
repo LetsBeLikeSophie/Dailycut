@@ -1076,12 +1076,14 @@ class ListLine extends StatelessWidget {
           if (value != null) ...[
             const SizedBox(width: 12),
             ConstrainedBox(
-              constraints: const BoxConstraints(minWidth: 72),
+              constraints: const BoxConstraints(minWidth: 72, maxWidth: 150), // 값이 길어도 이름 칸이 눌리지 않게(2026-10-13)
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   Text(
                     value!,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                     textAlign: TextAlign.right,
                     style: TextStyle(
                       fontSize: 16,
@@ -1094,6 +1096,9 @@ class ListLine extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       valueSub!,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.right,
                       style: TextStyle(
                         fontSize: 11,
                         fontWeight: FontWeight.w500,

@@ -23,7 +23,7 @@ class BenefitFeed extends StatefulWidget {
   static final Map<String, ({DateTime at, Future<Map<String, dynamic>> future})> _memo = {};
 
   static Future<Map<String, dynamic>> fetch(ApiClient api, Region r, BenefitKind kind, String? usage) {
-    final key = '${kind.name}/${r.code}/${r.sgg ?? ''}/${usage ?? ''}';
+    final key = '${kind.name}/${r.code}/${r.sgg ?? ''}/${usage ?? ''}'; // usage는 쉼표로 이은 여러 개
     final hit = _memo[key];
     if (hit != null && DateTime.now().difference(hit.at).inMinutes < 10) return hit.future;
     final f = switch (kind) {
@@ -44,8 +44,11 @@ class BenefitFeed extends StatefulWidget {
 }
 
 class _BenefitFeedState extends State<BenefitFeed> {
-  String? _usage; // 대출 용도 칩
+  // 대출 용도 칩: 여러 개를 고를 수 있고(하나라도 맞으면), 다시 누르면 풀림. 비어 있으면 전체.
+  final Set<String> _usages = {};
   late Future<Map<String, dynamic>> _future = _load();
+
+  String? get _usage => _usages.isEmpty ? null : (_usages.toList()..sort()).join(',');
 
   Future<Map<String, dynamic>> _load() => BenefitFeed.fetch(widget.api, widget.region, widget.kind, _usage);
 
@@ -109,18 +112,18 @@ class _BenefitFeedState extends State<BenefitFeed> {
                 children: [
                   PillChip(
                     label: '전체',
-                    selected: _usage == null,
+                    selected: _usages.isEmpty,
                     onTap: () {
-                      _usage = null;
+                      _usages.clear();
                       _reload();
                     },
                   ),
                   for (final u in usages)
                     PillChip(
                       label: u,
-                      selected: _usage == u,
+                      selected: _usages.contains(u),
                       onTap: () {
-                        _usage = u;
+                        _usages.contains(u) ? _usages.remove(u) : _usages.add(u);
                         _reload();
                       },
                     ),
@@ -135,7 +138,7 @@ class _BenefitFeedState extends State<BenefitFeed> {
                 child: Center(child: Text('지금 접수할 수 있는 공고가 없어요.', style: TextStyle(fontSize: 13, color: AppColors.inkSoft))),
               ),
             ExpandableList(
-              key: ValueKey('${widget.kind.name}/$_usage'),
+              key: ValueKey('${widget.kind.name}/${_usage ?? ''}'),
               children: [
                 for (final it in items)
                   ListLine(

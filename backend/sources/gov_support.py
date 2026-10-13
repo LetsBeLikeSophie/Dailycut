@@ -18,6 +18,7 @@
 
 from __future__ import annotations
 
+import html
 import re
 import time
 from datetime import date, datetime
@@ -58,7 +59,7 @@ def _g(d: dict, key: str) -> str:
     for k in F[key]:
         v = d.get(k)
         if v not in (None, ""):
-            return str(v).strip()
+            return html.unescape(str(v)).strip()
     return ""
 
 

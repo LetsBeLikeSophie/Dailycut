@@ -12,6 +12,7 @@
 
 from __future__ import annotations
 
+import html
 import re
 import xml.etree.ElementTree as ET
 from datetime import date, datetime, timedelta
@@ -35,6 +36,14 @@ SMILE_URL = "https://apis.data.go.kr/B553701/LoanProductSearchingInfo/LoanProduc
 
 def _base(name: str) -> str:
     return config.get_key(name) or ""
+
+
+def _u(v) -> str:
+    """공공데이터에 가끔 글자 코드가 두 번 겹쳐 들어 있음(예: "&amp;#40;" → "&#40;") — 풀어서 "("로 만들고 공백을 정리."""
+    t = str(v or "")
+    for _ in range(2):
+        t = html.unescape(t)
+    return re.sub(r"\s+", " ", t).strip()
 
 
 def _iso(s) -> str:
@@ -68,10 +77,10 @@ def _apply_items(key: str, today: date) -> list[dict]:
                 out.append(
                     {
                         "id": f"ap{d.get('HOUSE_MANAGE_NO')}{ep[3:6]}",
-                        "name": (d.get("HOUSE_NM") or "").strip(),
+                        "name": _u(d.get("HOUSE_NM")),
                         "kind": kind,
                         "region": (d.get("SUBSCRPT_AREA_CODE_NM") or "").strip(),
-                        "addr": addr,
+                        "addr": _u(addr),
                         "start": start,
                         "end": end,
                         "announce": _iso(d.get("RCRIT_PBLANC_DE")),
@@ -79,7 +88,7 @@ def _apply_items(key: str, today: date) -> list[dict]:
                         "contract": " ~ ".join(x for x in (_iso(d.get("CNTRCT_CNCLS_BGNDE")), _iso(d.get("CNTRCT_CNCLS_ENDDE"))) if x),
                         "households": d.get("TOT_SUPLY_HSHLDCO"),
                         "movein": (str(d.get("MVN_PREARNGE_YM") or "")[:4] + "." + str(d.get("MVN_PREARNGE_YM") or "")[4:6]) if d.get("MVN_PREARNGE_YM") else "",
-                        "builder": (d.get("BSNS_MBY_NM") or "").strip(),
+                        "builder": _u(d.get("BSNS_MBY_NM")),
                         "phone": str(d.get("MDHS_TELNO") or "").strip(),
                         "url": d.get("PBLANC_URL") or d.get("HMPG_ADRES") or "",
                     }
@@ -105,7 +114,7 @@ def _myhome_items(key: str, today: date) -> list[dict]:
             out.append(
                 {
                     "id": f"mh{d.get('pblancId')}",
-                    "name": (d.get("pblancNm") or "").strip(),
+                    "name": _u(d.get("pblancNm")),
                     "kind": " · ".join(x for x in (d.get("suplyTyNm"), d.get("houseTyNm")) if x),
                     "agency": (d.get("suplyInsttNm") or "").strip(),
                     "region": (d.get("brtcNm") or "").strip(),
@@ -115,7 +124,7 @@ def _myhome_items(key: str, today: date) -> list[dict]:
                     "announce": _iso(d.get("rcritPblancDe")),
                     "winners": _iso(d.get("przwnerPresnatnDe")),
                     "households": d.get("sumSuplyCo") or d.get("suplyHoCo") or None,
-                    "phone": (d.get("refrnc") or "").strip(),
+                    "phone": _u(d.get("refrnc")),
                     "url": d.get("pcUrl") or d.get("url") or "",
                     "src_url": d.get("url") or "",
                 }
@@ -145,7 +154,7 @@ def _lh_items(key: str, today: date, have_pan_ids: set[str]) -> list[dict]:
             out.append(
                 {
                     "id": f"lh{pan}",
-                    "name": (d.get("PAN_NM") or "").strip(),
+                    "name": _u(d.get("PAN_NM")),
                     "kind": " · ".join(x for x in (d.get("UPP_AIS_TP_NM"), d.get("AIS_TP_CD_NM")) if x),
                     "agency": "LH",
                     "region": (d.get("CNP_CD_NM") or "").strip(),
@@ -181,7 +190,7 @@ def run_housing() -> dict:
 
 
 def _text(el: ET.Element, tag: str) -> str:
-    v = (el.findtext(tag) or "").strip()
+    v = _u(el.findtext(tag))
     return "" if v in ("-", "없음") else v
 
 
@@ -324,7 +333,7 @@ def _rate_text(it: dict) -> str:
 
 
 def loans(usage: str | None = None, sido: str | None = None, limit: int = 80) -> dict:
-    """서민금융 대출상품. 내 지역(전국 공통 + 내 시도 상품)만, usage는 생계·주거·학자금·사업."""
+    """서민금융 대출상품. 내 지역(전국 공통 + 내 시도 상품)만, usage는 생계·주거·학자금·사업(쉼표로 여러 개 = 하나라도 맞으면)."""
     items = _live("loans", "loans")
     if not items:
         return {"live": False, "items": []}
@@ -338,8 +347,9 @@ def loans(usage: str | None = None, sido: str | None = None, limit: int = 80) ->
     pool = [it for it in items if in_area(it)]
     groups = {it["id"]: _usage_group(it) for it in pool}
     chips = [g for g in ("생계", "주거", "학자금", "사업") if any(v == g for v in groups.values())]
-    if usage:
-        pool = [it for it in pool if groups[it["id"]] == usage]
+    picked = {u.strip() for u in (usage or "").split(",") if u.strip()}
+    if picked:
+        pool = [it for it in pool if groups[it["id"]] in picked]
     pool.sort(key=lambda it: (groups[it["id"]] == "사업", it["name"]))
     out = []
     for it in pool[:limit]:
@@ -350,7 +360,7 @@ def loans(usage: str | None = None, sido: str | None = None, limit: int = 80) ->
                 "name": it["name"],
                 "sub": " · ".join(x for x in (it["org"], it["usage"], it["target"]) if x),
                 "tag": f"최대 {it['limit']:,}만원" if it["limit"] else "",
-                "span": rate,
+                "span": rate if len(rate) <= 26 else rate[:25] + "…",  # 목록용으로 줄임(전체는 상세에)
                 "detail": _detail_rows([
                     ("금리", rate), ("한도", f"최대 {it['limit']:,}만원" if it["limit"] else None), ("기간", it["term"]), ("상환 방식", it["repay"]),
                     ("용도", it["usage"]), ("대상", it["target"]), ("지원 조건", it["target_detail"]), ("취급 기관", it["handler"]),
