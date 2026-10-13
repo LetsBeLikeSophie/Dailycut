@@ -28,7 +28,7 @@ import requests
 import config
 import geo
 import jobs
-from sources import _http
+from sources import _http, _kst
 
 _BASE = config.get_key("GOV24_BENEFIT_BASE_URL") or "https://api.odcloud.kr/api/gov24/v3"
 URL = _BASE + "/serviceList"
@@ -75,7 +75,7 @@ def _expired(deadline: str) -> bool:
         return False
     y, m, d = (int(x) for x in dates[-1])
     try:
-        return date(y, m, d) < date.today()
+        return date(y, m, d) < _kst.today()
     except ValueError:
         return False
 
@@ -325,7 +325,7 @@ def _dday(i: dict) -> dict:
     end = i.get("end") or ""
     if not end:
         return {}
-    n = (date.fromisoformat(end) - date.today()).days
+    n = (date.fromisoformat(end) - _kst.today()).days
     return {"dday": n} if 0 <= n <= 30 else {}
 
 

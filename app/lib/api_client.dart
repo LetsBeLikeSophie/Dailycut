@@ -35,6 +35,8 @@ class ApiClient {
   Future<Map<String, dynamic>> benefitsLoans({String? usage, String? sido}) => _getJson('/benefits/loans', {'usage': usage, 'sido': sido});
   /// 이번 주말 한산한 곳(관광지 집중률 예측 + 그날 날씨). 처음 부르는 지역은 몇 초 걸릴 수 있음.
   Future<Map<String, dynamic>> outing({String? sido, String? sgg}) => _getJson('/outing', {'sido': sido, 'sgg': sgg});
+  /// 나들이: kind = library | camp | pet | wellness | trail
+  Future<Map<String, dynamic>> places({required String kind, String? sido, String? sgg}) => _getJson('/places', {'kind': kind, 'sido': sido, 'sgg': sgg});
   Future<Map<String, dynamic>> cultureDetail(String id) => _getJson('/culture/detail', {'id': id});
   Future<Map<String, dynamic>> marketDetail({required String name, String? sigungu}) => _getJson('/market/detail', {'name': name, 'sigungu': sigungu});
   Future<Map<String, dynamic>> ai() => _getJson('/ai');

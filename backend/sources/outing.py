@@ -18,7 +18,7 @@ import requests
 import config
 import geo
 import jobs
-from sources import _cache, _http
+from sources import _cache, _http, _kst
 
 CROWD_URL = "https://apis.data.go.kr/B551011/TatsCnctrRateService/tatsCnctrRatedList"
 
@@ -71,6 +71,14 @@ def _fetch_signgu(area: str, signgu: str) -> list[dict]:
         return _items(r.json())
     except ValueError:
         return []  # 해당 시군구에 데이터가 없으면 JSON이 아닌 응답이 올 수 있음
+
+
+def kto_area_code(sido: str | None) -> str:
+    """앱의 시도 → 한국관광공사 법정동 시도 코드(광주·전남은 통합특별시 12). 못 찾으면 빈 문자열."""
+    region = geo.region(sido)
+    prefixes = tuple(region.get("prefixes") or (region["name"],))
+    kto = next((k for k in _kto_regions() if any(p in k["name"] for p in prefixes)), None)
+    return kto["code"] if kto else ""
 
 
 def _targets(sido: str | None, sgg: str | None) -> tuple[str, list[dict]]:
@@ -131,7 +139,7 @@ def weekend(sido: str | None, sgg: str | None, weekly: list[dict], limit: int = 
     data = get(sido, sgg)
     if not data:
         return {"live": False, "days": []}
-    today = date.today()
+    today = _kst.today()
     days = []
     for d in weekend_days(today):
         ymd = d.strftime("%Y%m%d")

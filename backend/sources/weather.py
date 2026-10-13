@@ -10,6 +10,8 @@ air_quality, life, next_holiday, location, source.
 from __future__ import annotations
 
 import math
+
+import requests
 from datetime import date, datetime, timedelta
 
 import config
@@ -202,6 +204,30 @@ def _air(place: dict) -> dict:
 # ---------------- 생활 지수 ----------------
 
 WARNING_REGIONS = ("11", "28", "41")  # 서울·인천·경기(기상청 수도권 지점 108)만 지원
+
+
+def _quakes() -> list[dict]:
+    """최근 3일 기상청 지진 통보 중 국내에 영향이 있는 것(해외 지진은 "국내영향없음"이라 뺌). 기상청 지진정보 getEqkMsg는 3일 전까지만 조회됨."""
+    from sources import _kst
+
+    base = config.get_key("KMA_EARTHQUAKE_BASE_URL")
+    if not base:
+        return []
+    today = _kst.today()
+    r = requests.get(
+        base + "/getEqkMsg",
+        params={"serviceKey": config.get_key(_http.KEY_ENV), "numOfRows": 100, "pageNo": 1, "dataType": "JSON",
+                "fromTmFc": (today - timedelta(days=2)).strftime("%Y%m%d"), "toTmFc": today.strftime("%Y%m%d")},
+        timeout=20,
+    )
+    r.raise_for_status()
+    it = (((r.json().get("response") or {}).get("body") or {}).get("items") or {}).get("item") or []
+    it = it if isinstance(it, list) else [it]
+    return [
+        {"loc": (x.get("loc") or "").strip(), "mt": x.get("mt"), "t": str(x.get("tmEqk") or "")}
+        for x in it
+        if "국내영향없음" not in (x.get("rem") or "")
+    ]
 
 
 def _warning(now: datetime, region: dict) -> dict:
@@ -557,6 +583,16 @@ def fetch(code: str, sgg: str | None = None) -> dict:
         w_value, w_level = ("확인 못 함" if warning.get("error") else "없음"), ("good" if not warning.get("error") else None)
         w_detail = [f"{region['label']}에 발효 중인 특보가 없어요"] + ([f"참고: 최근 기상청 통보(전국) — {warning['recent']}"] if warning.get("recent") else [])
     indexes.append({"key": "warning", "title": "기상특보", "value": w_value, "level": w_level, "detail": w_detail, "source": "기상청 기상특보(서울·인천·경기만)"})
+    # 지진: 최근 3일 국내 영향 지진(전국 공통). 못 받으면 줄 자체를 안 냄.
+    try:
+        quakes = _cache.cached("quake", "quake:recent", 15, lambda: {"v": _quakes()})["v"]
+        if quakes:
+            q_detail = [f"{q['loc']} 규모 {q['mt']} ({q['t'][4:6]}/{q['t'][6:8]} {q['t'][8:10]}:{q['t'][10:12]})" for q in quakes[:5]]
+            indexes.append({"key": "quake", "title": "지진", "value": f"{len(quakes)}건", "level": "bad", "detail": q_detail + ["최근 3일 기상청이 발표한 국내 지진이에요"], "source": "기상청 지진정보"})
+        else:
+            indexes.append({"key": "quake", "title": "지진", "value": "없음", "level": "good", "detail": ["최근 3일 동안 국내에서 발표된 지진이 없어요", "해외 지진은 빼고 보여드려요"], "source": "기상청 지진정보(전국, 최근 3일)"})
+    except Exception:
+        pass
     out["indexes"] = indexes
 
     # 옷차림: 낮 평균 기온 + 일교차 + 비 여부

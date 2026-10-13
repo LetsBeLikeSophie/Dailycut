@@ -1,0 +1,171 @@
+import 'package:flutter/material.dart';
+
+import '../api_client.dart';
+import '../region.dart';
+import '../theme.dart';
+import 'benefit_feed.dart';
+import 'components.dart';
+
+/// 문화 탭 "나들이": 도서관 열람실 빈자리 · 캠핑장 · 반려동물 동반 · 웰니스 · 걷기길을 칩으로 골라 봄.
+/// 서버가 줄여서 준 항목({name, sub, tag, span, detail, url, link_label})을 청약·대출 목록과 같은 모양으로 보여주고,
+/// 누르면 같은 상세 시트가 열림. 지역은 앱 전체 지역(시도·시군구)을 따름. 사진은 쓰지 않음(저작권 구분 확인 전).
+enum PlaceKind { library, camp, pet, wellness, trail }
+
+const _labels = {
+  PlaceKind.library: '도서관',
+  PlaceKind.camp: '캠핑',
+  PlaceKind.pet: '반려동물',
+  PlaceKind.wellness: '웰니스',
+  PlaceKind.trail: '걷기길',
+};
+
+const _titles = {
+  PlaceKind.library: '도서관 열람실 빈자리',
+  PlaceKind.camp: '근처 캠핑장',
+  PlaceKind.pet: '반려동물과 갈 만한 곳',
+  PlaceKind.wellness: '웰니스 관광지',
+  PlaceKind.trail: '걷기길·자전거길',
+};
+
+class PlaceFeed extends StatefulWidget {
+  const PlaceFeed({super.key, required this.api, required this.region});
+
+  final ApiClient api;
+  final Region region;
+
+  static final Map<String, ({DateTime at, Future<Map<String, dynamic>> future})> _memo = {};
+
+  static Future<Map<String, dynamic>> fetch(ApiClient api, Region r, PlaceKind kind) {
+    final key = '${kind.name}/${r.code}/${r.sgg ?? ''}';
+    final hit = _memo[key];
+    // 도서관 좌석은 자주 바뀌니 짧게(2분), 나머지는 길게
+    final ttl = kind == PlaceKind.library ? 2 : 30;
+    if (hit != null && DateTime.now().difference(hit.at).inMinutes < ttl) return hit.future;
+    final f = api.places(kind: kind.name, sido: r.code, sgg: r.sgg);
+    _memo[key] = (at: DateTime.now(), future: f);
+    f.catchError((_) {
+      _memo.remove(key);
+      return <String, dynamic>{};
+    });
+    return f;
+  }
+
+  @override
+  State<PlaceFeed> createState() => _PlaceFeedState();
+}
+
+class _PlaceFeedState extends State<PlaceFeed> {
+  PlaceKind _kind = PlaceKind.library;
+  late Future<Map<String, dynamic>> _future = _load();
+
+  Future<Map<String, dynamic>> _load() => PlaceFeed.fetch(widget.api, widget.region, _kind);
+
+  void _pick(PlaceKind k) {
+    if (k == _kind) return;
+    setState(() {
+      _kind = k;
+      _future = _load();
+    });
+  }
+
+  Widget _chips() => Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: [for (final k in PlaceKind.values) PillChip(label: _labels[k]!, selected: _kind == k, onTap: () => _pick(k))],
+      );
+
+  Widget _message(Widget child, {VoidCallback? onTap}) => ListSection(
+        title: _titles[_kind]!,
+        children: [
+          const SizedBox(height: 18),
+          _chips(),
+          GestureDetector(
+            onTap: onTap,
+            behavior: HitTestBehavior.opaque,
+            child: Padding(padding: const EdgeInsets.symmetric(vertical: 48), child: Center(child: child)),
+          ),
+        ],
+      );
+
+  /// 캠핑: 이번 주말(토·일) 날씨를 한 줄씩 + 사실만 짧게(밤 기온·비 예보).
+  Widget _campWeather(List<Map<String, dynamic>> days) {
+    String line(Map<String, dynamic> d) {
+      final hints = <String>[
+        if ((d['low'] as num) <= 5) '밤엔 많이 추워요',
+        if (((d['pop'] as num?) ?? 0) >= 50) '비 예보가 있어요',
+      ];
+      return '${d['label']} ${d['md']}  ${d['condition']} · ${d['low']}°/${d['high']}°${d['pop'] == null ? '' : ' · 강수 ${d['pop']}%'}${hints.isEmpty ? '' : ' · ${hints.join(' · ')}'}';
+    }
+
+    return Padding(
+      padding: const EdgeInsets.only(top: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [for (final d in days) Padding(padding: const EdgeInsets.only(bottom: 4), child: Text(line(d), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700)))],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<Map<String, dynamic>>(
+      key: ValueKey(_kind), // 종류를 바꾸면 새로 받는 동안 이전 종류의 목록이 남아 보이지 않게(FutureBuilder는 옛 데이터를 들고 있음)
+      future: _future,
+      builder: (context, snap) {
+        final d = snap.data;
+        if (snap.hasError || (d != null && d['live'] != true)) {
+          return _message(const Text('목록을 불러오지 못했어요. 눌러서 다시 시도', style: TextStyle(fontSize: 13, color: AppColors.inkSoft)), onTap: () => setState(() => _future = _load()));
+        }
+        if (d == null) {
+          return _message(const Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.ink)),
+              SizedBox(height: 14),
+              Text('불러오는 중이에요', style: TextStyle(fontSize: 13, color: AppColors.inkSoft)),
+            ],
+          ));
+        }
+        final items = (d['items'] as List).cast<Map<String, dynamic>>();
+        final weather = ((d['weather'] as List?) ?? const []).cast<Map<String, dynamic>>();
+        return ListSection(
+          title: _titles[_kind]!,
+          trailing: '${d['total']}곳',
+          children: [
+            const SizedBox(height: 18),
+            _chips(),
+            if (_kind == PlaceKind.camp && weather.isNotEmpty) _campWeather(weather),
+            const SizedBox(height: 14),
+            Container(height: 1, color: AppColors.hair),
+            if (items.isEmpty)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 40),
+                child: Center(child: Text('이 지역에는 등록된 곳이 없어요.', style: TextStyle(fontSize: 13, color: AppColors.inkSoft))),
+              ),
+            ExpandableList(
+              key: ValueKey('place${_kind.name}'),
+              unit: '곳',
+              children: [
+                for (final it in items)
+                  ListLine(
+                    name: it['name'] as String,
+                    sub: it['sub'] as String?,
+                    value: (it['tag'] as String?)?.isEmpty ?? true ? null : it['tag'] as String,
+                    valueSub: (it['span'] as String?)?.isEmpty ?? true ? null : it['span'] as String,
+                    onTap: () => showItemSheet(context, it, 'place-${_kind.name}'),
+                  ),
+              ],
+            ),
+            Padding(
+              padding: const EdgeInsets.only(top: 16),
+              child: Text(
+                '${d['region']} 기준 · ${d['note'] ?? ''}',
+                style: const TextStyle(fontSize: 11, color: AppColors.inkSoft, height: 1.6),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}

@@ -10,6 +10,7 @@ import '../widgets/components.dart';
 import '../widgets/ad_slot.dart';
 import '../widgets/livestock_sheet.dart';
 import '../widgets/outing_section.dart';
+import '../widgets/place_feed.dart';
 import '../widgets/reels_links.dart';
 import '../widgets/culture_calendar.dart';
 import '../widgets/gov_support.dart';
@@ -268,6 +269,18 @@ Widget cultureScreen(ApiClient api, Region region, BuildContext shellContext) =>
                 );
               });
         // 문화 탭이 길어져서 큰 구역을 전환으로 나눔: 행사·전시 / 음악(예시)
+        Widget outingHero(Widget toggle) => PageHero(
+              section: Section.culture,
+              eyebrow: '문화 · ${region.label}',
+              onEyebrowTap: () => showRegionPicker(shellContext),
+              headline: '오늘 어디 갈까요? 근처 나들이',
+              emphasis: '나들이',
+              headlineLines: 2,
+              source: '한국관광공사 · 지역정보개발원',
+              topExtra: toggle,
+              body: const [],
+            );
+
         Widget musicHero(Widget toggle) => PageHero(
               section: Section.culture,
               eyebrow: '문화 · ${region.label}',
@@ -322,12 +335,13 @@ Widget cultureScreen(ApiClient api, Region region, BuildContext shellContext) =>
         }
         return [
           SegmentedHost(
-            labels: const ['행사·전시', '음악'],
+            labels: const ['행사·전시', '나들이', '음악'],
             prefKey: 'culture_seg',
             builder: (context, index, toggle) => Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: switch (index) {
-                1 => [musicHero(toggle), ...musicSections],
+                1 => [outingHero(toggle), PlaceFeed(key: ValueKey('places${region.code}${region.sgg}'), api: api, region: region), const AdSlot()],
+                2 => [musicHero(toggle), ...musicSections],
                 _ => [scopedCulture(toggle), const AdSlot()],
               },
             ),

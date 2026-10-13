@@ -146,7 +146,7 @@ class _BenefitFeedState extends State<BenefitFeed> {
                     sub: it['sub'] as String?,
                     value: (it['tag'] as String?)?.isEmpty ?? true ? null : it['tag'] as String,
                     valueSub: (it['span'] as String?)?.isEmpty ?? true ? null : it['span'] as String,
-                    onTap: () => showBenefitSheet(context, it, widget.kind),
+                    onTap: () => showItemSheet(context, it, 'benefit-${widget.kind.name}'),
                   ),
               ],
             ),
@@ -164,8 +164,9 @@ class _BenefitFeedState extends State<BenefitFeed> {
   }
 }
 
-Future<void> showBenefitSheet(BuildContext context, Map<String, dynamic> it, BenefitKind kind) {
-  Analytics.instance.track('life_open', 'benefit-${kind.name}');
+/// 목록 항목({name, sub, detail[[라벨,값]], url, link_label}) 상세 시트 — 혜택·나들이 목록이 같이 씀. tag는 통계용 짧은 이름.
+Future<void> showItemSheet(BuildContext context, Map<String, dynamic> it, String tag) {
+  Analytics.instance.track('life_open', tag);
   return showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,

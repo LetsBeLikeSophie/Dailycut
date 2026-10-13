@@ -22,7 +22,7 @@ import requests
 import config
 import geo
 import jobs
-from sources import _http
+from sources import _http, _kst
 
 APPLY_ENDPOINTS = (
     ("getAPTLttotPblancDetail", "아파트"),
@@ -176,7 +176,7 @@ def _lh_items(key: str, today: date, have_pan_ids: set[str]) -> list[dict]:
 
 def run_housing() -> dict:
     key = config.get_key(_http.KEY_ENV)
-    today = date.today()
+    today = _kst.today()
     apply = _apply_items(key, today)
     rent = _myhome_items(key, today)
     have = {m.group(1) for it in rent for m in [re.search(r"panId=(\d+)", it.get("src_url") or "")] if m}
@@ -269,7 +269,7 @@ def housing(kind: str, sido: str | None, sgg: str | None, limit: int = 60) -> di
     items = _live("housing", field)
     if not items:
         return {"live": False, "items": []}
-    today = date.today()
+    today = _kst.today()
     region = geo.region(sido)
     prefixes = tuple(region.get("prefixes") or (region["name"],))
 

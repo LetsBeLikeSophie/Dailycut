@@ -16,6 +16,7 @@ IconData lifeIconFor(String key) => switch (key) {
       'term' => Icons.eco_outlined,
       'holiday' => Icons.event_available_outlined,
       'warning' => Icons.warning_amber_outlined,
+      'quake' => Icons.vibration,
       _ => Icons.info_outline,
     };
 

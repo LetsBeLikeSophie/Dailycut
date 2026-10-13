@@ -31,6 +31,8 @@ from sources import benefits as benefits_src
 from sources import gov_support as gov_support_src
 from sources import markets as markets_src
 from sources import outing as outing_src
+from sources import places as places_src
+from sources import _kst
 from sources import weather as weather_src
 
 app = FastAPI(title="데일리컷 API")
@@ -127,6 +129,22 @@ def support(sido: str | None = None, sgg: str | None = None, scope: str = "all",
 def outing(sido: str | None = None, sgg: str | None = None):
     """문화 탭 "이번 주말 한산한 곳"(한국관광공사 관광지 집중률 예측 + 그날 날씨). 처음 부르는 지역은 몇 초 걸림(그 뒤 24시간 캐시)."""
     return outing_src.weekend(sido, sgg, weather(sido=sido, sgg=sgg).get("weekly", []))
+
+
+@app.get("/places")
+def places(kind: str = "library", sido: str | None = None, sgg: str | None = None):
+    """문화 탭 "나들이": kind = library(도서관 빈자리) | camp(캠핑장) | pet(반려동물 동반) | wellness(웰니스) | trail(걷기길).
+    캠핑은 이번 주말 날씨(토·일)를 같이 줌."""
+    out = places_src.query(kind, sido, sgg)
+    if kind == "camp" and out.get("live"):
+        weekly = weather(sido=sido, sgg=sgg).get("weekly", [])
+        days = []
+        for d in outing_src.weekend_days(_kst.today()):
+            w = next((x for x in weekly if x.get("date") == f"{d.month}/{d.day}"), None)
+            if w:
+                days.append({"label": "월화수목금토일"[d.weekday()], "md": f"{d.month}/{d.day}", "condition": w["condition"], "high": w["high"], "low": w["low"], "pop": w.get("pop")})
+        out = {**out, "weather": days}
+    return out
 
 
 @app.get("/benefits/housing")
@@ -534,11 +552,11 @@ def today(sido: str | None = None, sgg: str | None = None):
     live = culture_src.peek(region["code"], sgg)  # 캐시에 있을 때만(없으면 행사 수집으로 20초+ 걸려서 투데이가 느려짐)
     culture_card = None
     if live and live.get("events"):
-        sat, sun = _weekend_range(date.today())
+        sat, sun = _weekend_range(_kst.today())
         n = sum(1 for e in live["events"] if e["start"] <= sun.isoformat() and e["end"] >= sat.isoformat())
         culture_card = {
             "theme": "culture",
-            "title": "이번 주말 행사" if date.today().weekday() != 6 else "오늘 행사",
+            "title": "이번 주말 행사" if _kst.today().weekday() != 6 else "오늘 행사",
             "highlight": f"{n}개",
             "meta": f"{place_name} · {sat.month}/{sat.day}~{sun.day}" if sat != sun else place_name,
         }
