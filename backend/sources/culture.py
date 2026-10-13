@@ -21,7 +21,7 @@ import geo
 import jobs
 from sources import _cache, _http
 
-IMAGE_HOSTS = ("tong.visitkorea.or.kr", "www.culture.go.kr")  # 사진을 대신 받아 전달하는 호스트(api.py의 /proxy/image)
+IMAGE_HOSTS = ("tong.visitkorea.or.kr",)  # 사진을 대신 받아 전달하는 호스트(api.py의 /proxy/image)
 
 
 def available() -> bool:
@@ -142,7 +142,7 @@ def _event_kcisa(r: dict, place: dict) -> dict | None:
         "place": r.get("place", ""),
         "sigungu": sigungu,
         "local": bool(place["names"]) and sigungu in place["names"],
-        "image": r.get("thumbnail") or None,
+        "image": None,  # 문화포털 사진은 저작권 구분이 없어 광고(상업 이용) 대비로 쓰지 않음(2026-10-13)
     }
 
 
@@ -234,7 +234,7 @@ def detail(event_id: str) -> dict:
                 "text": _plain(d.get("contents1")) or None,
                 "homepage": d.get("url") or d.get("placeUrl") or None,
                 "tel": d.get("phone") or None,
-                "image": d.get("imgUrl") or d.get("thumbnail") or None,
+                "image": None,  # 위와 같은 이유
                 "credit": "문화포털(한국문화정보원)",
             }
         if kind == "t":

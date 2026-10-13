@@ -60,7 +60,7 @@ const sectionThemes = <Section, SectionTheme>{
     shapeAsset: 'assets/shapes/shape_culture.png',
   ),
   Section.money: SectionTheme(
-    label: '재테크',
+    label: '혜택',
     color: Color(0xFF2F42B0),
     highlight: Color(0xFFD9DFFA),
     shape: '□',

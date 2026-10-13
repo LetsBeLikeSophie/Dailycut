@@ -5,19 +5,16 @@ import '../local_prefs.dart';
 import '../region.dart';
 import '../theme.dart';
 import '../widgets/basket_hero.dart';
-import '../widgets/metric_chart.dart';
 import '../widgets/components.dart';
 import '../widgets/ad_slot.dart';
-import '../widgets/box_office.dart';
 import '../widgets/livestock_sheet.dart';
 import '../widgets/reels_links.dart';
 import '../widgets/culture_calendar.dart';
-import '../widgets/finance_sheet.dart';
 import '../widgets/gov_support.dart';
 import '../widgets/market_list.dart';
 import '../widgets/shopping_catalog.dart';
 
-/// 생활/문화/머니/AI 네 섹션 화면 — 모두 "future 하나 받아서 위에서
+/// 생활/문화/혜택/AI 네 섹션 화면 — 모두 "future 하나 받아서 위에서
 /// 아래로 보여주기" 구조가 같아서 하나의 뼈대 위젯으로 묶고, 섹션마다
 /// 다른 건 contentBuilder로만 갈아끼움.
 class SectionScreen extends StatefulWidget {
@@ -69,25 +66,6 @@ class _SectionScreenState extends State<SectionScreen> {
 bool _isLive(Map<String, dynamic> data, String key) => (data['live_keys'] as List?)?.contains(key) ?? false;
 
 String? _sourceLabel(String? source, bool live) => source == null ? null : (live ? source : '$source · 예시 데이터');
-
-/// {rank, title, meta} 목록이 들어 있는 키들을 순서대로 구간으로 만듦(없는 키는 건너뜀).
-/// 금융감독원 금융상품 한눈에(예·적금·대출)처럼 같은 모양의 순위 목록 여러 개에 씀.
-List<Widget> _rankSections(BuildContext context, Map<String, dynamic> data, List<(String, String, String)> specs) {
-  return [
-    for (final (key, title, trailing) in specs)
-      if (data[key] is List && (data[key] as List).isNotEmpty)
-        ListSection(
-          title: title,
-          trailing: trailing,
-          stub: !_isLive(data, key),
-          children: [
-            ExpandableList(
-              children: [for (final it in (data[key] as List).cast<Map<String, dynamic>>()) financeLine(context, it)],
-            ),
-          ],
-        ),
-  ];
-}
 
 List<Widget> _priceRows(List<Map<String, dynamic>> items) => [for (final it in items) priceRow(it)];
 
@@ -212,91 +190,16 @@ Widget marketScreen(ApiClient api, Region region, BuildContext shellContext) => 
       },
     );
 
-/// 문화: 어제 박스오피스 1위를 한 문장 + 큰 관객 수로, 눌러 뒤집으면 TOP 3.
+/// 문화: 이번 주말 행사 수 + 행사 달력 / 음악(예시). 영화(KOBIS) 구역은 광고 약관 때문에 뺌(2026-10-13).
 Widget cultureScreen(ApiClient api, Region region, BuildContext shellContext) => SectionScreen(
       section: Section.culture,
       fetch: () => api.culture(sido: region.code, sgg: region.sgg),
       contentBuilder: (context, data) {
-        final hero = data['hero'] as Map<String, dynamic>;
-        final allBoxOffice = (data['box_office'] as List).cast<Map<String, dynamic>>();
-        final rest = allBoxOffice.where((it) => it['rank'] != 1).toList();
-        final performances = (data['performances'] as List).cast<Map<String, dynamic>>();
-        final festivals = (data['festivals'] as List).cast<Map<String, dynamic>>();
         final spotifyTop = (data['spotify_top'] as List).cast<Map<String, dynamic>>();
         final youtubeTrending = (data['youtube_trending'] as List).cast<Map<String, dynamic>>();
 
-        final scope = data['culture_scope'] as Map<String, dynamic>?;
-        String nearbyFor(String key) {
-          final n = scope?[key] as Map<String, dynamic>?;
-          if (scope == null || n == null) return '${region.label} 기준';
-          if (scope['sgg'] == null) return '${scope['sido']} 전체';
-          final local = n['local'] as int;
-          return local == 0 ? '${scope['sgg']}엔 없어서 ${scope['sido']} 전체' : '${scope['sgg']} $local곳 · 나머지는 ${scope['sido']}';
-        }
-        final title = '‘${hero['title']}’';
-        // "182만 명" → 숫자 182 + 단위 "만 명"
-        final stat = hero['stat'] as String;
-        final m = RegExp(r'^([\d,\.]+)\s*(.*)$').firstMatch(stat);
-        final poster = hero['poster'] as String?;
-        final Widget legacyHero = PageHero(
-            section: Section.culture,
-            eyebrow: '문화 · ${region.label}',
-            onEyebrowTap: () => showRegionPicker(shellContext),
-            headline: '${hero['label'] ?? '어제 박스오피스 1위'}는 $title',
-            emphasis: title,
-            source: _sourceLabel(hero['source'] as String?, _isLive(data, 'hero')),
-            stub: !_isLive(data, 'hero'),
-            backTitle: '박스오피스 TOP 3',
-            backHint: '눌러서 TOP 3 보기',
-            back: Column(
-              children: [
-                for (final it in allBoxOffice.take(3))
-                  RankRow(rank: it['rank'] as int, title: it['title'] as String, meta: it['meta'] as String),
-              ],
-            ),
-            body: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  if (poster != null) ...[
-                    ClipRect(child: Image.network(poster, width: 64, height: 96, fit: BoxFit.cover)),
-                    const SizedBox(width: 16),
-                  ],
-                  Expanded(
-                    child: m == null
-                        ? Text(stat, style: AppTheme.displaySerif(size: 24))
-                        : Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              BigNumber(
-                                to: num.parse(m.group(1)!.replaceAll(',', '')),
-                                unit: m.group(2)!.isEmpty ? null : m.group(2),
-                              ),
-                              const SizedBox(height: 4),
-                              Text('${hero['stat_label']}', style: const TextStyle(fontSize: 13, color: AppColors.inkSoft)),
-                            ],
-                          ),
-                  ),
-                ],
-              ),
-            ],
-          );
         final events = (data['events'] as List?)?.cast<Map<String, dynamic>>();
-        Map<String, dynamic> eventFor(Map<String, dynamic> it) =>
-            events?.firstWhere((e) => e['id'] == it['id'], orElse: () => const {}) ??
-            {'id': it['id'], 'kind': '행사', 'title': it['title'], 'start': '', 'end': '', 'place': it['meta'], 'local': it['local']};
-        Widget listLine(Map<String, dynamic> it) {
-          final full = eventFor(it);
-          final e = full.isEmpty ? {'id': it['id'], 'kind': '행사', 'title': it['title'], 'start': '', 'end': '', 'place': it['meta'], 'local': it['local']} : full;
-          return ListLine(
-            name: it['title'] as String,
-            badge: it['local'] == true ? '우리 동네' : null,
-            sub: it['meta'] as String,
-            onTap: it['id'] == null ? null : () => showEventSheet(context, api, e),
-          );
-        }
-
-        // 행사 달력이 실데이터로 들어오면 맨 위는 "이번 주말 N개 행사"(박스오피스는 KOBIS 키 전까지 예시라 아래로)
+        // 맨 위는 "이번 주말 N개 행사"
         Widget weekendHero(List<Map<String, dynamic>> events, bool useLocal, [Widget? toggle]) {
           final now = DateTime.now();
           final today = DateTime(now.year, now.month, now.day);
@@ -361,31 +264,7 @@ Widget cultureScreen(ApiClient api, Region region, BuildContext shellContext) =>
                   ],
                 );
               });
-        // 문화 탭이 길어져서 큰 구역을 전환으로 나눔: 행사·전시 / 영화 / 음악(예시)
-        Widget movieHero(Widget toggle) {
-          final stat = hero['stat'] as String;
-          final sm = RegExp(r'^([\d,\.]+)\s*(.*)$').firstMatch(stat);
-          final title = '‘${hero['title']}’';
-          return PageHero(
-            section: Section.culture,
-            eyebrow: '문화 · ${region.label}',
-            onEyebrowTap: () => showRegionPicker(shellContext),
-            headline: '${hero['label'] ?? '어제 박스오피스 1위'}는 $title',
-            emphasis: title,
-            headlineLines: 2,
-            source: _sourceLabel(hero['source'] as String?, _isLive(data, 'hero')),
-            topExtra: toggle,
-            body: [
-              if (sm != null)
-                BigNumber(to: num.parse(sm.group(1)!.replaceAll(',', '')), unit: sm.group(2)!.isEmpty ? null : sm.group(2))
-              else
-                Text(stat, style: AppTheme.displaySerif(size: 24)),
-              const SizedBox(height: 4),
-              Text('${hero['stat_label']}', style: const TextStyle(fontSize: 13, color: AppColors.inkSoft)),
-            ],
-          );
-        }
-
+        // 문화 탭이 길어져서 큰 구역을 전환으로 나눔: 행사·전시 / 음악(예시)
         Widget musicHero(Widget toggle) => PageHero(
               section: Section.culture,
               eyebrow: '문화 · ${region.label}',
@@ -424,174 +303,55 @@ Widget cultureScreen(ApiClient api, Region region, BuildContext shellContext) =>
           reelsLinks(),
         ];
 
-        if (events != null && data['box_office_sets'] != null) {
+        // 2026-10-13: 영화(KOBIS) 구역은 광고(상업 이용) 약관 때문에 뺌. 행사 정보를 아직 못 받았으면 안내만 보임(예시 카드 없음).
+        if (events == null) {
           return [
-            SegmentedHost(
-              labels: const ['행사·전시', '영화', '음악'],
-              prefKey: 'culture_seg',
-              builder: (context, index, toggle) => Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: switch (index) {
-                  1 => [
-                      LicenseFlag(
-                        label: 'KOBIS 약관 - 결과 저장·복제 금지(제6조), 승낙 없는 제3자 제공 금지(제8조)',
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.stretch,
-                          children: [movieHero(toggle), BoxOfficeSection(api: api, data: data, stub: !_isLive(data, 'box_office'))],
-                        ),
-                      ),
-                      const AdSlot(),
-                    ],
-                  2 => [musicHero(toggle), ...musicSections],
-                  _ => [scopedCulture(toggle), const AdSlot()],
-                },
-              ),
+            ListSection(
+              title: '행사·전시',
+              children: [
+                const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 56),
+                  child: Center(child: Text('행사 정보를 아직 받지 못했어요. 잠시 뒤에 다시 열어 주세요', style: TextStyle(fontSize: 13, color: AppColors.inkSoft))),
+                ),
+              ],
             ),
           ];
         }
         return [
-          events == null ? legacyHero : scopedCulture(),
-          if (data['box_office_sets'] != null)
-            BoxOfficeSection(api: api, data: data, stub: !_isLive(data, 'box_office'))
-          else
-            ListSection(
-              title: '박스오피스',
-              trailing: '어제 기준',
-              stub: !_isLive(data, 'box_office'),
-              children: [ExpandableList(children: [for (final it in (events != null ? allBoxOffice : rest)) RankRow(rank: it['rank'] as int, title: it['title'] as String, meta: it['meta'] as String)])],
+          SegmentedHost(
+            labels: const ['행사·전시', '음악'],
+            prefKey: 'culture_seg',
+            builder: (context, index, toggle) => Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: switch (index) {
+                1 => [musicHero(toggle), ...musicSections],
+                _ => [scopedCulture(toggle), const AdSlot()],
+              },
             ),
-          if (events == null) ...[
-            ListSection(
-              title: '진행 중인 전시·공연',
-              trailing: _isLive(data, 'performances') ? nearbyFor('performances') : null,
-              stub: !_isLive(data, 'performances'),
-              children: [ExpandableList(children: [for (final it in performances) listLine(it)])],
-            ),
-            ListSection(
-              title: '곧 열리는 축제',
-              trailing: _isLive(data, 'festivals') ? nearbyFor('festivals') : null,
-              stub: !_isLive(data, 'festivals'),
-              children: [ExpandableList(children: [for (final it in festivals) listLine(it)])],
-            ),
-          ],
-          ...musicSections,
+          ),
         ];
       },
     );
 
-/// 머니: 환율 한 문장 + 큰 숫자 + 추이, 눌러 뒤집으면 다른 통화.
-Widget moneyScreen(ApiClient api) => SectionScreen(
+/// 혜택(옛 머니 탭): 정부 지원·혜택을 지역과 "내 조건"으로 찾아 봄(행정안전부 공공서비스 정보).
+/// 2026-10-13: 금융위 지수·상품, 금감원 금리는 광고(상업 이용) 약관 때문에 뺌 — 허락을 받으면 다시 붙일 수 있음(CLAUDE.md 참고).
+Widget benefitsScreen(ApiClient api, Region region, BuildContext shellContext) => SectionScreen(
       section: Section.money,
-      fetch: api.money,
-      contentBuilder: (context, data) {
-        final hero = data['hero'] as Map<String, dynamic>;
-        final heroLive = _isLive(data, 'hero');
-        final stats = (data['stats'] as List).cast<Map<String, dynamic>>();
-        // 뒤집으면 보이는 면: 실데이터면 서버가 준 back, 아니면 스텁의 다른 통화
-        final backRows = ((data['back'] ?? data['fx_others']) as List? ?? const []).cast<Map<String, dynamic>>();
-        final chartItems = ((data['chart_items'] as List?) ?? const []).cast<Map<String, dynamic>>();
-        if (heroLive && chartItems.isNotEmpty) {
-          // 실데이터: 뒤집는 카드 대신 칩(코스피·코스닥·금·물가)으로 차트를 고름
-          final chartLabels = {for (final c in chartItems) c['label']};
-          final others = [for (final s in stats) if (!chartLabels.contains(s['label']) && s['label'] != '소비자물가') s];
-          GovSupportSection.prefetch(api); // 혜택 구역을 눌렀을 때 바로 보이게 미리 받아 둠(같은 요청은 다시 안 보냄)
-          return [
-            LicenseFlag(
-              label: '금융위 4유형(상업이용·제3자 제공 금지): 코스피·코스닥·금 (물가는 KOSIS라 가능)',
-              child: MetricHero(items: chartItems, source: _sourceLabel(hero['source'] as String?, heroLive)),
-            ),
-            if (others.isNotEmpty)
-              LicenseFlag(
-                label: '금융위 일반상품시세(4유형) - 기름값',
-                child: ListSection(title: '기름값', trailing: '리터당', stub: !_isLive(data, 'stats'), children: _priceRows(others)),
-              ),
-            // 2026-10-12: 문화 탭처럼 아래쪽을 "금리·대출 / 정부 혜택" 두 구역으로 나눠 한 번에 하나만 보임
-            SegmentedHost(
-              labels: const ['금리·대출', '정부 혜택'],
-              prefKey: 'money_seg',
-              trackName: 'money_metric',
-              builder: (context, index, toggle) => Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  Padding(padding: const EdgeInsets.only(top: 36), child: toggle),
-                  if (index == 0)
-                    LicenseFlag(
-                      level: LicenseLevel.check,
-                      label: '금감원 금융상품한눈에 - 수익(광고) 시 사전 협의·허락 필요, 출처 금감원 명시',
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: _rankSections(context, data, const [
-                          ('deposits', '정기예금 최고금리', '12개월 · 우대 포함'),
-                          ('savings', '적금 최고금리', '12개월 · 우대 포함'),
-                          ('loans_mortgage', '주택담보대출 최저금리', '낮은 순'),
-                          ('loans_rent', '전세자금대출 최저금리', '낮은 순'),
-                          ('loans_credit', '신용대출 금리', '신용등급 평균 · 낮은 순'),
-                        ]),
-                      ),
-                    )
-                  else
-                    GovSupportSection(api: api), // 키 승인 전·수집 전에는 스스로 숨음
-                  const AdSlot(),
-                ],
-              ),
-            ),
-          ];
-        }
-        final points = [
-          for (final e in (hero['series'] as List).cast<Map<String, dynamic>>())
-            ChartPoint(DateTime.parse(e['date'] as String).day, (e['value'] as num).toDouble()),
-        ];
-        final change = hero['change'] as String;
-        final emphasis = switch (change) { 'up' => '올랐어요', 'down' => '내렸어요', _ => '그대로예요' };
-        final diff = points.last.value - points.first.value;
-        final diffKey = diff.abs() < 1e-9 ? 'flat' : (diff > 0 ? 'up' : 'down');
-        final unit = (hero['unit'] as String?) ?? '원';
-        final when = heroLive ? '마지막 거래일엔' : '오늘은';
-        return [
-          PageHero(
-            section: Section.money,
-            headline: '${hero['label']}, $when $emphasis',
-            emphasis: emphasis,
-            source: _sourceLabel(hero['source'] as String?, heroLive),
-            stub: !heroLive,
-            backTitle: (data['back_title'] as String?) ?? '주요 통화 환율',
-            backHint: backRows.isEmpty ? null : '눌러서 다른 지표 보기',
-            back: backRows.isEmpty
-                ? null
-                : Column(
-                    children: [
-                      for (final it in backRows) RankRow(rank: 0, title: it['title'] as String, meta: it['meta'] as String),
-                    ],
-                  ),
-            body: [
-              BigNumber(to: hero['value'] as num, decimals: 1, unit: unit),
-              const SizedBox(height: 4),
-              Text(
-                points.length < 2
-                    ? '이번 달 첫 기록이에요'
-                    : '${changeLabel(diffKey)} 이번 달 ${diff >= 0 ? '+' : '-'}${formatNumber(diff.abs(), decimals: 1)}$unit',
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: changeColor(diffKey)),
-              ),
-              const SizedBox(height: 14),
-              TrendChart(section: Section.money, points: points),
-            ],
-          ),
-          // 실데이터면 시장 지표는 위 카드를 뒤집으면 보임(여기서 반복하지 않음). 예시 데이터일 때만 목록으로.
-          if (!heroLive || backRows.isEmpty)
-            ListSection(
-              title: '기준 지표',
-              stub: !_isLive(data, 'stats'),
-              children: [ExpandableList(children: _priceRows(stats))],
-            ),
-          ..._rankSections(context, data, const [
-            ('deposits', '정기예금 최고금리', '12개월 · 우대 포함'),
-            ('savings', '적금 최고금리', '12개월 · 우대 포함'),
-            ('loans_mortgage', '주택담보대출 최저금리', '낮은 순'),
-            ('loans_rent', '전세자금대출 최저금리', '낮은 순'),
-            ('loans_credit', '신용대출 금리', '신용등급 평균 · 낮은 순'),
-          ]),
-        ];
-      },
+      fetch: () async => <String, dynamic>{},
+      contentBuilder: (context, data) => [
+        PageHero(
+          section: Section.money,
+          eyebrow: '혜택 · ${region.label}',
+          onEyebrowTap: () => showRegionPicker(shellContext),
+          headline: '받을 수 있는 혜택, 한 번에 찾아봐요',
+          emphasis: '혜택',
+          headlineLines: 2,
+          source: '행정안전부 공공서비스(혜택) 정보',
+          body: const [],
+        ),
+        GovSupportSection(api: api),
+        const AdSlot(),
+      ],
     );
 
 /// AI: 이번 주 글 제목이 곧 한 문장 제목, 핵심 한 줄은 그 아래.

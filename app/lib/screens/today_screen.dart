@@ -206,9 +206,7 @@ class _TodayScreenState extends State<TodayScreen> {
               title: '오늘의 섹션',
               children: [
                 for (final c in others)
-                  _flagged(
-                    c,
-                    ListLine(
+                  ListLine(
                     stub: !liveSections.contains(c['section']),
                     name: (c['title'] ?? c['label'] ?? '') as String,
                     sub:
@@ -221,7 +219,6 @@ class _TodayScreenState extends State<TodayScreen> {
                     valueSub: c['highlight'] != null
                         ? (c['meta'] ?? c['value'])?.toString()
                         : null,
-                    ),
                   ),
               ],
             ),
@@ -293,6 +290,3 @@ Widget _weeklyRow(Map<String, dynamic> w) {
     value: has ? '${w['low']}° / $high°' : '–',
   );
 }
-/// 점검 모드(?license=1)에서만: 재테크 카드는 금융위 지수 수치를 쓰므로 표시.
-Widget _flagged(Map<String, dynamic> c, Widget line) =>
-    c['section'] == 'money' ? LicenseFlag(label: '금융위 지수(4유형) 수치 사용', child: line) : line;

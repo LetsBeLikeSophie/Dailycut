@@ -30,10 +30,8 @@ class ApiClient {
     if (res.statusCode != 200) throw Exception('/support/search 응답 실패: ${res.statusCode}');
     return jsonDecode(utf8.decode(res.bodyBytes)) as Map<String, dynamic>;
   }
-  Future<Map<String, dynamic>> movieDetail(String code) => _getJson('/movie/detail', {'code': code});
   Future<Map<String, dynamic>> cultureDetail(String id) => _getJson('/culture/detail', {'id': id});
   Future<Map<String, dynamic>> marketDetail({required String name, String? sigungu}) => _getJson('/market/detail', {'name': name, 'sigungu': sigungu});
-  Future<Map<String, dynamic>> money() => _getJson('/money');
   Future<Map<String, dynamic>> ai() => _getJson('/ai');
 
   /// 좌표(소수 둘째 자리로 뭉갠 값) → 시도. 서버는 좌표를 저장하지 않음.

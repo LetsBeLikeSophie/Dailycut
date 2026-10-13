@@ -26,7 +26,6 @@ import geo
 import jobs
 import sources  # noqa: F401  (수집 작업 등록)
 import store
-from sources import boxoffice as boxoffice_src
 from sources import culture as culture_src
 from sources import gov_support as gov_support_src
 from sources import markets as markets_src
@@ -140,12 +139,6 @@ def support_search(body: SupportProfile):
     return gov_support_src.query(
         body.sido, body.sgg, scope, None, 40, {"age": body.age, "gender": body.gender, "income": body.income, "traits": body.traits[:20]}
     )
-
-
-@app.get("/movie/detail")
-def movie_detail(code: str):
-    """영화 상세(KOBIS: 감독·출연·장르·상영시간·등급·제작국). code는 박스오피스 항목의 code."""
-    return boxoffice_src.detail(code)
 
 
 @app.get("/proxy/image")
@@ -438,26 +431,8 @@ def market(sido: str | None = None, sgg: str | None = None):
 # + KOPIS 공연예술통합전산망 + TourAPI 지역 축제
 @app.get("/culture")
 @live_geo(culture_src)
-@live_merge("boxoffice")
 def culture(sido: str | None = None, sgg: str | None = None):
-    region_box = boxoffice_src.region_items(geo.region(sido)["code"])  # 선택한 시도의 박스오피스(키가 없으면 None → 필드 없음)
     return {
-        **({"box_office_region": region_box} if region_box else {}),
-        "hero": {
-            "theme": "culture",
-            "label": "어제 박스오피스 1위",
-            "title": "영화 A",
-            "poster": None,
-            "rank": 1,
-            "stat_label": "누적 관객",
-            "stat": "182만 명",
-            "source": "KOBIS 영화관입장권통합전산망",
-        },
-        "box_office": [
-            {"rank": 1, "title": "영화 A", "meta": "182만 명"},
-            {"rank": 2, "title": "영화 B", "meta": "94만 명"},
-            {"rank": 3, "title": "영화 C", "meta": "61만 명"},
-        ],
         "performances": [{"title": "공연 A", "meta": "이번 주 개막"}],
         "festivals": [{"title": "축제 A", "meta": "이번 주말 · OO시"}],
         # 2026-09-29: "음악 순위도 넣을 수 있나" 질문 — 멜론/지니/벅스/
@@ -483,48 +458,6 @@ def culture(sido: str | None = None, sgg: str | None = None):
         "youtube_trending": [
             {"rank": 1, "title": "뮤직비디오 제목 A", "meta": "채널 A"},
             {"rank": 2, "title": "뮤직비디오 제목 B", "meta": "채널 B"},
-        ],
-    }
-
-
-# TODO: 한국은행 ECOS (https://ecos.bok.or.kr/api/) + 금감원 금융상품 한눈에
-@app.get("/money")
-@live_merge(("money", "finance"))
-def money():
-    # 이번 달 1일~오늘 일별 환율(스텁). 마지막 값이 1350.2가 되게 맞춤.
-    today_d = date.today()
-    rng = random.Random(today_d.month)
-    walk, v = [], 0.0
-    for _ in range(today_d.day):
-        v += rng.uniform(-4.0, 4.5)
-        walk.append(v)
-    shift = 1350.2 - walk[-1]
-    fx_series = [
-        {"date": (today_d - timedelta(days=today_d.day - 1 - i)).isoformat(), "value": round(w + shift, 1)}
-        for i, w in enumerate(walk)
-    ]
-    return {
-        "hero": {
-            "theme": "money",
-            "label": "달러 환율",
-            "value": fx_series[-1]["value"],
-            "change": "up" if fx_series[-1]["value"] > fx_series[0]["value"] else "down" if fx_series[-1]["value"] < fx_series[0]["value"] else "flat",
-            "series": fx_series,
-            "source": "한국은행 ECOS",
-        },
-        # 2026-10-10: 환율 카드 뒷면(뒤집으면 보임)용 — 주요 통화 환율.
-        "fx_others": [
-            {"title": "엔화 (100엔)", "meta": "910.4원"},
-            {"title": "유로", "meta": "1,462.8원"},
-            {"title": "위안", "meta": "188.1원"},
-        ],
-        "stats": [
-            {"label": "기준금리", "value": "3.50%", "change": "flat"},
-            {"label": "소비자물가", "value": "2.1%", "change": "up"},
-        ],
-        "deposits": [
-            {"rank": 1, "title": "은행 A · 정기예금", "meta": "연 4.10%"},
-            {"rank": 2, "title": "은행 B · 정기예금", "meta": "연 4.05%"},
         ],
     }
 
@@ -559,8 +492,7 @@ def today(sido: str | None = None, sgg: str | None = None):
     """투데이(홈) — 섹션별 대표 카드 1개씩만 모아서 반환.
     2026-09-30: 날씨가 독립 섹션으로 빠지면서 투데이 카드 목록에도
     다른 섹션들과 동등하게 날씨 카드를 추가함(맨 앞)."""
-    # 투데이는 문화 스텁 카드(박스오피스)만 쓰므로 실데이터 병합(무거운 행사 목록 수집)을 건너뜀
-    w, m, c, mo, a = weather(sido=sido, sgg=sgg), market(sido=sido, sgg=sgg), culture.__wrapped__(sido=sido, sgg=sgg), money(), ai()
+    w, m, a = weather(sido=sido, sgg=sgg), market(sido=sido, sgg=sgg), ai()
     # 이번 달 제철: 실데이터 job이 돌면 편집 가이드(data/produce_guide.json) 기준 이름들, 아니면 스텁 첫 항목
     season_names = m.get("season_now") or [m["in_season"][0]["name"]]
     weather_card = {
@@ -575,29 +507,52 @@ def today(sido: str | None = None, sgg: str | None = None):
         "highlight": " · ".join(season_names[:3]),
         "meta": f"이번 달 제철 {len(season_names)}가지" if m.get("season_now") else f"{m['in_season'][0]['start_month']}~{m['in_season'][0]['end_month']}월 제철",
     }
-    # 2026-10-05: culture()["hero"]엔 title/poster/rank/stat_label/stat만
-    # 있고 투데이 HeroCard가 쓰는 highlight/meta가 없어서, 투데이의 문화
-    # 카드가 지금까지 제목만 뜨고 "182만 명" 같은 수치는 안 보였음(PosterCard
-    # 작업하면서 발견) — highlight/meta로 매핑해서 채움.
-    culture_card = {
-        "theme": "culture",
-        "title": c["hero"]["title"],
-        "highlight": f"{c['hero']['rank']}위",
-        "meta": f"{c['hero']['stat_label']} {c['hero']['stat']}",
-    }
+    # 2026-10-13: 문화 카드는 예전엔 박스오피스(KOBIS 스텁)였는데, 광고 약관 때문에 빼고 "이번 주말 행사 N개"(관광공사·문화정보원)로 바꿈.
+    # 혜택 카드(옛 머니 자리)는 행안부 공공서비스 건수. 둘 다 실데이터를 못 받았으면 카드를 아예 안 냄(예시 카드를 만들지 않음).
+    region = geo.region(sido)
+    place_name = region["name"] + (f" {sgg}" if sgg else "")
+    live = culture_src.get(region["code"], sgg)
+    culture_card = None
+    if live and live.get("events"):
+        sat, sun = _weekend_range(date.today())
+        n = sum(1 for e in live["events"] if e["start"] <= sun.isoformat() and e["end"] >= sat.isoformat())
+        culture_card = {
+            "theme": "culture",
+            "title": "이번 주말 행사" if date.today().weekday() != 6 else "오늘 행사",
+            "highlight": f"{n}개",
+            "meta": f"{place_name} · {sat.month}/{sat.day}~{sun.day}" if sat != sun else place_name,
+        }
+    benefits = gov_support_src.query(sido, sgg, "all", None, 1)
+    benefit_card = (
+        {"theme": "money", "title": "정부 혜택", "highlight": f"{benefits['total']:,}개", "meta": f"{place_name} 기준"} if benefits.get("live") else None
+    )
+    cards = [
+        {"section": "weather", **weather_card},
+        {"section": "market", **market_card},
+        *([{"section": "culture", **culture_card}] if culture_card else []),
+        *([{"section": "money", **benefit_card}] if benefit_card else []),
+        {"section": "ai", **a["weekly_article"]},
+    ]
     return {
         "headline": _headline(w),
         # 어떤 섹션 카드가 실데이터인지(앱이 스텁 카드를 구분해서 표시)
         "live_sections": [
             name
-            for name, live in (("weather", "today" in w.get("live_keys", [])), ("money", "hero" in mo.get("live_keys", [])), ("market", "season_now" in m.get("live_keys", [])))
-            if live
+            for name, is_live in (
+                ("weather", "today" in w.get("live_keys", [])),
+                ("culture", culture_card is not None),
+                ("money", benefit_card is not None),
+                ("market", "season_now" in m.get("live_keys", [])),
+            )
+            if is_live
         ],
-        "cards": [
-            {"section": "weather", **weather_card},
-            {"section": "market", **market_card},
-            {"section": "culture", **culture_card},
-            {"section": "money", **mo["hero"]},
-            {"section": "ai", **a["weekly_article"]},
-        ],
+        "cards": cards,
     }
+
+
+def _weekend_range(today: date) -> tuple[date, date]:
+    """이번 주말: 일요일이면 오늘 하루, 아니면 이번 주 토~일."""
+    if today.weekday() == 6:
+        return today, today
+    sat = today + timedelta(days=(5 - today.weekday()) % 7)
+    return sat, sat + timedelta(days=1)
