@@ -325,6 +325,9 @@ claude.ai/artifact/17gytwYuXMFkF4vx8tWv65 (사용 중 · 일부만 · 미사용 
   이미지: 농산물 사진은 전부 CC BY/BY-SA/CC0/PD(⓪ ⓘ에 출처 표기), 관광공사 사진은 1유형만 사용. **문화포털(culture.go.kr) 썸네일은 저작권 필터가 없음** — 광고 켜기 전에 끄거나 확인 필요.
   유료 API는 없음(전부 무료, 개발계정 한도: 에어코리아 일 500·전력거래소 일 100 등 — 이용자가 늘면 활용사례 등록해 운영계정 증량 신청 필요). AI 탭 등에 유료 LLM 호출 없음.
 
+- **라이선스 점검 표시 (2026-10-13)**: 사이트 주소 뒤에 `?license=1`을 붙이면(예: itssophie.dev/dailycut/?license=1) 광고 시 문제가 되는 구역에 테두리와 꼬리표가 보임(`LicenseFlag`, components.dart).
+  빨강=상업 이용·제3자 제공이 막힘(재테크 맨 위 지표 차트·기름값, 문화>영화 구역, 투데이 "오늘의 섹션"의 재테크 줄), 주황=허락·확인 필요(금리·대출 목록, 문화포털 사진). 평소엔 아무것도 안 보임. 구역을 지우거나 대체하면 해당 `LicenseFlag`도 같이 정리할 것.
+
 - **광고(카카오 애드핏, 웹) 준비됨 (2026-10-12)**: `widgets/ad_slot.dart`의 `AdSlot` + `web/ad.html`(애드핏 스크립트 페이지, 같은 도메인 iframe).
   광고 단위 ID가 없으면 칸이 아예 안 그려짐. 켜는 법: 애드핏에서 사이트(itssophie.dev/dailycut) 등록·승인 → 광고 단위(320x100 등) 생성 →
   `flutter build web … --dart-define=ADFIT_UNIT=DAN-xxxx --dart-define=ADFIT_SIZE=320x100`. 칸 위치: 생활(장보기 시세 아래)·문화(행사/영화 구역 아래)·머니(금리 아래).

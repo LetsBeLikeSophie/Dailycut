@@ -432,7 +432,16 @@ Widget cultureScreen(ApiClient api, Region region, BuildContext shellContext) =>
               builder: (context, index, toggle) => Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: switch (index) {
-                  1 => [movieHero(toggle), BoxOfficeSection(api: api, data: data, stub: !_isLive(data, 'box_office')), const AdSlot()],
+                  1 => [
+                      LicenseFlag(
+                        label: 'KOBIS 약관 - 결과 저장·복제 금지(제6조), 승낙 없는 제3자 제공 금지(제8조)',
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.stretch,
+                          children: [movieHero(toggle), BoxOfficeSection(api: api, data: data, stub: !_isLive(data, 'box_office'))],
+                        ),
+                      ),
+                      const AdSlot(),
+                    ],
                   2 => [musicHero(toggle), ...musicSections],
                   _ => [scopedCulture(toggle), const AdSlot()],
                 },
@@ -487,9 +496,15 @@ Widget moneyScreen(ApiClient api) => SectionScreen(
           final others = [for (final s in stats) if (!chartLabels.contains(s['label']) && s['label'] != '소비자물가') s];
           GovSupportSection.prefetch(api); // 혜택 구역을 눌렀을 때 바로 보이게 미리 받아 둠(같은 요청은 다시 안 보냄)
           return [
-            MetricHero(items: chartItems, source: _sourceLabel(hero['source'] as String?, heroLive)),
+            LicenseFlag(
+              label: '금융위 4유형(상업이용·제3자 제공 금지): 코스피·코스닥·금 (물가는 KOSIS라 가능)',
+              child: MetricHero(items: chartItems, source: _sourceLabel(hero['source'] as String?, heroLive)),
+            ),
             if (others.isNotEmpty)
-              ListSection(title: '기름값', trailing: '리터당', stub: !_isLive(data, 'stats'), children: _priceRows(others)),
+              LicenseFlag(
+                label: '금융위 일반상품시세(4유형) - 기름값',
+                child: ListSection(title: '기름값', trailing: '리터당', stub: !_isLive(data, 'stats'), children: _priceRows(others)),
+              ),
             // 2026-10-12: 문화 탭처럼 아래쪽을 "금리·대출 / 정부 혜택" 두 구역으로 나눠 한 번에 하나만 보임
             SegmentedHost(
               labels: const ['금리·대출', '정부 혜택'],
@@ -500,13 +515,20 @@ Widget moneyScreen(ApiClient api) => SectionScreen(
                 children: [
                   Padding(padding: const EdgeInsets.only(top: 36), child: toggle),
                   if (index == 0)
-                    ..._rankSections(context, data, const [
-                      ('deposits', '정기예금 최고금리', '12개월 · 우대 포함'),
-                      ('savings', '적금 최고금리', '12개월 · 우대 포함'),
-                      ('loans_mortgage', '주택담보대출 최저금리', '낮은 순'),
-                      ('loans_rent', '전세자금대출 최저금리', '낮은 순'),
-                      ('loans_credit', '신용대출 금리', '신용등급 평균 · 낮은 순'),
-                    ])
+                    LicenseFlag(
+                      level: LicenseLevel.check,
+                      label: '금감원 금융상품한눈에 - 수익(광고) 시 사전 협의·허락 필요, 출처 금감원 명시',
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: _rankSections(context, data, const [
+                          ('deposits', '정기예금 최고금리', '12개월 · 우대 포함'),
+                          ('savings', '적금 최고금리', '12개월 · 우대 포함'),
+                          ('loans_mortgage', '주택담보대출 최저금리', '낮은 순'),
+                          ('loans_rent', '전세자금대출 최저금리', '낮은 순'),
+                          ('loans_credit', '신용대출 금리', '신용등급 평균 · 낮은 순'),
+                        ]),
+                      ),
+                    )
                   else
                     GovSupportSection(api: api), // 키 승인 전·수집 전에는 스스로 숨음
                   const AdSlot(),

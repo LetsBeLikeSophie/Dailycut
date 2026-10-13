@@ -1392,3 +1392,51 @@ class PillChip extends StatelessWidget {
     );
   }
 }
+
+/// 개발자 점검용: 광고(상업 이용)를 켰을 때 라이선스 문제가 되는 구역에 테두리·꼬리표를 씌움.
+/// 주소 뒤에 `?license=1`을 붙였을 때만 보이고, 평소엔 아무 일도 안 함(자식 그대로).
+///  - block(빨강): 상업적 이용·제3자 제공이 약관/이용허락으로 막힌 데이터
+///  - check(주황): 광고를 켜기 전에 허락·확인이 필요한 데이터
+bool get kShowLicenseFlags => Uri.base.queryParameters['license'] == '1';
+
+enum LicenseLevel { block, check }
+
+class LicenseFlag extends StatelessWidget {
+  const LicenseFlag({super.key, required this.label, required this.child, this.level = LicenseLevel.block});
+
+  final String label;
+  final Widget child;
+  final LicenseLevel level;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!kShowLicenseFlags) return child;
+    final color = level == LicenseLevel.block ? const Color(0xFFE5231B) : const Color(0xFFF08A00);
+    return Padding(
+      padding: const EdgeInsets.only(top: 12),
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Container(
+            padding: const EdgeInsets.fromLTRB(6, 14, 6, 6),
+            decoration: BoxDecoration(border: Border.all(color: color, width: 2), borderRadius: BorderRadius.circular(6)),
+            child: child,
+          ),
+          Positioned(
+            top: -9,
+            left: 10,
+            right: 10,
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                color: color,
+                child: Text(label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Colors.white)),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}

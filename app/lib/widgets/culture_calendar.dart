@@ -403,13 +403,21 @@ class _EventSheet extends StatelessWidget {
                 ],
                 if (image != null) ...[
                   const SizedBox(height: 22),
-                  ZoomImage(
-                    provider: NetworkImage('${api.baseUrl}$image'),
-                    background: t.highlight,
-                    onError: ColoredBox(color: t.highlight, child: SizedBox(height: 140, child: Center(child: Image.asset(t.shapeAsset, width: 72, height: 72)))),
+                  _imageFlag(
+                    d!['credit'] as String?,
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        ZoomImage(
+                          provider: NetworkImage('${api.baseUrl}$image'),
+                          background: t.highlight,
+                          onError: ColoredBox(color: t.highlight, child: SizedBox(height: 140, child: Center(child: Image.asset(t.shapeAsset, width: 72, height: 72)))),
+                        ),
+                        const SizedBox(height: 6),
+                        Text('사진: ${d['credit']}', style: const TextStyle(fontSize: 11, color: AppColors.inkSoft)),
+                      ],
+                    ),
                   ),
-                  const SizedBox(height: 6),
-                  Text('사진: ${d!['credit']}', style: const TextStyle(fontSize: 11, color: AppColors.inkSoft)),
                 ],
                 if (ok) ...[
                   const SizedBox(height: 18),
@@ -460,3 +468,7 @@ class _Chip extends StatelessWidget {
     );
   }
 }
+/// 점검 모드(?license=1)에서만: 문화포털(한국문화정보원) 사진은 저작권 구분이 없어 광고 전 확인 필요로 표시.
+Widget _imageFlag(String? credit, Widget child) => (credit ?? '').contains('문화포털')
+    ? LicenseFlag(level: LicenseLevel.check, label: '문화포털 사진 - 포스터 저작권 확인 안 됨', child: child)
+    : child;
