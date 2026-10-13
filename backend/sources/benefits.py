@@ -301,7 +301,8 @@ def housing(kind: str, sido: str | None, sgg: str | None, limit: int = 60) -> di
                 ("지역", where), ("공급 호수", it.get("households")), ("문의", it.get("phone")),
             ])
             link_label = "공고 자세히 보기"
-        rows.append((0 if near else 1, group, it.get("start") or it.get("end") or "9999", {
+        # 접수 중(0)은 마감 가까운 순, 접수 예정(1)은 시작 가까운 순 — "곧 마감" 공고가 위로 오게
+        rows.append((0 if near else 1, group, (it.get("end") if group == 0 else it.get("start")) or "9999", {
             "id": it["id"], "name": it["name"], "sub": sub, "tag": tag, "span": span, "detail": detail, "url": it.get("url") or "", "link_label": link_label,
         }))
     rows.sort(key=lambda r: (r[1], r[0], r[2]))

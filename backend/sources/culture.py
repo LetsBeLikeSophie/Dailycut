@@ -19,6 +19,7 @@ from datetime import date, datetime, timedelta
 import config
 import geo
 import jobs
+import store
 from sources import _cache, _http
 
 IMAGE_HOSTS = ("tong.visitkorea.or.kr",)  # 사진을 대신 받아 전달하는 호스트(api.py의 /proxy/image)
@@ -195,6 +196,16 @@ def _build(code: str, sgg: str | None) -> dict:
         "events": {"local": sum(1 for e in out["events"] if e["local"]), "total": len(out["events"])},
     }
     return out
+
+
+def peek(code: str, sgg: str | None = None) -> dict | None:
+    """캐시에 이미 있는 값만(만료됐어도) 돌려줌 — 없으면 새로 만들지 않고 None. 투데이처럼 빨라야 하는 곳용
+    (get()은 캐시가 없거나 1시간이 지나면 행사 수집으로 20~30초 걸림)."""
+    if not available():
+        return None
+    pl = geo.place(code, sgg)
+    hit = store.load_cache(f"cr2:{pl['key']}")
+    return hit[0] if hit else None
 
 
 def get(code: str, sgg: str | None = None) -> dict | None:

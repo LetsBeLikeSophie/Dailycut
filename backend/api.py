@@ -30,6 +30,7 @@ from sources import culture as culture_src
 from sources import benefits as benefits_src
 from sources import gov_support as gov_support_src
 from sources import markets as markets_src
+from sources import outing as outing_src
 from sources import weather as weather_src
 
 app = FastAPI(title="데일리컷 API")
@@ -120,6 +121,12 @@ def support(sido: str | None = None, sgg: str | None = None, scope: str = "all",
     """정부 지원·혜택(행정안전부 공공서비스 정보). 지역(시도·시군구)만으로 거르고 개인 조건은 받지 않음.
     수집이 안 됐으면(키 미승인) live=False, items=[] — 화면은 섹션을 숨김(예시 데이터 없음)."""
     return gov_support_src.query(sido, sgg, scope if scope in ("all", "local", "central") else "all", field, min(max(limit, 1), 60))
+
+
+@app.get("/outing")
+def outing(sido: str | None = None, sgg: str | None = None):
+    """문화 탭 "이번 주말 한산한 곳"(한국관광공사 관광지 집중률 예측 + 그날 날씨). 처음 부르는 지역은 몇 초 걸림(그 뒤 24시간 캐시)."""
+    return outing_src.weekend(sido, sgg, weather(sido=sido, sgg=sgg).get("weekly", []))
 
 
 @app.get("/benefits/housing")
@@ -524,7 +531,7 @@ def today(sido: str | None = None, sgg: str | None = None):
     # 혜택 카드(옛 머니 자리)는 행안부 공공서비스 건수. 둘 다 실데이터를 못 받았으면 카드를 아예 안 냄(예시 카드를 만들지 않음).
     region = geo.region(sido)
     place_name = region["name"] + (f" {sgg}" if sgg else "")
-    live = culture_src.get(region["code"], sgg)
+    live = culture_src.peek(region["code"], sgg)  # 캐시에 있을 때만(없으면 행사 수집으로 20초+ 걸려서 투데이가 느려짐)
     culture_card = None
     if live and live.get("events"):
         sat, sun = _weekend_range(date.today())

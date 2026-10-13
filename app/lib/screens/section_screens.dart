@@ -9,6 +9,7 @@ import '../widgets/benefit_feed.dart';
 import '../widgets/components.dart';
 import '../widgets/ad_slot.dart';
 import '../widgets/livestock_sheet.dart';
+import '../widgets/outing_section.dart';
 import '../widgets/reels_links.dart';
 import '../widgets/culture_calendar.dart';
 import '../widgets/gov_support.dart';
@@ -261,6 +262,7 @@ Widget cultureScreen(ApiClient api, Region region, BuildContext shellContext) =>
                           style: const TextStyle(fontSize: 11, color: AppColors.inkSoft),
                         ),
                       ),
+                    OutingSection(api: api, region: region),
                     CultureCalendar(api: api, events: scoped),
                   ],
                 );

@@ -5,6 +5,7 @@
   market  — 농수산식품유통공사 최근일자 소매가 + 가격 이력 저장   (생활)
   gov_support — 행정안전부 공공서비스(혜택) 정보(정부 지원)       (혜택)
   benefits — 청약홈·마이홈·LH 공고, 서민금융 대출상품               (혜택)
+  outing — 관광공사 관광지 집중률 예측(이번 주말 한산한 곳, 요청 시 + 24시간 캐시) (문화)
   livestock — 축산물품질평가원 소·돼지 소비자가격                  (생활)
 사용자 위치별(요청 시 계산 + 위치 칸 캐시, sources/_cache.py):
   weather — 기상청 단기·중기예보, 에어코리아, 생활기상지수, 출몰시각   (투데이)
@@ -18,4 +19,4 @@
 
 # 2026-10-13: 광고(상업 이용) 약관 때문에 금융위 지수·상품(money), 금감원 금리(finance), KOBIS(boxoffice)는 등록하지 않음.
 # 파일(money.py·finance.py·boxoffice.py)은 남겨 뒀고, 허락을 받으면 아래 import에 다시 넣으면 작업이 등록됨.
-from sources import benefits, culture, gov_support, livestock, market, markets, weather  # noqa: F401  (market 등은 import하면 작업이 등록됨)
+from sources import benefits, culture, gov_support, livestock, market, markets, outing, weather  # noqa: F401  (market 등은 import하면 작업이 등록됨)

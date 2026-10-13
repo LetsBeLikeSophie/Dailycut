@@ -197,6 +197,8 @@ class _GovSupportSectionState extends State<GovSupportSection> {
     return ListLine(
       name: it['name'] as String,
       sub: [if ((it['org'] as String).isNotEmpty) it['org'], if (summary.isNotEmpty) summary].join(' · '),
+      value: it['dday'] == null ? null : (it['dday'] == 0 ? '오늘 마감' : '${it['dday']}일 남음'), // 신청기한이 한 달 안일 때만
+      valueWeight: FontWeight.w700,
       onTap: () => showSupportSheet(context, it),
     );
   }

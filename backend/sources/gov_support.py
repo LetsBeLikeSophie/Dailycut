@@ -115,6 +115,18 @@ def _fetch_conditions(key: str) -> dict[str, dict]:
     return out
 
 
+def _end_date(deadline: str) -> str:
+    """신청기한 문구의 마지막 날짜(YYYY-MM-DD). 상시·날짜 없음은 빈 문자열."""
+    dates = re.findall(r"(20\d{2})[.\-/ ]*(\d{1,2})[.\-/ ]*(\d{1,2})", deadline or "")
+    if not dates:
+        return ""
+    y, m, d = (int(x) for x in dates[-1])
+    try:
+        return date(y, m, d).isoformat()
+    except ValueError:
+        return ""
+
+
 def run() -> dict:
     key = config.get_key(_http.KEY_ENV)
     conds = _fetch_conditions(key)
@@ -169,6 +181,8 @@ def _items() -> list[dict]:
         live = jobs.get_live("gov_support") or {}
         if live.get("support_at") != _mem["at"]:
             _mem["at"], _mem["items"] = live.get("support_at"), live.get("support_all") or []
+            for i in _mem["items"]:
+                i["end"] = _end_date(i.get("deadline", ""))  # 저장된 값엔 없고 불러올 때 계산
     return _mem["items"]
 
 
@@ -300,10 +314,19 @@ def query(sido: str | None, sgg: str | None, scope: str = "all", field: str | No
         "unfiltered_total": unfiltered,
         "filtered": bool(prof),
         "local_count": len(local),
-        "items": [{k: v for k, v in i.items() if k != "c"} for i in pool[:limit]],
+        "items": [{**{k: v for k, v in i.items() if k != "c"}, **_dday(i)} for i in pool[:limit]],
         "fields": top_fields,
         "region": region,
     }
+
+
+def _dday(i: dict) -> dict:
+    """마감까지 남은 날(30일 안일 때만 알려 줌: 목록 줄 오른쪽에 "N일 남음")."""
+    end = i.get("end") or ""
+    if not end:
+        return {}
+    n = (date.fromisoformat(end) - date.today()).days
+    return {"dday": n} if 0 <= n <= 30 else {}
 
 
 _ALL_SIDO = ("서울", "부산", "대구", "인천", "광주", "대전", "울산", "세종", "경기", "강원", "충북", "충남", "충청", "전북", "전남", "전라", "경북", "경남", "경상", "제주")
