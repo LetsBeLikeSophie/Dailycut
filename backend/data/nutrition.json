@@ -1,0 +1,410 @@
+{
+ "source": "식품의약품안전처 식품영양성분DB(원재료성 식품, 생것, 100g 기준)",
+ "items": {
+  "배추": {
+   "ref": "배추, 생것",
+   "kcal": 15.0,
+   "protein": 1.2,
+   "fat": 0.1,
+   "carb": 3.3,
+   "sugar": 1.7,
+   "fiber": 1.3
+  },
+  "무": {
+   "ref": "무, 조선무, 생것",
+   "kcal": 21.0,
+   "protein": 0.8,
+   "fat": 0.1,
+   "carb": 4.7,
+   "sugar": 3.0,
+   "fiber": 1.1
+  },
+  "양파": {
+   "ref": "양파, 생것",
+   "kcal": 29.0,
+   "protein": 1.0,
+   "fat": 0.2,
+   "carb": 6.5,
+   "sugar": 4.7,
+   "fiber": 1.6
+  },
+  "당근": {
+   "ref": "당근, 뿌리, 생것",
+   "kcal": 33.0,
+   "protein": 0.8,
+   "fat": 0.2,
+   "carb": 7.7,
+   "sugar": 4.5,
+   "fiber": 2.9
+  },
+  "감자": {
+   "ref": "감자, 대지, 생것",
+   "kcal": 67.0,
+   "protein": 2.0,
+   "fat": 0.0,
+   "carb": 15.1,
+   "sugar": 0.0,
+   "fiber": 2.7
+  },
+  "고구마": {
+   "ref": "고구마, 생것",
+   "kcal": 147.0,
+   "protein": 1.1,
+   "fat": 0.1,
+   "carb": 35.5,
+   "sugar": 9.8,
+   "fiber": 2.4
+  },
+  "오이": {
+   "ref": "오이, 취청, 생것",
+   "kcal": 12.0,
+   "protein": 0.9,
+   "fat": 0.0,
+   "carb": 2.5,
+   "sugar": 1.8,
+   "fiber": 0.8
+  },
+  "호박": {
+   "ref": "호박, 단호박, 생것",
+   "kcal": 57.0,
+   "protein": 1.2,
+   "fat": 0.7,
+   "carb": 13.6,
+   "sugar": 4.7,
+   "fiber": 5.0
+  },
+  "상추": {
+   "ref": "상추, 결구, 아담, 녹색, 생것",
+   "kcal": 9.0,
+   "protein": 0.9,
+   "fat": 0.2,
+   "carb": 1.3,
+   "sugar": null,
+   "fiber": null
+  },
+  "시금치": {
+   "ref": "시금치, 생것",
+   "kcal": 29.0,
+   "protein": 3.4,
+   "fat": 0.4,
+   "carb": 4.9,
+   "sugar": 0.4,
+   "fiber": 3.1
+  },
+  "파": {
+   "ref": "파, 생것",
+   "kcal": 29.0,
+   "protein": 1.2,
+   "fat": 0.2,
+   "carb": 6.7,
+   "sugar": null,
+   "fiber": null
+  },
+  "마늘": {
+   "ref": "마늘, 생것",
+   "kcal": 128.0,
+   "protein": 7.5,
+   "fat": 0.2,
+   "carb": 26.4,
+   "sugar": 0.2,
+   "fiber": 3.8
+  },
+  "토마토": {
+   "ref": "토마토, 생것",
+   "kcal": 19.0,
+   "protein": 0.8,
+   "fat": 0.2,
+   "carb": 4.3,
+   "sugar": 2.7,
+   "fiber": 1.0
+  },
+  "가지": {
+   "ref": "가지, 생것",
+   "kcal": 19.0,
+   "protein": 1.1,
+   "fat": 0.0,
+   "carb": 4.4,
+   "sugar": 2.3,
+   "fiber": 2.7
+  },
+  "양배추": {
+   "ref": "양배추, 생것",
+   "kcal": 29.0,
+   "protein": 1.4,
+   "fat": 0.1,
+   "carb": 7.0,
+   "sugar": 4.4,
+   "fiber": 2.5
+  },
+  "브로콜리": {
+   "ref": "브로콜리, 생것",
+   "kcal": 28.0,
+   "protein": 3.6,
+   "fat": 0.3,
+   "carb": 4.7,
+   "sugar": 1.5,
+   "fiber": 2.8
+  },
+  "사과": {
+   "ref": "사과, 생것",
+   "kcal": 52.0,
+   "protein": 0.3,
+   "fat": 0.1,
+   "carb": 14.0,
+   "sugar": 10.6,
+   "fiber": 1.8
+  },
+  "배": {
+   "ref": "배, 생것",
+   "kcal": 45.0,
+   "protein": 0.3,
+   "fat": 0.0,
+   "carb": 12.2,
+   "sugar": 8.3,
+   "fiber": 1.1
+  },
+  "포도": {
+   "ref": "포도, 거봉, 생것",
+   "kcal": 57.0,
+   "protein": 0.4,
+   "fat": 0.1,
+   "carb": 15.3,
+   "sugar": 14.3,
+   "fiber": 1.0
+  },
+  "딸기": {
+   "ref": "딸기, 생것",
+   "kcal": 33.0,
+   "protein": 0.8,
+   "fat": 0.1,
+   "carb": 8.2,
+   "sugar": 6.1,
+   "fiber": 1.5
+  },
+  "수박": {
+   "ref": "수박, 적육질, 생것",
+   "kcal": 30.0,
+   "protein": 0.8,
+   "fat": 0.1,
+   "carb": 7.6,
+   "sugar": 7.1,
+   "fiber": 0.2
+  },
+  "참외": {
+   "ref": "참외, 생것, 씨 제거",
+   "kcal": 40.0,
+   "protein": 0.6,
+   "fat": 0.0,
+   "carb": 10.5,
+   "sugar": 8.8,
+   "fiber": 1.1
+  },
+  "복숭아": {
+   "ref": "복숭아, 백도, 생것",
+   "kcal": 49.0,
+   "protein": 0.6,
+   "fat": 0.0,
+   "carb": 13.1,
+   "sugar": 9.4,
+   "fiber": 2.6
+  },
+  "고등어": {
+   "ref": "고등어, 생것",
+   "kcal": 183.0,
+   "protein": 20.2,
+   "fat": 10.4,
+   "carb": 0.0,
+   "sugar": null,
+   "fiber": null
+  },
+  "갈치": {
+   "ref": "갈치, 생것",
+   "kcal": 149.0,
+   "protein": 18.5,
+   "fat": 7.5,
+   "carb": 0.1,
+   "sugar": null,
+   "fiber": null
+  },
+  "느타리버섯": {
+   "ref": "느타리버섯, 생것",
+   "kcal": 15.0,
+   "protein": 2.6,
+   "fat": 0.1,
+   "carb": 4.7,
+   "sugar": 0.7,
+   "fiber": 2.9
+  },
+  "찹쌀": {
+   "ref": "찹쌀, 백미, 생것",
+   "kcal": 364.0,
+   "protein": 6.7,
+   "fat": 1.1,
+   "carb": 78.2,
+   "sugar": 0.3,
+   "fiber": 0.5
+  },
+  "팽이버섯": {
+   "ref": "팽이버섯, 생것",
+   "kcal": 21.0,
+   "protein": 2.5,
+   "fat": 0.5,
+   "carb": 7.1,
+   "sugar": 0.4,
+   "fiber": 3.8
+  },
+  "레몬": {
+   "ref": "레몬, 생것",
+   "kcal": 36.0,
+   "protein": 0.7,
+   "fat": 0.1,
+   "carb": 9.3,
+   "sugar": 2.2,
+   "fiber": 1.1
+  },
+  "망고": {
+   "ref": "망고, 생것",
+   "kcal": 59.0,
+   "protein": 0.7,
+   "fat": 0.1,
+   "carb": 15.4,
+   "sugar": 13.7,
+   "fiber": 1.5
+  },
+  "바나나": {
+   "ref": "바나나, 생것",
+   "kcal": 77.0,
+   "protein": 1.1,
+   "fat": 0.2,
+   "carb": 20.0,
+   "sugar": 14.2,
+   "fiber": 2.2
+  },
+  "블루베리": {
+   "ref": "블루베리, 생것",
+   "kcal": 43.0,
+   "protein": 0.5,
+   "fat": 0.1,
+   "carb": 11.1,
+   "sugar": 7.9,
+   "fiber": 2.4
+  },
+  "아보카도": {
+   "ref": "아보카도, 생것",
+   "kcal": 160.0,
+   "protein": 2.0,
+   "fat": 14.7,
+   "carb": 8.5,
+   "sugar": 0.7,
+   "fiber": 6.7
+  },
+  "오렌지": {
+   "ref": "오렌지, 생것",
+   "kcal": 47.0,
+   "protein": 1.1,
+   "fat": 0.1,
+   "carb": 11.9,
+   "sugar": 9.2,
+   "fiber": 1.3
+  },
+  "키위": {
+   "ref": "키위, 골드, 생것",
+   "kcal": 55.0,
+   "protein": 0.8,
+   "fat": 0.3,
+   "carb": 14.0,
+   "sugar": 7.1,
+   "fiber": 2.1
+  },
+  "파인애플": {
+   "ref": "파인애플, 생것",
+   "kcal": 53.0,
+   "protein": 0.5,
+   "fat": 0.1,
+   "carb": 14.1,
+   "sugar": 10.9,
+   "fiber": 1.3
+  },
+  "명태": {
+   "ref": "명태, 생것",
+   "kcal": 80.0,
+   "protein": 17.5,
+   "fat": 0.7,
+   "carb": 0.0,
+   "sugar": null,
+   "fiber": null
+  },
+  "삼치": {
+   "ref": "삼치, 생것",
+   "kcal": 112.0,
+   "protein": 20.1,
+   "fat": 2.9,
+   "carb": 0.0,
+   "sugar": 0.0,
+   "fiber": 0.0
+  },
+  "멜론": {
+   "ref": "멜론, 감로, 생것",
+   "kcal": 36.0,
+   "protein": 0.3,
+   "fat": 0.1,
+   "carb": 9.6,
+   "sugar": 7.3,
+   "fiber": 1.0
+  },
+  "미나리": {
+   "ref": "미나리, 돌미나리, 생것",
+   "kcal": 16.0,
+   "protein": 1.9,
+   "fat": 0.2,
+   "carb": 2.7,
+   "sugar": 0.8,
+   "fiber": 1.3
+  },
+  "부추": {
+   "ref": "부추, 산부추, 생것",
+   "kcal": 41.0,
+   "protein": 3.5,
+   "fat": 0.1,
+   "carb": 8.8,
+   "sugar": null,
+   "fiber": null
+  },
+  "생강": {
+   "ref": "생강, 뿌리줄기, 생것",
+   "kcal": 42.0,
+   "protein": 1.0,
+   "fat": 0.1,
+   "carb": 9.8,
+   "sugar": 0.5,
+   "fiber": 2.6
+  },
+  "열무": {
+   "ref": "열무, 생것",
+   "kcal": 14.0,
+   "protein": 1.9,
+   "fat": 0.2,
+   "carb": 2.2,
+   "sugar": 0.4,
+   "fiber": 1.8
+  },
+  "파프리카": {
+   "ref": "파프리카, 노란색, 생것",
+   "kcal": 22.0,
+   "protein": 0.8,
+   "fat": 0.1,
+   "carb": 5.2,
+   "sugar": 3.1,
+   "fiber": 1.5
+  },
+  "피망": {
+   "ref": "피망, 빨간색, 생것",
+   "kcal": 28.0,
+   "protein": 1.2,
+   "fat": 0.1,
+   "carb": 6.9,
+   "sugar": 3.0,
+   "fiber": 2.0
+  }
+ }
+}

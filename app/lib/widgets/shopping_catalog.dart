@@ -322,6 +322,48 @@ class _ProduceSheet extends StatelessWidget {
       );
     }
 
+    // 영양(100g 기준): 식약처 식품영양성분DB 생것 기준. 숫자 네 개를 한 줄로(없는 품목은 안 보여줌)
+    Widget nutritionSection(Map<String, dynamic>? n) {
+      if (n == null || n['kcal'] == null) return const SizedBox.shrink();
+      Widget cell(String value, String label) => Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+                const SizedBox(height: 2),
+                Text(label, style: const TextStyle(fontSize: 11, color: AppColors.inkSoft)),
+              ],
+            ),
+          );
+      String g(dynamic v) => v == null ? '-' : '${v}g';
+      return Padding(
+        padding: const EdgeInsets.only(top: 22),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(Icons.local_fire_department_outlined, size: 18),
+                const SizedBox(width: 6),
+                Text('영양 · 100g당', style: AppTheme.subheading),
+              ],
+            ),
+            const SizedBox(height: 12),
+            Row(
+              children: [
+                cell('${(n['kcal'] as num).round()}kcal', '열량'),
+                cell(g(n['carb']), '탄수화물'),
+                cell(g(n['protein']), '단백질'),
+                cell(g(n['fat']), '지방'),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text('식품의약품안전처 식품영양성분DB(${n['ref']}) 기준이에요.', style: const TextStyle(fontSize: 11, color: AppColors.inkSoft, height: 1.5)),
+          ],
+        ),
+      );
+    }
+
     // 팁: 라벨 없이 한 줄씩 짧은 문장(없는 품목은 섹션 자체를 안 보여줌)
     Widget tipsSection(List? tips) {
       final lines = (tips ?? const []).cast<String>();
@@ -473,6 +515,7 @@ class _ProduceSheet extends StatelessWidget {
                     ),
                 ],
               ),
+              nutritionSection(guide!['nutrition'] as Map<String, dynamic>?),
               rowsSection('이렇게 고르세요', guide!['good'] as List?, icon: Icons.check_circle, color: const Color(0xFF2F8F5B)),
               rowsSection('이런 건 피하세요', guide!['avoid'] as List?, icon: Icons.warning_amber_rounded, color: const Color(0xFFC4472B)),
               rowsSection('보관법', guide!['storage'] as List?, icon: Icons.inventory_2_outlined),

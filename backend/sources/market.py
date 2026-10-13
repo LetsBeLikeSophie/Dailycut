@@ -53,6 +53,13 @@ def _guide() -> dict:
 
 
 @lru_cache(maxsize=1)
+def _nutrition() -> dict:
+    """품목별 영양(100g 기준) — backend/tools/build_nutrition.py가 식약처 식품영양성분DB에서 한 번 뽑아 둔 정적 표."""
+    p = DATA / "nutrition.json"
+    return json.loads(p.read_text(encoding="utf-8")).get("items", {}) if p.exists() else {}
+
+
+@lru_cache(maxsize=1)
 def _images() -> dict:
     p = DATA / "produce_images.json"
     return json.loads(p.read_text(encoding="utf-8")) if p.exists() else {}
@@ -229,7 +236,7 @@ def run() -> dict:
 
     guide = {}
     for gk, g in _guide().items():
-        guide[gk] = {**g, "image": _images().get(IMAGE_KEY.get(gk, gk))}
+        guide[gk] = {**g, "image": _images().get(IMAGE_KEY.get(gk, gk)), "nutrition": _nutrition().get(gk)}
 
     w1 = h["w1"] or h["now"]
     return {

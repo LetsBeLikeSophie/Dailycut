@@ -354,6 +354,14 @@ claude.ai/artifact/17gytwYuXMFkF4vx8tWv65 (사용 중 · 일부만 · 미사용 
 - **혜택 "마감 임박" 정리**: 정부24는 신청기한이 명시된 게 10,491건 중 168건이라 "이번 주 마감" 구역은 늘 비어서 안 만듦(신청기한이 한 달 안인 항목에만 목록 줄에 "N일 남음"). 청약·공공임대는 접수 중인 공고를 마감 가까운 순으로 정렬.
 - **영양성분(식약처 `FoodNtrCpntDbInfo03/getFoodNtrCpntDbInq03`) 메모**: `FOOD_NM_KR`로만 찾으면 조리·가공식품(찐고구마, 마늘빵…)이 먼저 나옴. `FOOD_CAT1_NM=채소류`처럼 대분류로 거르면 `DB_GRP_NM=원재료성`("고구마, 줄기, …생것") 행이 나옴 — 에너지는 `AMT_NUM1`(kcal/100g). 품목별로 "생것" 행을 골라 정적 표(`data/nutrition.json`)로 만드는 방식이 맞음(아직 안 만듦).
 - **지역화폐 가맹점(조폐공사 `localFranchisesV3/franchiseV3`)**: 호출은 되지만 데이터가 2022-10-31 기준이고 폐업 가맹점이 섞여 있으며(`bzmn_stts_nm`), 전통시장 목록에 좌표가 없어 연결이 어려움 → 보류.
+- **문화 탭 "나들이" 구역 + 지진 + 영양 (2026-10-14)**: 문화 탭 구역 전환은 `행사·전시 | 나들이 | 음악`. 나들이(`backend/sources/places.py`, `widgets/place_feed.dart`)는 칩으로 `도서관 | 캠핑 | 반려동물 | 웰니스 | 걷기길`.
+  `/places?kind&sido&sgg`가 항목을 청약·대출과 같은 모양({name,sub,tag,span,detail,url})으로 줌(상세 시트는 `showItemSheet` 공용). 사진은 저작권 구분 확인 전이라 안 씀.
+  · 도서관(지역정보개발원 `B551982/plr_v2` info_v2 + rlt_rdrm_info_v2): **도서관 번호(PLR001…)가 지자체마다 겹쳐서** 지자체코드(stdgCd)+이름으로 열람실을 짝지음, 갱신 4시간 넘은 열람실은 남은 좌석에 안 셈, 운영 시간 밖이면 "운영 종료".
+  · 캠핑(고캠핑 `GoCamping/basedList` 전체 ≈3,100곳, 운영 중만) + 이번 주말 날씨 한 줄씩(밤 5° 이하/강수 50%↑면 사실 안내만). 반려동물(`KorPetTourService2/areaBasedList2`, 종류 5개)·웰니스(`WellnessTursmService/areaBasedList`, langDivCd=KOR 필수)·걷기길(두루누비 `courseList`, sigun 글자로 지역 거름).
+  · 큰 목록은 `places_warm` 작업이 12시간마다 서울 기준으로 미리 받아 두고, 다른 지역·캠핑은 처음 부를 때 수 초~수십 초 걸림(그 뒤 24시간 캐시).
+  · 지진: `weather.py`의 생활지수에 `quake` 줄(기상청 `EqkInfoService/getEqkMsg`, 최근 3일 조회만 가능, 해외 지진은 `rem`에 "국내영향없음"이라 뺌). 산불위험(`forestPointV2`)은 지수 단계 뜻을 확인하지 못해 아직 안 붙임.
+  · 영양: `backend/tools/build_nutrition.py`로 식약처 식품영양성분DB에서 품목별 생것 100g 영양을 뽑아 `data/nutrition.json`(69품목 중 45개 매칭 — 쇠고기·우유·쌀·깻잎·단감·감귤 등은 미매칭)에 저장하고, `market.py` guide에 `nutrition`으로 실려 장보기 상세 시트에 "영양 · 100g당"으로 보임.
+  · `sources/_kst.py`: 배포 서버가 UTC라 `date.today()`가 한국 새벽 0~9시에 하루 전 날짜를 줌 → 날짜가 중요한 새 코드(청약·임대·집중률·도서관)는 `_kst.today()/now()`를 씀(오래된 코드엔 `date.today()`가 남아 있을 수 있음).
 - **광고(카카오 애드핏, 웹) 준비됨 (2026-10-12)**: `widgets/ad_slot.dart`의 `AdSlot` + `web/ad.html`(애드핏 스크립트 페이지, 같은 도메인 iframe).
   광고 단위 ID가 없으면 칸이 아예 안 그려짐. 켜는 법: 애드핏에서 사이트(itssophie.dev/dailycut) 등록·승인 → 광고 단위(320x100 등) 생성 →
   `flutter build web … --dart-define=ADFIT_UNIT=DAN-xxxx --dart-define=ADFIT_SIZE=320x100`. 칸 위치: 생활(장보기 시세 아래)·문화(행사/영화 구역 아래)·머니(금리 아래).
