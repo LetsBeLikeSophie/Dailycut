@@ -27,6 +27,7 @@ import jobs
 import sources  # noqa: F401  (수집 작업 등록)
 import store
 from sources import culture as culture_src
+from sources import benefits as benefits_src
 from sources import gov_support as gov_support_src
 from sources import markets as markets_src
 from sources import weather as weather_src
@@ -119,6 +120,18 @@ def support(sido: str | None = None, sgg: str | None = None, scope: str = "all",
     """정부 지원·혜택(행정안전부 공공서비스 정보). 지역(시도·시군구)만으로 거르고 개인 조건은 받지 않음.
     수집이 안 됐으면(키 미승인) live=False, items=[] — 화면은 섹션을 숨김(예시 데이터 없음)."""
     return gov_support_src.query(sido, sgg, scope if scope in ("all", "local", "central") else "all", field, min(max(limit, 1), 60))
+
+
+@app.get("/benefits/housing")
+def benefits_housing(kind: str = "apply", sido: str | None = None, sgg: str | None = None):
+    """청약(kind=apply, 한국부동산원 청약홈)·공공임대(kind=rent, 마이홈포털+LH) 공고. 접수가 안 끝난 것만, 선택한 시도 기준."""
+    return benefits_src.housing("rent" if kind == "rent" else "apply", sido, sgg)
+
+
+@app.get("/benefits/loans")
+def benefits_loans(usage: str | None = None, sido: str | None = None):
+    """서민금융진흥원 대출상품 한눈에(전국 공통 + 선택한 시도 상품). usage는 생계·주거·학자금·사업."""
+    return benefits_src.loans(usage, sido)
 
 
 class SupportProfile(BaseModel):
@@ -215,7 +228,7 @@ class UsageBatch(BaseModel):
 _USAGE_OK = re.compile(r"^[0-9A-Za-z_가-힣·\-\. ]{1,30}$")
 _USAGE_NAMES = {
     "tab_view", "region_pick", "culture_kind", "culture_open", "market_open", "produce_open", "basket_add",
-    "basket_remove", "support_profile", "support_trait", "money_metric", "money_range", "life_open", "sources_open", "life_edit", "location_ask",
+    "basket_remove", "support_profile", "support_trait", "benefit_seg", "money_metric", "money_range", "life_open", "sources_open", "life_edit", "location_ask",
 }
 
 

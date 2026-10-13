@@ -5,6 +5,7 @@ import '../local_prefs.dart';
 import '../region.dart';
 import '../theme.dart';
 import '../widgets/basket_hero.dart';
+import '../widgets/benefit_feed.dart';
 import '../widgets/components.dart';
 import '../widgets/ad_slot.dart';
 import '../widgets/livestock_sheet.dart';
@@ -333,25 +334,52 @@ Widget cultureScreen(ApiClient api, Region region, BuildContext shellContext) =>
       },
     );
 
-/// 혜택(옛 머니 탭): 정부 지원·혜택을 지역과 "내 조건"으로 찾아 봄(행정안전부 공공서비스 정보).
+/// 혜택(옛 머니 탭): 정부 지원 / 청약 / 공공임대 / 대출을 구역 전환으로. 모두 공공데이터포털 "제한 없음" 데이터.
 /// 2026-10-13: 금융위 지수·상품, 금감원 금리는 광고(상업 이용) 약관 때문에 뺌 — 허락을 받으면 다시 붙일 수 있음(CLAUDE.md 참고).
 Widget benefitsScreen(ApiClient api, Region region, BuildContext shellContext) => SectionScreen(
       section: Section.money,
       fetch: () async => <String, dynamic>{},
-      contentBuilder: (context, data) => [
-        PageHero(
-          section: Section.money,
-          eyebrow: '혜택 · ${region.label}',
-          onEyebrowTap: () => showRegionPicker(shellContext),
-          headline: '받을 수 있는 혜택, 한 번에 찾아봐요',
-          emphasis: '혜택',
-          headlineLines: 2,
-          source: '행정안전부 공공서비스(혜택) 정보',
-          body: const [],
+      contentBuilder: (context, data) {
+        GovSupportSection.prefetch(api); // 정부 지원 구역이 바로 보이게 미리 받아 둠(같은 요청은 다시 안 보냄)
+        return [
+        SegmentedHost(
+          labels: const ['정부 지원', '청약', '공공임대', '대출'],
+          prefKey: 'benefit_seg',
+          trackName: 'benefit_seg',
+          builder: (context, index, toggle) {
+            final (headline, emphasis, source) = switch (index) {
+              1 => ('곧 접수하는 청약, 한눈에 봐요', '청약', '한국부동산원 청약홈'),
+              2 => ('신청할 수 있는 공공임대 공고', '공공임대', '국토교통부 마이홈포털 · 한국토지주택공사'),
+              3 => ('내가 쓸 수 있는 서민 대출', '서민 대출', '서민금융진흥원 대출상품 한눈에'),
+              _ => ('받을 수 있는 혜택, 한 번에 찾아봐요', '혜택', '행정안전부 공공서비스(혜택) 정보'),
+            };
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                PageHero(
+                  section: Section.money,
+                  eyebrow: '혜택 · ${region.label}',
+                  onEyebrowTap: () => showRegionPicker(shellContext),
+                  headline: headline,
+                  emphasis: emphasis,
+                  headlineLines: 2,
+                  source: source,
+                  topExtra: toggle,
+                  body: const [],
+                ),
+                switch (index) {
+                  1 => BenefitFeed(key: ValueKey('apply${region.code}${region.sgg}'), api: api, region: region, kind: BenefitKind.apply),
+                  2 => BenefitFeed(key: ValueKey('rent${region.code}${region.sgg}'), api: api, region: region, kind: BenefitKind.rent),
+                  3 => BenefitFeed(key: ValueKey('loan${region.code}'), api: api, region: region, kind: BenefitKind.loan),
+                  _ => GovSupportSection(api: api),
+                },
+                const AdSlot(),
+              ],
+            );
+          },
         ),
-        GovSupportSection(api: api),
-        const AdSlot(),
-      ],
+        ];
+      },
     );
 
 /// AI: 이번 주 글 제목이 곧 한 문장 제목, 핵심 한 줄은 그 아래.

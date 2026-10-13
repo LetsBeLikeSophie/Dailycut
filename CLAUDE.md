@@ -334,6 +334,13 @@ claude.ai/artifact/17gytwYuXMFkF4vx8tWv65 (사용 중 · 일부만 · 미사용 
   서버: `sources/__init__.py`에서 `money`·`finance`·`boxoffice` import를 뺐음(작업 미등록, `/money`·`/movie/detail` 삭제). 파일(`money.py`·`finance.py`·`boxoffice.py`)은 남겨 둠 —
   허락을 받으면 import에 다시 넣고 화면(옛 `metric_chart.dart`·`box_office.dart`·`finance_sheet.dart`는 삭제했으니 git 기록에서 복원)을 되살릴 것. 문화포털 사진은 `culture.py`에서 `image: None`.
   `?license=1` 점검 표시(`LicenseFlag`)는 위젯만 남겨 둠(쓰는 곳 없음). 출처 안내(ⓘ)에서도 빼고 에어코리아를 3유형으로 고침.
+- **혜택 탭 구역 전환 4개 (2026-10-13)**: `정부 지원 | 청약 | 공공임대 | 대출`(`SegmentedHost`, 마지막 선택 기억). 모두 포털 "이용허락범위 제한 없음"(상업 이용 가능, 포털 표기 확인).
+  `backend/sources/benefits.py` — 청약홈(`ApplyhomeInfoDetailSvc` 4종: APT·무순위·오피스텔/도시형·공공지원민간임대, 접수 안 끝난 것만), 마이홈 공공임대 공고(`HWSPR02/rsdtRcritNtcList`,
+  마이홈에 이미 있는 LH 공고번호는 중복 제외 후 `lhLeaseNoticeInfo1/lhLeaseNoticeInfo1`로 보탬 — LH는 주소 끝에 함수 이름을 한 번 더 붙여야 함), 서민금융진흥원 대출상품(XML 약 320건,
+  주소 `B553701/LoanProductSearchingInfo/LoanProductSearchingInfo/getLoanProductSearchingInfo`). 작업 `housing`(3시간)·`loans`(하루)가 줄여 저장하고, `/benefits/housing?kind=apply|rent&sido&sgg`·
+  `/benefits/loans?usage&sido`가 오늘 날짜로 "접수 중·N일 남음/N일 뒤 접수"와 지역(시도) 필터를 계산해 줌(대출은 전국 공통+내 시도 상품, 용도 칩 생계·주거·학자금·사업).
+  앱은 `widgets/benefit_feed.dart`(`BenefitFeed` 한 위젯으로 세 구역 + 상세 시트, 10분 메모). 서버 `.env`에 `APPLYHOME_BASE_URL`·`MYHOME_NOTICE_BASE_URL` 줄이 있어야 함(주소만, 비밀 아님).
+  복지로 중앙/지자체 복지서비스(`WELFARE_*`)와 온통청년은 정부24와 겹쳐서 아직 안 붙임.
 - **광고(카카오 애드핏, 웹) 준비됨 (2026-10-12)**: `widgets/ad_slot.dart`의 `AdSlot` + `web/ad.html`(애드핏 스크립트 페이지, 같은 도메인 iframe).
   광고 단위 ID가 없으면 칸이 아예 안 그려짐. 켜는 법: 애드핏에서 사이트(itssophie.dev/dailycut) 등록·승인 → 광고 단위(320x100 등) 생성 →
   `flutter build web … --dart-define=ADFIT_UNIT=DAN-xxxx --dart-define=ADFIT_SIZE=320x100`. 칸 위치: 생활(장보기 시세 아래)·문화(행사/영화 구역 아래)·머니(금리 아래).

@@ -30,6 +30,9 @@ class ApiClient {
     if (res.statusCode != 200) throw Exception('/support/search 응답 실패: ${res.statusCode}');
     return jsonDecode(utf8.decode(res.bodyBytes)) as Map<String, dynamic>;
   }
+  /// 청약(kind=apply)·공공임대(kind=rent) 공고, 서민 대출. 지역은 시도 코드·시군구 이름으로만 보냄.
+  Future<Map<String, dynamic>> benefitsHousing({required String kind, String? sido, String? sgg}) => _getJson('/benefits/housing', {'kind': kind, 'sido': sido, 'sgg': sgg});
+  Future<Map<String, dynamic>> benefitsLoans({String? usage, String? sido}) => _getJson('/benefits/loans', {'usage': usage, 'sido': sido});
   Future<Map<String, dynamic>> cultureDetail(String id) => _getJson('/culture/detail', {'id': id});
   Future<Map<String, dynamic>> marketDetail({required String name, String? sigungu}) => _getJson('/market/detail', {'name': name, 'sigungu': sigungu});
   Future<Map<String, dynamic>> ai() => _getJson('/ai');
