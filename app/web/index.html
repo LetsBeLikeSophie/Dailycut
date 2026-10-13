@@ -32,7 +32,7 @@
   <title>데일리컷</title>
   <link rel="manifest" href="manifest.json">
   <style>
-    /* 2026-10-12: 앱 엔진(약 3MB)이 뜨기 전 빈 흰 화면을 없애려는 스플래시. 첫 프레임이 그려지면 지움. */
+    /* 2026-10-12: 앱 엔진(약 3MB)이 뜨기 전 빈 흰 화면을 없애려는 스플래시. 첫 화면 데이터가 준비되면 지움(10-13: 첫 프레임이 아니라 데이터 기준으로). */
     html, body { margin: 0; background: #fff; }
     #splash { position: fixed; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 18px;
       background: #fff; color: #191919; z-index: 10; transition: opacity .25s ease; font-family: "Apple SD Gothic Neo","Malgun Gothic","Noto Sans KR",sans-serif; }
@@ -60,12 +60,12 @@
     * https://docs.flutter.dev/platform-integration/web/initialization
   -->
   <script>
-    window.addEventListener('flutter-first-frame', function () {
+    /* 스플래시는 앱이 첫 화면 데이터를 받은 뒤 스스로 걷음(lib/splash_web.dart). 인터넷이 아주 느리거나 앱이 못 떠도
+       빈 화면에 갇히지 않게 20초 뒤엔 어쨌든 걷음. */
+    setTimeout(function () {
       var el = document.getElementById('splash');
-      if (!el) return;
-      el.classList.add('done');
-      setTimeout(function () { el.remove(); }, 400);
-    });
+      if (el) { el.classList.add('done'); setTimeout(function () { el.remove(); }, 400); }
+    }, 20000);
   </script>
   <script src="flutter_bootstrap.js" async></script>
 </body>
