@@ -93,8 +93,6 @@ class _MarketListState extends State<MarketList> {
         const SizedBox(height: 10),
         Row(
           children: [
-            const Text('정렬', style: TextStyle(fontSize: 11, color: AppColors.inkSoft)),
-            const SizedBox(width: 8),
             for (final (label, s) in const [('시설 많은 순', _Sort.facilities), ('가나다순', _Sort.name), ('시군구별', _Sort.sigungu)])
               Padding(
                 padding: const EdgeInsets.only(right: 12),

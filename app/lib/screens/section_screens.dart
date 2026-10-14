@@ -215,7 +215,7 @@ Widget cultureScreen(ApiClient api, Region region, BuildContext shellContext) =>
           final inWeekend = events.where((e) => (e['start'] as String).compareTo(iso(sun)) <= 0 && (e['end'] as String).compareTo(iso(sat)) >= 0).toList();
           final list = inWeekend;
           final scopeName = useLocal ? region.label : region.name;
-          final label = today.weekday == DateTime.sunday ? '오늘' : '이번 주말(${sat.month}/${sat.day}~${sun.day})';
+          final label = today.weekday == DateTime.sunday ? '오늘' : '토·일(${sat.month}/${sat.day}~${sun.day})'; // '이번 주말'은 주말 탭과 헷갈려서 뺌(2026-10-15)
           final emphasis = '${list.length}개 행사';
           return PageHero(
             section: Section.culture,

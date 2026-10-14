@@ -161,21 +161,27 @@ class _LifeIndexSectionState extends State<LifeIndexSection> {
               children: [
                 Text('보일 생활 지수', style: AppTheme.subheading),
                 const SizedBox(height: 4),
-                for (final it in widget.indexes)
-                  SwitchListTile(
-                    contentPadding: EdgeInsets.zero,
-                    secondary: Icon(lifeIconFor(it['key'] as String), size: 22),
-                    title: Text(it['title'] as String, style: const TextStyle(fontSize: 15)),
-                    value: !_hidden.contains(it['key']),
-                    activeThumbColor: AppColors.ink,
-                    onChanged: (on) {
-                      final next = [..._hidden]..remove(it['key']);
-                      if (!on) next.add(it['key'] as String);
-                      setState(() => _hidden = next);
-                      setSheet(() {});
-                      LocalPrefs.setList(_key, next);
-                    },
-                  ),
+                const Text('눌러서 보이거나 숨길 수 있어요', style: TextStyle(fontSize: 12, color: AppColors.inkSoft)),
+                const SizedBox(height: 16),
+                // 2026-10-14: 스위치 대신 알약 칩 — 진한 칩 = 보임(앱의 다른 선택 칩과 같은 모양)
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: [
+                    for (final it in widget.indexes)
+                      PillChip(
+                        label: it['title'] as String,
+                        selected: !_hidden.contains(it['key']),
+                        onTap: () {
+                          final next = [..._hidden];
+                          next.contains(it['key']) ? next.remove(it['key']) : next.add(it['key'] as String);
+                          setState(() => _hidden = next);
+                          setSheet(() {});
+                          LocalPrefs.setList(_key, next);
+                        },
+                      ),
+                  ],
+                ),
               ],
             ),
           ),
@@ -190,13 +196,19 @@ class _LifeIndexSectionState extends State<LifeIndexSection> {
     return ListSection(
       title: '오늘의 생활 지수',
       stub: widget.stub,
-      // 설정 톱니바퀴: 보일 지수 고르기
+      // 보일 지수 고르기(정부 지원의 "내 조건"과 같은 모양의 글자 버튼)
       action: GestureDetector(
         onTap: _edit,
         behavior: HitTestBehavior.opaque,
         child: const Padding(
-          padding: EdgeInsets.only(left: 12, top: 2, bottom: 2),
-          child: Icon(Icons.settings_outlined, size: 20, color: AppColors.inkSoft),
+          padding: EdgeInsets.only(left: 12),
+          child: Text.rich(
+            TextSpan(children: [
+              WidgetSpan(alignment: PlaceholderAlignment.middle, child: Icon(Icons.tune, size: 15)),
+              TextSpan(text: ' 지수 고르기'),
+            ]),
+            style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.inkSoft),
+          ),
         ),
       ),
       children: [for (final it in shown) lifeIndexLine(context, it)],
