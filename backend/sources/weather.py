@@ -16,6 +16,7 @@ from datetime import date, datetime, timedelta
 
 import config
 import geo
+import jobs
 from sources import _cache, _http
 
 WEEKDAYS = ["월", "화", "수", "목", "금", "토", "일"]
@@ -611,3 +612,13 @@ def get(code: str, sgg: str | None = None) -> dict | None:
         return _cache.cached("weather", f"weather:{pl['key']}", 25, lambda: fetch(pl["code"], pl["sgg"]))
     except Exception:
         return None
+
+
+def _warm() -> dict:
+    """기본 지역(서울) 날씨를 미리 데워 둠 — 캐시가 25분마다 만료돼서 방문자가 기다리지 않게(2026-10-14).
+    에어코리아 일 500회 한도: 30분마다 = 하루 48회 수준."""
+    get("11", None)
+    return {"ok": True}
+
+
+jobs.register(jobs.Job(name="weather_warm", run=_warm, env_keys=[], interval_min=30))

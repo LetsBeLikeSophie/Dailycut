@@ -20,11 +20,40 @@ _locks: dict[str, threading.Lock] = {}
 _guard = threading.Lock()
 
 
+_STALE_EXTRA_MIN = 180
+
+
+def _refresh_async(source: str, key: str, fn: Callable[[], dict]) -> None:
+    """만료된 칸을 뒤에서 새로 받음. 이미 누가 받는 중이면 아무것도 안 함(락을 못 잡으면 그냥 지나감)."""
+    with _guard:
+        lock = _locks.setdefault(key, threading.Lock())
+    if not lock.acquire(blocking=False):
+        return
+
+    def work() -> None:
+        try:
+            store.save_cache(key, fn())
+            store.set_status(source, ok=True)
+        except Exception as e:  # 실패해도 옛 값이 그대로 남음
+            store.set_status(source, ok=False, error=f"{type(e).__name__}: {e}")
+        finally:
+            lock.release()
+
+    threading.Thread(target=work, daemon=True).start()
+
+
 def cached(source: str, key: str, ttl_min: int, fn: Callable[[], dict]) -> dict:
     """source: 상태 표시용 이름(예: "weather"), key: 캐시 키(위치 칸 포함)."""
     hit = store.load_cache(key)
-    if hit and datetime.now() - datetime.fromisoformat(hit[1]) < timedelta(minutes=ttl_min):
-        return hit[0]
+    if hit:
+        age = datetime.now() - datetime.fromisoformat(hit[1])
+        if age < timedelta(minutes=ttl_min):
+            return hit[0]
+        # 2026-10-14: 만료 직후 처음 온 방문자가 외부 API가 끝날 때까지(날씨 약 20초) 기다리던 문제 —
+        # 너무 오래되지 않았으면(만료 후 3시간 안) 옛 값을 바로 주고 새 값은 뒤에서 받음.
+        if age < timedelta(minutes=ttl_min + _STALE_EXTRA_MIN):
+            _refresh_async(source, key, fn)
+            return hit[0]
     with _guard:
         lock = _locks.setdefault(key, threading.Lock())
     with lock:  # 같은 칸을 동시에 여러 번 부르지 않게
