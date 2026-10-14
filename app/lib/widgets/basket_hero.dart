@@ -6,7 +6,7 @@ import 'components.dart';
 
 /// 생활 탭 맨 위: 내 장바구니 합계와 이번 달 추이. 위의 ‹ 장바구니 › 로 담은 품목을 한 칸씩 넘겨 보며
 /// (고정 크기라 내용이 출렁이지 않음), 품목마다 가격·지난주 대비·추이가 바뀜.
-/// 기본으로 담긴 품목은 없고, 아래 "장보기 시세"에서 줄을 밀어 담으면 여기에 나타남.
+/// 기본으로 담긴 품목은 없고, 아래 "장보기 시세"에서 담기 버튼을 누르면 여기에 나타남.
 /// 그래프는 이번 달 1일~말일 축이고 서버가 쌓은 날짜까지만 선이 그려짐.
 class BasketHero extends StatefulWidget {
   const BasketHero({
@@ -151,7 +151,7 @@ class _BasketHeroState extends State<BasketHero> {
       source: widget.source,
       body: [
         const Text(
-          '아래 장보기 시세에서 품목 줄을 왼쪽으로 밀면 장바구니에 담겨요. 담은 품목의 합계 가격과 지난주 대비, 이번 달 추이를 여기서 한눈에 볼 수 있어요.',
+          '아래 장보기 시세에서 품목 오른쪽 끝의 장바구니 버튼을 누르면 담겨요. 담은 품목의 합계 가격과 지난주 대비, 이번 달 추이를 여기서 한눈에 볼 수 있어요.',
           style: TextStyle(fontSize: 15, height: 1.6),
         ),
         const SizedBox(height: 16),

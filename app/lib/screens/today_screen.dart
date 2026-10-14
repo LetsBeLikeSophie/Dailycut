@@ -8,6 +8,7 @@ import '../theme.dart';
 import '../widgets/components.dart';
 import '../widgets/hourly_strip.dart';
 import '../widgets/life_index.dart';
+import '../widgets/my_basket_today.dart';
 import '../widgets/weather_icon.dart';
 
 class TodayScreen extends StatefulWidget {
@@ -202,6 +203,8 @@ class _TodayScreenState extends State<TodayScreen> {
                         ),
                     ],
             ),
+            // 생활 탭에서 담아 둔 품목이 있을 때만 보임(없으면 아무것도 안 그림)
+            MyBasketToday(api: widget.api, region: widget.region),
             ListSection(
               title: '오늘의 섹션',
               children: [

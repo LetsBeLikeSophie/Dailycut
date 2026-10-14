@@ -116,6 +116,26 @@ class _ShoppingCatalogState extends State<ShoppingCatalog> {
     );
   }
 
+  /// 담기/빼기 + 잠깐 뜨는 안내(되돌리기 포함)
+  Future<void> _toggle(BuildContext context, String name) async {
+    final added = await MyBasket.instance.toggle(name);
+    if (!context.mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(SnackBar(
+        duration: const Duration(milliseconds: 2200),
+        persist: false, // 되돌리기 버튼이 있으면 기본이 '안 닫힘'이라 꼭 지정
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: AppColors.ink,
+        content: Text(added ? '${_eulReul(name)} 장바구니에 담았어요' : '${_eulReul(name)} 장바구니에서 뺐어요'),
+        action: SnackBarAction(
+          label: '되돌리기',
+          textColor: Colors.white,
+          onPressed: () => MyBasket.instance.toggle(name),
+        ),
+      ));
+  }
+
   Widget _row(BuildContext context, Map<String, dynamic> it) {
     final change = (it['change'] as String?) ?? 'flat';
     final pct = it['pct'] as num?;
@@ -125,14 +145,18 @@ class _ShoppingCatalogState extends State<ShoppingCatalog> {
     final line = ListLine(
       name: name,
       badge: it['in_season'] == true ? '제철' : null,
-      nameIcon: inBasket ? Icons.shopping_basket : null,
-      nameIconColor: sectionThemes[Section.market]!.color,
       sub: it['sub'] as String?,
       middle: series == null ? null : MiniSpark(series: series, color: changeColor(change)),
       value: '${formatNumber(it['price'] as num)}원',
       valueSub: pct == null ? null : changeLabel(change, pct: pct),
       valueSubColor: changeColor(change),
       onTap: () => showProduceSheet(context, it, widget.guide[it['guide']] as Map<String, dynamic>?),
+      // 2026-10-14: 밀어야만 담기던 걸 줄 끝 버튼 한 번으로(밀기는 그대로 남김). 누른 줄은 상세로 안 넘어감.
+      trailing: _BasketButton(
+        inBasket: inBasket,
+        color: sectionThemes[Section.market]!.color,
+        onTap: () => _toggle(context, name),
+      ),
     );
     // 왼쪽으로 밀면 담기/빼기 버튼이 보이고, 놓으면 바로 적용(줄은 제자리로 돌아옴)
     return Dismissible(
@@ -140,17 +164,7 @@ class _ShoppingCatalogState extends State<ShoppingCatalog> {
       direction: DismissDirection.endToStart,
       dismissThresholds: const {DismissDirection.endToStart: 0.3},
       confirmDismiss: (_) async {
-        final added = await MyBasket.instance.toggle(name);
-        if (context.mounted) {
-          ScaffoldMessenger.of(context)
-            ..hideCurrentSnackBar()
-            ..showSnackBar(SnackBar(
-              duration: const Duration(milliseconds: 1600),
-              behavior: SnackBarBehavior.floating,
-              backgroundColor: AppColors.ink,
-              content: Text(added ? '$name을(를) 장바구니에 담았어요' : '$name을(를) 장바구니에서 뺐어요'),
-            ));
-        }
+        await _toggle(context, name);
         return false;
       },
       background: Container(
@@ -167,6 +181,43 @@ class _ShoppingCatalogState extends State<ShoppingCatalog> {
         ),
       ),
       child: Container(color: inBasket ? sectionThemes[Section.market]!.highlight.withValues(alpha: 0.35) : AppColors.background, child: line),
+    );
+  }
+}
+
+/// 받침이 있으면 '을', 없으면 '를'(한글이 아니면 '을(를)')
+String _eulReul(String name) {
+  if (name.isEmpty) return name;
+  final c = name.runes.last;
+  if (c < 0xAC00 || c > 0xD7A3) return '$name을(를)';
+  return '$name${(c - 0xAC00) % 28 == 0 ? '를' : '을'}';
+}
+
+/// 목록 줄 끝의 장바구니 버튼: 안 담음=윤곽 아이콘+, 담음=채운 아이콘. 터치 영역은 44px.
+class _BasketButton extends StatelessWidget {
+  const _BasketButton({required this.inBasket, required this.color, required this.onTap});
+
+  final bool inBasket;
+  final Color color;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Tooltip(
+      message: inBasket ? '장바구니에서 빼기' : '장바구니에 담기',
+      child: InkResponse(
+        onTap: onTap,
+        radius: 22,
+        child: SizedBox(
+          width: 44,
+          height: 44,
+          child: Icon(
+            inBasket ? Icons.shopping_basket : Icons.add_shopping_cart_outlined,
+            size: 22,
+            color: inBasket ? color : AppColors.inkSoft,
+          ),
+        ),
+      ),
     );
   }
 }

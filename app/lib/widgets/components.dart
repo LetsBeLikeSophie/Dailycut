@@ -983,8 +983,10 @@ class ListLine extends StatelessWidget {
     this.nameIcon,
     this.nameIconColor = AppColors.ink,
     this.tag,
+    this.trailing,
   });
 
+  final Widget? trailing; // 줄 맨 오른쪽 끝 버튼(예: 장바구니 담기). 줄 전체의 onTap과 따로 눌림
   final Color nameIconColor;
 
   final String? tag; // 이름 옆 윤곽 알약(예: 장바구니에 '담김')
@@ -1111,6 +1113,7 @@ class ListLine extends StatelessWidget {
               ),
             ),
           ],
+          if (trailing != null) ...[const SizedBox(width: 4), trailing!],
         ],
       ),
     );
