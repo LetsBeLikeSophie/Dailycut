@@ -69,6 +69,13 @@
       if (el) { el.classList.add('done'); setTimeout(function () { el.remove(); }, 400); }
     }, 20000);
   </script>
+  <!-- 2026-10-14: 앱 화면은 캔버스라 검색·심사 로봇이 글을 못 읽음 → 같은 내용을 글로도 둠(화면에선 보이지 않고 스크린리더·로봇만 읽음) -->
+  <div style="position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap">
+    <h1>데일리컷 — 공공데이터로 매일 모으는 생활 정보</h1>
+    <p>내 지역의 오늘 날씨·미세먼지, 채소·과일·축산물 소매가격과 제철, 지역 행사·전시·나들이, 정부 지원·청약·공공임대·서민 대출 정보를 한곳에서 볼 수 있습니다. 회원가입이 필요 없습니다.</p>
+    <a href="about.html">서비스 소개</a> <a href="privacy.html">개인정보처리방침</a>
+  </div>
+  <noscript>이 서비스는 자바스크립트가 필요해요. <a href="about.html">서비스 소개</a> · <a href="privacy.html">개인정보처리방침</a></noscript>
   <script src="flutter_bootstrap.js" async></script>
 </body>
 </html>

@@ -38,8 +38,10 @@ class _RootShellState extends State<RootShell> {
   // 2026-09-30: 날씨를 생활에서 빼되, 별도 탭/전용 화면까지는 필요 없고
   // 투데이 카드로만 있으면 충분하다는 피드백 — 탭은 원래 5개로 되돌림
   // (Section.weather 자체는 투데이 카드 테마용으로 theme.dart에 남겨둠).
-  static const _tabs = ['투데이', '생활', '문화', '혜택', 'AI'];
-  static const _tabKeys = ['today', 'life', 'culture', 'money', 'ai'];
+  // 2026-10-14: AI 탭은 아직 전부 예시 데이터라 배포본에선 뺌(개발 때만 `--dart-define=SHOW_AI_TAB=true`).
+  static const _showAi = bool.fromEnvironment('SHOW_AI_TAB');
+  static const _tabs = ['투데이', '생활', '문화', '혜택', if (_showAi) 'AI'];
+  static const _tabKeys = ['today', 'life', 'culture', 'money', if (_showAi) 'ai'];
 
   @override
   void initState() {
@@ -70,7 +72,7 @@ class _RootShellState extends State<RootShell> {
       _regional((r) => marketScreen(_api, r, context)),
       _regional((r) => cultureScreen(_api, r, context)),
       _regional((r) => benefitsScreen(_api, r, context)),
-      aiScreen(_api),
+      if (_showAi) aiScreen(_api),
     ];
 
     return Scaffold(

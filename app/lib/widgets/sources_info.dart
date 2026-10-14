@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import '../analytics.dart';
 import '../theme.dart';
@@ -85,6 +86,12 @@ Future<void> showSourcesSheet(BuildContext context, {String? current}) {
               style: TextStyle(fontSize: 12, color: AppColors.inkSoft, height: 1.6),
             ),
             const _AnalyticsSwitch(),
+            const SizedBox(height: 14),
+            Row(children: [
+              _LegalLink('서비스 소개', 'about.html'),
+              const SizedBox(width: 18),
+              _LegalLink('개인정보처리방침', 'privacy.html'),
+            ]),
           ],
         ),
       ),
@@ -92,6 +99,26 @@ Future<void> showSourcesSheet(BuildContext context, {String? current}) {
   );
 }
 
+
+/// 같은 사이트의 정적 안내 페이지(web/about.html, web/privacy.html)를 새 탭으로 엶
+class _LegalLink extends StatelessWidget {
+  const _LegalLink(this.label, this.page);
+
+  final String label;
+  final String page;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => launchUrl(Uri.base.resolve(page), mode: LaunchMode.externalApplication),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        child: Text(label, style: const TextStyle(fontSize: 12, color: AppColors.inkSoft, decoration: TextDecoration.underline)),
+      ),
+    );
+  }
+}
 
 class _AnalyticsSwitch extends StatefulWidget {
   const _AnalyticsSwitch();

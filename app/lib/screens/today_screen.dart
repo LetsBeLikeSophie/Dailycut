@@ -64,7 +64,7 @@ class _TodayScreenState extends State<TodayScreen> {
         final t = sectionThemes[Section.weather]!;
         final others = (data['cards'] as List)
             .cast<Map<String, dynamic>>()
-            .where((c) => c['section'] != 'weather')
+            .where((c) => c['section'] != 'weather' && ((data['live_sections'] as List?)?.contains(c['section']) ?? false)) // 예시(스텁) 카드는 뺌
             .toList();
 
         final today = weather['today'] as Map<String, dynamic>;

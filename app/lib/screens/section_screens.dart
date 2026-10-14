@@ -181,7 +181,9 @@ Widget marketScreen(ApiClient api, Region region, BuildContext shellContext) => 
           // 실데이터(소·돼지)는 위 listing 안의 "축산물 시세"가 보여주므로, 예시 구간은 실데이터가 없을 때만
           if (!_isLive(data, 'livestock'))
             ListSection(title: '축산물 시세(계란·돼지고기)', trailing: '지난주 대비', stub: true, children: [ExpandableList(children: _priceRows(livestock))]),
-          ListSection(title: '생필품 물가지수', trailing: '전월 대비', stub: !_isLive(data, 'essentials'), children: [ExpandableList(children: _priceRows(essentials))]),
+          // 2026-10-14: 예시(스텁) 구간은 광고 심사 전에 화면에서 뺌 — 실데이터가 붙으면 자동으로 나타남
+          if (_isLive(data, 'essentials'))
+            ListSection(title: '생필품 물가지수', trailing: '전월 대비', children: [ExpandableList(children: _priceRows(essentials))]),
           MarketList(
             api: api,
             markets: marketsNearby,
@@ -202,6 +204,7 @@ Widget cultureScreen(ApiClient api, Region region, BuildContext shellContext) =>
         final youtubeTrending = (data['youtube_trending'] as List).cast<Map<String, dynamic>>();
 
         final events = (data['events'] as List?)?.cast<Map<String, dynamic>>();
+        final musicLive = _isLive(data, 'spotify_top') || _isLive(data, 'youtube_trending');
         // 맨 위는 "이번 주말 N개 행사"
         Widget weekendHero(List<Map<String, dynamic>> events, bool useLocal, [Widget? toggle]) {
           final now = DateTime.now();
@@ -335,13 +338,14 @@ Widget cultureScreen(ApiClient api, Region region, BuildContext shellContext) =>
         }
         return [
           SegmentedHost(
-            labels: const ['행사·전시', '나들이', '음악'],
+            // 음악은 아직 예시 데이터라 실데이터(spotify/youtube)가 있을 때만 구역으로 둠
+            labels: musicLive ? const ['행사·전시', '나들이', '음악'] : const ['행사·전시', '나들이'],
             prefKey: 'culture_seg',
             builder: (context, index, toggle) => Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: switch (index) {
                 1 => [outingHero(toggle), PlaceFeed(key: ValueKey('places${region.code}${region.sgg}'), api: api, region: region), const AdSlot()],
-                2 => [musicHero(toggle), ...musicSections],
+                2 when musicLive => [musicHero(toggle), ...musicSections],
                 _ => [scopedCulture(toggle), const AdSlot()],
               },
             ),

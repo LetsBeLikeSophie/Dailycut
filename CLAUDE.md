@@ -369,6 +369,11 @@ claude.ai/artifact/17gytwYuXMFkF4vx8tWv65 (사용 중 · 일부만 · 미사용 
   누르면 바로 담김(채운 아이콘+강조 배경) + 스낵바 "되돌리기"(`persist: false` 필수: 액션이 있는 스낵바는 기본이 안 닫힘). 밀기는 남김. 비어 있을 때 히어로 안내 문구도 버튼 기준으로 바꿈.
   투데이 `MyBasketToday`(`widgets/my_basket_today.dart`)는 담은 품목이 있을 때만 "내 장바구니"(지난주 대비 많이 움직인 순)를 보임 — `/market`을 이 위젯만 뒤에서 받아(10분 메모) 투데이 첫 화면을 안 막음.
   통계(`basket_add`)가 0건인 건 지금 테스트하는 사람이 사용자 본인뿐이라서임(사용성 근거 아님). 푸시 알림은 보류(안드로이드 출시 후 가격 변동 알림 우선).
+- **광고 심사 전 정리 (2026-10-14)**: 심사자가 "미완성"으로 볼 만한 것을 정리해 배포. ①예시(스텁) 구간을 화면에서 뺌 — AI 탭(`--dart-define=SHOW_AI_TAB=true`일 때만), 문화 탭 음악 구역(spotify/youtube 실데이터가 있을 때만),
+  생필품 물가지수(`essentials` 실데이터일 때만), 투데이 "오늘의 섹션"의 예시 카드(`live_sections`에 든 것만). 분홍 개발 표시(`kShowStubMarks`)는 기본 꺼짐(`--dart-define=SHOW_STUB_MARKS=true`로 켬).
+  ②`app/web/about.html`(서비스 소개)·`privacy.html`(개인정보처리방침, 접속 로그 14일 보관·익명 통계·위치·내 조건·광고 안내 — 실제 동작 기준, 동작을 바꾸면 같이 고칠 것)·`legal.css`. 앱 ⓘ 시트 맨 아래에 링크.
+  ③`index.html`에 글 형태의 서비스 소개(화면 밖 숨김)와 noscript — 캔버스 앱이라 심사·검색 로봇이 글을 못 읽는 문제 대응. 문의처는 아직 전용 이메일이 없어 GitHub 프로필로 적어 둠(이메일이 정해지면 두 페이지에서 교체).
+  애드핏 신청: 매체 종류 웹사이트, 카테고리 라이프스타일, 희망 지면 = 생활·문화(행사·전시/나들이)·혜택 목록 아래 320x100 하단 배너(`AdSlot`).
 - **광고(카카오 애드핏, 웹) 준비됨 (2026-10-12)**: `widgets/ad_slot.dart`의 `AdSlot` + `web/ad.html`(애드핏 스크립트 페이지, 같은 도메인 iframe).
   광고 단위 ID가 없으면 칸이 아예 안 그려짐. 켜는 법: 애드핏에서 사이트(itssophie.dev/dailycut) 등록·승인 → 광고 단위(320x100 등) 생성 →
   `flutter build web … --dart-define=ADFIT_UNIT=DAN-xxxx --dart-define=ADFIT_SIZE=320x100`. 칸 위치: 생활(장보기 시세 아래)·문화(행사/영화 구역 아래)·머니(금리 아래).

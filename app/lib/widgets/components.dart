@@ -17,7 +17,8 @@ import 'sources_info.dart';
 
 /// 개발용 임시 표시: 실데이터가 아닌(스텁/예시) 영역에 분홍 배경 + 빨간 왼쪽 선을 깔아서
 /// 눈으로 구분함. 실데이터가 다 붙으면 false로 바꾸거나 이 표시를 지우면 됨.
-const kShowStubMarks = true;
+// 2026-10-14: 배포본에선 끔(예시 구간은 화면에서 아예 뺐음). 개발 때만 `--dart-define=SHOW_STUB_MARKS=true`.
+const kShowStubMarks = bool.fromEnvironment('SHOW_STUB_MARKS');
 
 class StubMark extends StatelessWidget {
   const StubMark({super.key, required this.stub, required this.child});
