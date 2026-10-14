@@ -195,7 +195,7 @@ Widget marketScreen(ApiClient api, Region region, BuildContext shellContext) => 
       },
     );
 
-/// 문화: 이번 주말 행사 수 + 행사 달력 / 음악(예시). 영화(KOBIS) 구역은 광고 약관 때문에 뺌(2026-10-13).
+/// 문화: 이번 주말 행사 수 + 행사 달력(+ 음악이 실데이터일 때만 구역 전환). 나들이는 주말 탭으로 나감(2026-10-15). 영화(KOBIS) 구역은 광고 약관 때문에 뺌(2026-10-13).
 Widget cultureScreen(ApiClient api, Region region, BuildContext shellContext) => SectionScreen(
       section: Section.culture,
       fetch: () => api.culture(sido: region.code, sgg: region.sgg),
@@ -266,24 +266,11 @@ Widget cultureScreen(ApiClient api, Region region, BuildContext shellContext) =>
                           style: const TextStyle(fontSize: 11, color: AppColors.inkSoft),
                         ),
                       ),
-                    OutingSection(api: api, region: region),
                     CultureCalendar(api: api, events: scoped),
                   ],
                 );
               });
-        // 문화 탭이 길어져서 큰 구역을 전환으로 나눔: 행사·전시 / 음악(예시)
-        Widget outingHero(Widget toggle) => PageHero(
-              section: Section.culture,
-              eyebrow: '문화 · ${region.label}',
-              onEyebrowTap: () => showRegionPicker(shellContext),
-              headline: '오늘 어디 갈까요? 근처 나들이',
-              emphasis: '나들이',
-              headlineLines: 2,
-              source: '한국관광공사 · 지역정보개발원',
-              topExtra: toggle,
-              body: const [],
-            );
-
+        // 음악은 아직 예시 데이터라 실데이터가 있을 때만 `행사 / 음악` 구역 전환을 둠
         Widget musicHero(Widget toggle) => PageHero(
               section: Section.culture,
               eyebrow: '문화 · ${region.label}',
@@ -336,22 +323,44 @@ Widget cultureScreen(ApiClient api, Region region, BuildContext shellContext) =>
             ),
           ];
         }
+        // 2026-10-15: 나들이는 별도 탭(주말)으로 나감. 음악이 실데이터가 될 때까지는 행사 화면만.
+        if (!musicLive) return [scopedCulture(), const AdSlot()];
         return [
           SegmentedHost(
-            // 음악은 아직 예시 데이터라 실데이터(spotify/youtube)가 있을 때만 구역으로 둠
-            labels: musicLive ? const ['행사·전시', '나들이', '음악'] : const ['행사·전시', '나들이'],
+            labels: const ['행사', '음악'],
             prefKey: 'culture_seg',
             builder: (context, index, toggle) => Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: switch (index) {
-                1 => [outingHero(toggle), PlaceFeed(key: ValueKey('places${region.code}${region.sgg}'), api: api, region: region), const AdSlot()],
-                2 when musicLive => [musicHero(toggle), ...musicSections],
+                1 => [musicHero(toggle), ...musicSections],
                 _ => [scopedCulture(toggle), const AdSlot()],
               },
             ),
           ),
         ];
       },
+    );
+
+/// 주말(2026-10-15, 문화 탭의 나들이를 따로 뺌): 이번 주말 한산한 곳 + 도서관·캠핑·반려동물·웰니스·걷기길.
+/// 두 구역이 각자 데이터를 받아서(시도·시군구 반영) 여기선 따로 불러올 게 없음.
+Widget weekendScreen(ApiClient api, Region region, BuildContext shellContext) => SectionScreen(
+      section: Section.culture,
+      fetch: () async => <String, dynamic>{},
+      contentBuilder: (context, data) => [
+        PageHero(
+          section: Section.culture,
+          eyebrow: '주말 · ${region.label}',
+          onEyebrowTap: () => showRegionPicker(shellContext),
+          headline: '이번 주말, 어디 갈까요?',
+          emphasis: '이번 주말',
+          headlineLines: 2,
+          source: '한국관광공사 · 지역정보개발원',
+          body: const [],
+        ),
+        OutingSection(api: api, region: region),
+        PlaceFeed(key: ValueKey('places${region.code}${region.sgg}'), api: api, region: region),
+        const AdSlot(),
+      ],
     );
 
 /// 혜택(옛 머니 탭): 정부 지원 / 청약 / 공공임대 / 대출을 구역 전환으로. 모두 공공데이터포털 "제한 없음" 데이터.

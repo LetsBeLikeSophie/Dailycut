@@ -40,8 +40,8 @@ class _RootShellState extends State<RootShell> {
   // (Section.weather 자체는 투데이 카드 테마용으로 theme.dart에 남겨둠).
   // 2026-10-14: AI 탭은 아직 전부 예시 데이터라 배포본에선 뺌(개발 때만 `--dart-define=SHOW_AI_TAB=true`).
   static const _showAi = bool.fromEnvironment('SHOW_AI_TAB');
-  static const _tabs = ['투데이', '생활', '문화', '혜택', if (_showAi) 'AI'];
-  static const _tabKeys = ['today', 'life', 'culture', 'money', if (_showAi) 'ai'];
+  static const _tabs = ['투데이', '생활', '문화', '주말', '혜택', if (_showAi) 'AI'];
+  static const _tabKeys = ['today', 'life', 'culture', 'weekend', 'money', if (_showAi) 'ai'];
 
   @override
   void initState() {
@@ -71,6 +71,7 @@ class _RootShellState extends State<RootShell> {
       _regional((r) => TodayScreen(api: _api, region: r)),
       _regional((r) => marketScreen(_api, r, context)),
       _regional((r) => cultureScreen(_api, r, context)),
+      _regional((r) => weekendScreen(_api, r, context)),
       _regional((r) => benefitsScreen(_api, r, context)),
       if (_showAi) aiScreen(_api),
     ];
