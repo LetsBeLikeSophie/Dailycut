@@ -368,7 +368,7 @@ Widget placesScreen(ApiClient api, Region region, BuildContext shellContext) => 
               children: [
                 PageHero(
                   section: Section.place,
-                  eyebrow: '장소 · ${region.label}',
+                  eyebrow: '나들이 · ${region.label}',
                   onEyebrowTap: () => showRegionPicker(shellContext),
                   headline: headline,
                   emphasis: emphasis,

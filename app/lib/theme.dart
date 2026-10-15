@@ -61,7 +61,7 @@ const sectionThemes = <Section, SectionTheme>{
   ),
   // 2026-10-16: 장소 탭이 문화와 같은 테라코타색이라 구분이 안 됐음 → 초록(도형은 AI 도형을 같은 색으로 다시 칠함)
   Section.place: SectionTheme(
-    label: '장소',
+    label: '나들이',
     color: Color(0xFF2E8B57),
     highlight: Color(0xFFCDEBD9),
     shape: '✳',
