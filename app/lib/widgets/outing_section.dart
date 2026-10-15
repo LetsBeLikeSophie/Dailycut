@@ -43,7 +43,7 @@ class _OutingSectionState extends State<OutingSection> {
   static const _explain =
       '한국관광공사 관광지 집중률 방문자 추이 예측 정보예요. 관광지별로 예상되는 방문 집중도를 0~100으로 나타내고, 높을수록 붐빈다는 뜻이에요. '
       '사람 수가 아니라 그 관광지의 평소 방문 대비 지수라서, 서로 다른 관광지의 숫자를 그대로 비교하기보다는 "그 장소가 덜 붐비는 날"을 찾는 용도로 봐 주세요. '
-      '오늘부터 약 30일 뒤까지 예측하고, 날씨는 기상청 중기예보예요.';
+      '오늘부터 약 30일 뒤까지 예측해요. 집중도가 낮은 순으로 보여주고, 줄을 누르면 지도에서 찾아봐요.';
 
   @override
   Widget build(BuildContext context) {
@@ -109,13 +109,6 @@ class _OutingSectionState extends State<OutingSection> {
                     onTap: s['pin'] == null ? null : () => openMapChooser(context, (s['pin'] as Map).cast<String, dynamic>()), // 주소·좌표는 없어서 시군구+이름으로 찾음
                   ),
               ],
-            ),
-            Padding(
-              padding: const EdgeInsets.only(top: 14),
-              child: Text(
-                '${d['region']} · 예상 집중도가 낮은 순이에요. 누르면 지도에서 찾아봐요.',
-                style: const TextStyle(fontSize: 11, color: AppColors.inkSoft, height: 1.6),
-              ),
             ),
           ],
         );

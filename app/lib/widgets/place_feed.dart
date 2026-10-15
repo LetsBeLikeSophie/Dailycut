@@ -91,6 +91,7 @@ class _PlaceFeedState extends State<PlaceFeed> {
         return ListSection(
           title: _titles[_kind]!,
           trailing: '${d['total']}곳',
+          action: InfoIconButton(title: '안내', lines: ['${d['region']} 기준이에요.', if ((d['note'] as String?)?.isNotEmpty ?? false) d['note'] as String]),
           children: [
             if (d['scope_note'] != null)
               Padding(padding: const EdgeInsets.only(top: 12), child: Text(d['scope_note'] as String, style: const TextStyle(fontSize: 11, color: AppColors.inkSoft, height: 1.6))),
@@ -111,13 +112,6 @@ class _PlaceFeedState extends State<PlaceFeed> {
                     onTap: () => showItemSheet(context, it, 'place-${_kind.name}'),
                   ),
               ],
-            ),
-            Padding(
-              padding: const EdgeInsets.only(top: 16),
-              child: Text(
-                '${d['region']} 기준 · ${d['note'] ?? ''}',
-                style: const TextStyle(fontSize: 11, color: AppColors.inkSoft, height: 1.6),
-              ),
             ),
           ],
         );

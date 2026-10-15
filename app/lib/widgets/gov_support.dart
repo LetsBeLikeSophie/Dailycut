@@ -112,19 +112,25 @@ class _GovSupportSectionState extends State<GovSupportSection> {
         final set = _prof.isSet;
         return ListSection(
           title: '정부 지원·혜택',
-          action: GestureDetector(
-            onTap: () => showSupportProfileSheet(context),
-            behavior: HitTestBehavior.opaque,
-            child: Padding(
-              padding: const EdgeInsets.only(left: 12),
-              child: Text.rich(
-                const TextSpan(children: [
-                  WidgetSpan(alignment: PlaceholderAlignment.middle, child: Icon(Icons.tune, size: 15)),
-                  TextSpan(text: ' 내 조건'),
-                ]),
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: set ? AppColors.ink : AppColors.inkSoft),
+          action: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              InfoIconButton(title: '안내', lines: ['$regionName 기준이에요.', '받을 수 있는지는 대상·조건을 확인하고 해당 기관에 문의해 주세요.']),
+              GestureDetector(
+                onTap: () => showSupportProfileSheet(context),
+                behavior: HitTestBehavior.opaque,
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 12),
+                  child: Text.rich(
+                    const TextSpan(children: [
+                      WidgetSpan(alignment: PlaceholderAlignment.middle, child: Icon(Icons.tune, size: 15)),
+                      TextSpan(text: ' 내 조건'),
+                    ]),
+                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: set ? AppColors.ink : AppColors.inkSoft),
+                  ),
+                ),
               ),
-            ),
+            ],
           ),
           children: [
             const SizedBox(height: 18),
@@ -168,13 +174,6 @@ class _GovSupportSectionState extends State<GovSupportSection> {
             ExpandableList(
               key: ValueKey('$_scope/${_prof.summary}'),
               children: [for (final it in items) _line(context, it)],
-            ),
-            Padding(
-              padding: const EdgeInsets.only(top: 16),
-              child: Text(
-                '$regionName 기준 · 받을 수 있는지는 대상·조건을 확인하고 해당 기관에 문의해 주세요.',
-                style: const TextStyle(fontSize: 11, color: AppColors.inkSoft, height: 1.6),
-              ),
             ),
           ],
         );

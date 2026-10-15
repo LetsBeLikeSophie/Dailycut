@@ -97,6 +97,7 @@ class _BenefitFeedState extends State<BenefitFeed> {
         return ListSection(
           title: _title,
           trailing: widget.kind == BenefitKind.loan ? null : '${d['total']}건',
+          action: InfoIconButton(title: '안내', lines: [if (d['region'] != null) '${d['region']} 기준이에요.', _footnote]),
           children: [
             if (widget.kind == BenefitKind.loan && usages.isNotEmpty) ...[
               const SizedBox(height: 18),
@@ -142,13 +143,6 @@ class _BenefitFeedState extends State<BenefitFeed> {
                     onTap: () => showItemSheet(context, it, 'benefit-${widget.kind.name}'),
                   ),
               ],
-            ),
-            Padding(
-              padding: const EdgeInsets.only(top: 16),
-              child: Text(
-                '${d['region'] != null ? '${d['region']} 기준 · ' : ''}$_footnote',
-                style: const TextStyle(fontSize: 11, color: AppColors.inkSoft, height: 1.6),
-              ),
             ),
           ],
         );

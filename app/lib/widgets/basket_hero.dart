@@ -132,7 +132,12 @@ class _BasketHeroState extends State<BasketHero> {
         const SizedBox(height: 10),
         BigNumber(key: ValueKey('n$label'), to: value, unit: '원'),
         const SizedBox(height: 4),
-        Text(deltaText, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: changeColor(changeKey))),
+        Row(
+          children: [
+            Text(deltaText, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: changeColor(changeKey))),
+            InfoIconButton(title: '이 숫자는', lines: [sub]),
+          ],
+        ),
         const SizedBox(height: 14),
         TrendChart(
           key: ValueKey('c$label${names.length}'),
@@ -140,8 +145,6 @@ class _BasketHeroState extends State<BasketHero> {
           points: points,
           format: (v) => '${formatNumber(v)}원',
         ),
-        const SizedBox(height: 10),
-        Text(sub, style: const TextStyle(fontSize: 11, color: AppColors.inkSoft, height: 1.5)),
       ],
     );
   }
