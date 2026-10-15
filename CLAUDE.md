@@ -380,6 +380,11 @@ claude.ai/artifact/17gytwYuXMFkF4vx8tWv65 (사용 중 · 일부만 · 미사용 
 - **탭 구성 변경: 문화 / 주말 분리 (2026-10-15)**: 문화 탭의 `나들이` 구역을 하단 탭 `주말`로 뺌 → 탭 `투데이 · 생활 · 문화 · 주말 · 혜택`(AI는 `SHOW_AI_TAB`일 때만 여섯째). 문화 = 이번 주말 행사 수 + 행사 달력(음악이 실데이터가 되면 `행사 | 음악` 구역 전환이 다시 생김),
   주말(`weekendScreen`) = 이번 주말 한산한 곳(`OutingSection`) + 도서관·캠핑·반려동물·웰니스·걷기길(`PlaceFeed`). 두 구역이 각자 데이터를 받아서 주말 탭은 자체 fetch 없음. 광고 칸은 문화·주말 모두 목록 맨 아래(애드핏 신청서에는 "문화 탭 나들이 목록 아래"로 적었음 → 지금은 주말 탭 목록 아래).
   통계 이름은 `tab_view` 값 `weekend`가 추가됨. 이름은 사용자가 고름(문화·주말).
+- **첫 로드 2차 점검 (2026-10-15, 브라우저 리소스 타이밍으로 측정)**: 첫 방문(캐시 없음) 순서 — 0.3s HTML → 0.5~2.3s main.dart.js(gzip 827KB) → 2.7s 엔진이 뜨고 FontManifest 요청 → 2.8~5.0s 글꼴 4개(세리프 700이 586KB라 가장 늦음)
+  → 5.25s에야 API 요청 시작 → 5.6s 첫 화면. 즉 병목은 서버가 아니라 **글꼴이 엔진 부팅 뒤에 직렬로 시작**하는 것. 조치: ①`index.html`에 글꼴 4개 `<link rel="preload" as="font" crossorigin>`(번들과 동시에 받음; 글꼴 파일명 `-rN`을 올리면 여기도 고칠 것)
+  ②nginx `listen 443 ssl http2`(원래 HTTP/1.1이라 동시 6연결 제한; 백업 `sites-available/itssophie.dev.bak-*`). 캐시된 재방문은 API 요청이 0.9s에 시작(전엔 5.25s).
+  측정 스크립트: 브라우저 콘솔에서 `performance.getEntriesByType('resource')`. **남은 개선 후보**: ①`IndexedStack`이 5개 탭을 시작과 동시에 만들어서 `/market`(130KB)·`/culture`가 투데이 요청과 같이 나감(1코어 서버라 투데이가 0.2→0.5s로 밀림) → 탭을 처음 열 때 만들고 투데이가 뜬 뒤 뒤에서 미리 만들기
+  ②투데이가 `today()`+`weather()` 둘 다 기다림 → 날씨 히어로를 먼저 그리고 "오늘의 섹션"은 따로 ③스플래시에 날씨 한 줄 먼저 띄우기(index.html에서 바로 `/weather` 호출) ④서울이 아닌 지역은 날씨 첫 요청이 콜드(수 초~수십 초).
 - **광고(카카오 애드핏, 웹) 준비됨 (2026-10-12)**: `widgets/ad_slot.dart`의 `AdSlot` + `web/ad.html`(애드핏 스크립트 페이지, 같은 도메인 iframe).
   광고 단위 ID가 없으면 칸이 아예 안 그려짐. 켜는 법: 애드핏에서 사이트(itssophie.dev/dailycut) 등록·승인 → 광고 단위(320x100 등) 생성 →
   `flutter build web … --dart-define=ADFIT_UNIT=DAN-xxxx --dart-define=ADFIT_SIZE=320x100`. 칸 위치: 생활(장보기 시세 아래)·문화(행사/영화 구역 아래)·머니(금리 아래).
