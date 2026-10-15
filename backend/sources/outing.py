@@ -160,7 +160,7 @@ def weekend(sido: str | None, sgg: str | None, weekly: list[dict], limit: int = 
                 "md": f"{d.month}/{d.day}",
                 "avg": round(sum(r for r, _, _ in rows) / len(rows), 1),
                 "weather": {"condition": wd["condition"], "high": wd["high"], "low": wd["low"], "pop": wd.get("pop")} if wd else None,
-                "spots": [{"name": n, "sgg": g, "rate": round(r)} for r, n, g in rows[:limit]],
+                "spots": [{"name": n, "sgg": g, "rate": round(r), "pin": {"name": n, "q": f"{g} {n}"}} for r, n, g in rows[:limit]],
                 "count": len(rows),
             }
         )

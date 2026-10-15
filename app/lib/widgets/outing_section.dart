@@ -5,6 +5,7 @@ import '../api_client.dart';
 import '../region.dart';
 import '../theme.dart';
 import 'components.dart';
+import 'map_links.dart';
 import 'sources_info.dart';
 
 /// 문화 탭 "이번 주말 한산한 곳": 한국관광공사 관광지 집중률 예측(오늘~약 30일 뒤)으로 토·일별로 예상 집중도가 낮은 관광지를 보여줌.
@@ -65,7 +66,6 @@ class _OutingSectionState extends State<OutingSection> {
         final days = (d['days'] as List).cast<Map<String, dynamic>>();
         final day = days[_day.clamp(0, days.length - 1)];
         final spots = (day['spots'] as List).cast<Map<String, dynamic>>();
-        final w = day['weather'] as Map<String, dynamic>?;
         return ListSection(
           title: '이번 주말 한산한 곳',
           action: GestureDetector(
@@ -95,13 +95,6 @@ class _OutingSectionState extends State<OutingSection> {
                 ],
               ),
             ],
-            if (w != null) ...[
-              const SizedBox(height: 16),
-              Text(
-                '${w['condition']} · ${w['low']}°/${w['high']}°${w['pop'] == null ? '' : ' · 강수 ${w['pop']}%'}',
-                style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
-              ),
-            ],
             if (d['scope_note'] != null)
               Padding(padding: const EdgeInsets.only(top: 12), child: Text(d['scope_note'] as String, style: const TextStyle(fontSize: 11, color: AppColors.inkSoft, height: 1.6))),
             const SizedBox(height: 14),
@@ -116,13 +109,14 @@ class _OutingSectionState extends State<OutingSection> {
                     sub: s['sgg'] as String?,
                     value: '${s['rate']}',
                     valueSub: '집중률',
+                    onTap: s['pin'] == null ? null : () => openMapChooser(context, (s['pin'] as Map).cast<String, dynamic>()), // 주소·좌표는 없어서 시군구+이름으로 찾음
                   ),
               ],
             ),
             Padding(
               padding: const EdgeInsets.only(top: 14),
               child: Text(
-                '${d['region']} · 예상 집중도가 낮은 순이에요. 한국관광공사 예측 기준이에요.',
+                '${d['region']} · 예상 집중도가 낮은 순이에요. 누르면 지도에서 찾아봐요.',
                 style: const TextStyle(fontSize: 11, color: AppColors.inkSoft, height: 1.6),
               ),
             ),

@@ -10,6 +10,7 @@ import '../widgets/components.dart';
 import '../widgets/hourly_strip.dart';
 import '../widgets/life_index.dart';
 import '../widgets/my_basket_today.dart';
+import '../widgets/weekend_weather.dart';
 import '../widgets/weather_icon.dart';
 
 class TodayScreen extends StatefulWidget {
@@ -169,7 +170,7 @@ class _TodayScreenState extends State<TodayScreen> {
               title: '이번 주 날씨',
               trailing: weather['weekly_range'] as String?,
               stub: !weatherLive,
-              children: [for (final w in weekly) _weeklyRow(w)],
+              children: [for (final w in weekly) weeklyRow(w)],
             ),
             if (indexes != null)
               LifeIndexSection(indexes: indexes, stub: !weatherLive)
@@ -268,54 +269,4 @@ String? _airBasis(
   final v = air[valueKey];
   if (v == null) return null;
   return '$name $v㎍/㎥ · 에어코리아 ${air['scope'] ?? ''} 측정소 ${air['stations'] ?? '여러'}곳 평균 · 환경부 기준($cuts)';
-}
-
-/// 주간 한 줄: 왼쪽에 요일(오늘은 강조)과 그 아래 날짜, 가운데 날씨, 오른쪽 최저/최고.
-/// 기상청이 안 주는 날(단기·중기예보 사이)은 "예보 없음"으로 비워둠.
-Widget _weeklyRow(Map<String, dynamic> w) {
-  final high = w['high'];
-  final has = high != null;
-  final pop = (w['pop'] as num?)?.toInt() ?? 0;
-  final today = w['is_today'] == true;
-  return ListLine(
-    leading: Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        SizedBox(
-          width: 40,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                w['day'] as String,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w700,
-                  color: today ? AppColors.ink : AppColors.ink,
-                ),
-              ),
-              Text(
-                w['date'] as String,
-                style: const TextStyle(fontSize: 11, color: AppColors.inkSoft),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(width: 10),
-        SizedBox(
-          width: 22,
-          child: has ? WeatherIcon(w['condition'] as String?, size: 20) : null,
-        ),
-      ],
-    ),
-    name: has ? (w['condition'] as String? ?? '') : '예보 없음',
-    sub: has ? null : '기상청이 이 날은 제공하지 않아요',
-    middle: pop > 0
-        ? Text(
-            '$pop%',
-            style: const TextStyle(fontSize: 13, color: AppColors.down),
-          )
-        : null,
-    value: has ? '${w['low']}° / $high°' : '–',
-  );
 }

@@ -6,6 +6,7 @@ import '../api_client.dart';
 import '../region.dart';
 import '../theme.dart';
 import 'components.dart';
+import 'map_links.dart';
 
 /// 혜택 탭의 주거·금융 목록: 청약(청약홈), 공공임대(마이홈·LH), 서민 대출(서민금융진흥원).
 /// 서버가 줄여서 준 항목({name, sub, tag, span, detail[[라벨,값]], url, link_label})을 한 모양으로 보여주고,
@@ -188,7 +189,8 @@ class _BenefitSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final rows = ((item['detail'] as List?) ?? const []).map((e) => (e as List).cast<String>()).toList();
     final url = item['url'] as String?;
-    final map = item['map'] as String?; // 대표 링크(누리집·예약)와 별도로 지도에서 그 장소 하나만 보는 링크
+    final pin = item['pin'] as Map<String, dynamic>?; // 지도 앱으로 보낼 재료(장소 목록)
+    final hasUrl = url != null && url.isNotEmpty;
     return SafeArea(
       child: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
@@ -212,7 +214,7 @@ class _BenefitSheet extends StatelessWidget {
                   ],
                 ),
               ),
-            if (url != null && url.isNotEmpty) ...[
+            if (hasUrl) ...[
               const SizedBox(height: 26),
               GestureDetector(
                 onTap: () => launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication),
@@ -224,15 +226,22 @@ class _BenefitSheet extends StatelessWidget {
                 ),
               ),
             ],
-            if (map != null && map.isNotEmpty) ...[
-              const SizedBox(height: 10),
+            if (pin != null) ...[
+              SizedBox(height: hasUrl ? 10 : 26),
               GestureDetector(
-                onTap: () => launchUrl(Uri.parse(map), mode: LaunchMode.externalApplication),
+                onTap: () => openMapChooser(context, pin),
                 behavior: HitTestBehavior.opaque,
-                child: const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 10),
-                  child: Center(child: Text('지도에서 보기', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, decoration: TextDecoration.underline))),
-                ),
+                child: hasUrl
+                    ? const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 10),
+                        child: Center(child: Text('지도에서 보기', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, decoration: TextDecoration.underline))),
+                      )
+                    : Container(
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(border: Border.all(color: AppColors.ink), borderRadius: BorderRadius.circular(8)),
+                        child: const Text('지도에서 보기', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+                      ),
               ),
             ],
           ],

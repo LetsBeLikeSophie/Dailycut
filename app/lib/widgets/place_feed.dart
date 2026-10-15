@@ -74,25 +74,6 @@ class _PlaceFeedState extends State<PlaceFeed> {
         ],
       );
 
-  /// 캠핑: 이번 주말(토·일) 날씨를 한 줄씩 + 사실만 짧게(밤 기온·비 예보).
-  Widget _campWeather(List<Map<String, dynamic>> days) {
-    String line(Map<String, dynamic> d) {
-      final hints = <String>[
-        if ((d['low'] as num) <= 5) '밤엔 많이 추워요',
-        if (((d['pop'] as num?) ?? 0) >= 50) '비 예보가 있어요',
-      ];
-      return '${d['label']} ${d['md']}  ${d['condition']} · ${d['low']}°/${d['high']}°${d['pop'] == null ? '' : ' · 강수 ${d['pop']}%'}${hints.isEmpty ? '' : ' · ${hints.join(' · ')}'}';
-    }
-
-    return Padding(
-      padding: const EdgeInsets.only(top: 16),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [for (final d in days) Padding(padding: const EdgeInsets.only(bottom: 4), child: Text(line(d), style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700)))],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     return FutureBuilder<Map<String, dynamic>>(
@@ -114,12 +95,10 @@ class _PlaceFeedState extends State<PlaceFeed> {
           ));
         }
         final items = (d['items'] as List).cast<Map<String, dynamic>>();
-        final weather = ((d['weather'] as List?) ?? const []).cast<Map<String, dynamic>>();
         return ListSection(
           title: _titles[_kind]!,
           trailing: '${d['total']}곳',
           children: [
-            if (_kind == PlaceKind.camp && weather.isNotEmpty) _campWeather(weather),
             if (d['scope_note'] != null)
               Padding(padding: const EdgeInsets.only(top: 12), child: Text(d['scope_note'] as String, style: const TextStyle(fontSize: 11, color: AppColors.inkSoft, height: 1.6))),
             const SizedBox(height: 14),

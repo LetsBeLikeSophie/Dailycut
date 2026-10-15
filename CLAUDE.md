@@ -397,6 +397,10 @@ claude.ai/artifact/17gytwYuXMFkF4vx8tWv65 (사용 중 · 일부만 · 미사용 
   **사진**: 반려동물·웰니스 데이터에는 `firstimage`/`orgImage`와 저작권 유형 `cpyrhtDivCd`(Type1/Type3 …)가 같이 옴. 도서관·캠핑(공개 필드 없음)·걷기길엔 사진 없음. 쓰려면 Type1(출처표시)만 쓰는 기존 원칙(생활 탭 시장 사진과 같음) — 아직 안 붙임.
 - **투데이 로딩 원 깜빡임 수정 (2026-10-16)**: 첫 방문은 서울로 먼저 그리고 위치를 알아낸 뒤 지역이 바뀌는데(`RegionStore._locate`), 그때 투데이가 통째로 새로 만들어져(KeyedSubtree 키 변경) 스플래시가 걷힌 뒤 1초쯤 뒤 로딩 원이 2~3초 다시 돌았음.
   이제 투데이만 `keyed: false`로 두고 `didUpdateWidget`에서 새 지역 데이터를 받으며, 받는 동안은 이전 내용 위에 가는 진행 막대(`LinearProgressIndicator`)만 보임. 다른 탭은 그대로 지역이 바뀌면 새로 만듦.
+- **지도 앱 고르기 + 주말 날씨 통합 (2026-10-16)**: ①서버는 장소 항목에 지도 링크 대신 `pin`({name, q, lat?, lng?})을 줌(`places._pin`; 좌표가 한국 안이면 lat/lng). 앱 `widgets/map_links.dart`의 `openMapChooser`가 카카오맵·네이버지도·구글지도 중 고르게 하고
+  마지막에 쓴 앱을 맨 위에 둠(`LocalPrefs 'map_app'`, 통계 `life_open` 값 `map-○○`). 좌표 있으면 그 자리 핀(카카오 `link/map/이름,위도,경도`·네이버 `p/search/이름?c=경도,위도,15…`·구글 `search/?api=1&query=위도,경도`), 없으면 검색어(q). **앱으로 낼 땐 `mapUri`만 각 지도 앱 딥링크(`kakaomap://`, `nmap://`)로 바꾸면 됨.**
+  상세 시트(`_BenefitSheet`)는 누리집·예약 링크(`url`)가 있으면 그것이 대표 버튼, 없으면 "지도에서 보기"가 대표 버튼. ②한산한 곳(관광공사 집중률 원본은 관광지 이름·시군구뿐, 주소·좌표 없음)은 줄을 누르면 "시군구 + 이름" 검색으로 지도 앱 고르기.
+  ③주말 날씨는 `WeekendWeather`(`widgets/weekend_weather.dart`) 한 곳 — `/weather`의 주간 목록에서 토·일(일요일이면 오늘)을 뽑아 투데이 주간 날씨와 같은 줄(`weeklyRow`, 투데이 파일에서 이쪽으로 옮김)로 보이고, 밤 5° 이하·강수 50%↑면 줄 밑에 사실 한 줄. 장소 탭 도서관만 빼고 모든 구분 위에 한 번만 나오며, 한산한 곳·캠핑 안에 따로 있던 날씨 줄은 없앰(서버 `/outing` `/places`의 weather 필드는 응답에 남아 있으나 앱은 안 씀).
 - **광고(카카오 애드핏, 웹) 준비됨 (2026-10-12)**: `widgets/ad_slot.dart`의 `AdSlot` + `web/ad.html`(애드핏 스크립트 페이지, 같은 도메인 iframe).
   광고 단위 ID가 없으면 칸이 아예 안 그려짐. 켜는 법: 애드핏에서 사이트(itssophie.dev/dailycut) 등록·승인 → 광고 단위(320x100 등) 생성 →
   `flutter build web … --dart-define=ADFIT_UNIT=DAN-xxxx --dart-define=ADFIT_SIZE=320x100`. 칸 위치: 생활(장보기 시세 아래)·문화(행사/영화 구역 아래)·머니(금리 아래).

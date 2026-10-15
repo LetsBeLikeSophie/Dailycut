@@ -5,6 +5,7 @@ import '../local_prefs.dart';
 import '../region.dart';
 import '../theme.dart';
 import '../widgets/basket_hero.dart';
+import '../widgets/weekend_weather.dart';
 import '../widgets/benefit_feed.dart';
 import '../widgets/components.dart';
 import '../widgets/ad_slot.dart';
@@ -375,6 +376,7 @@ Widget placesScreen(ApiClient api, Region region, BuildContext shellContext) => 
                   topExtra: toggle,
                   body: const [],
                 ),
+                if (index != 1) WeekendWeather(key: ValueKey('wk${region.code}${region.sgg}'), api: api, region: region), // 도서관만 날씨와 무관
                 if (index == 0)
                   OutingSection(api: api, region: region)
                 else
