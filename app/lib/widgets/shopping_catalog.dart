@@ -64,7 +64,7 @@ class _ShoppingCatalogState extends State<ShoppingCatalog> {
             runSpacing: 8,
             children: [
               for (final c in _categories)
-                _Pill(
+                PillChip(
                   label: c,
                   selected: c == _category,
                   onTap: () => setState(() {
@@ -106,10 +106,7 @@ class _ShoppingCatalogState extends State<ShoppingCatalog> {
         ),
         Container(height: 1, color: AppColors.hair),
         if (shown.isEmpty)
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 24),
-            child: Text('해당하는 품목이 없어요.', style: TextStyle(fontSize: 13, color: AppColors.inkSoft)),
-          ),
+          const EmptyNote('해당하는 품목이 없어요.', vertical: 24),
         for (final it in shown) _row(context, it),
         if (!_showAll && rows.length > _limit) ShowMoreButton(count: rows.length - _limit, onTap: () => setState(() => _showAll = true)),
       ],
@@ -256,37 +253,6 @@ class _FilterToggle extends StatelessWidget {
   }
 }
 
-class _Pill extends StatelessWidget {
-  const _Pill({required this.label, required this.selected, required this.onTap, });
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-        decoration: BoxDecoration(
-          color: selected ? AppColors.ink : AppColors.background,
-          border: Border.all(color: selected ? AppColors.ink : AppColors.line),
-          borderRadius: BorderRadius.circular(999),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 13,
-            fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-            color: selected ? Colors.white : AppColors.ink,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 /// 제철 시기 문자열: [10,11,12,1] → "10~1월" (이어지지 않으면 쉼표로).
 String seasonText(List<int> months) {
   if (months.isEmpty) return '연중';
@@ -363,8 +329,8 @@ class _ProduceSheet extends StatelessWidget {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SizedBox(width: 78, child: Text(r[0], style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, height: 1.5))),
-                    Expanded(child: Text(r[1], style: const TextStyle(fontSize: 15, height: 1.5))),
+                    SizedBox(width: 78, child: Text(r[0], style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, height: 1.5))),
+                    Expanded(child: Text(r[1], style: const TextStyle(fontSize: 16, height: 1.5))),
                   ],
                 ),
               ),
@@ -380,7 +346,7 @@ class _ProduceSheet extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(value, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+                Text(value, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w800)),
                 const SizedBox(height: 2),
                 Text(label, style: const TextStyle(fontSize: 11, color: AppColors.inkSoft)),
               ],
@@ -435,7 +401,7 @@ class _ProduceSheet extends StatelessWidget {
             for (final l in lines)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 4),
-                child: Text(l, style: const TextStyle(fontSize: 15, height: 1.5)),
+                child: Text(l, style: const TextStyle(fontSize: 16, height: 1.5)),
               ),
           ],
         ),
@@ -521,22 +487,11 @@ class _ProduceSheet extends StatelessWidget {
               listenable: MyBasket.instance,
               builder: (context, _) {
                 final inBasket = MyBasket.instance.contains(item['name'] as String);
-                return GestureDetector(
+                return ActionButton(
+                  filled: inBasket,
+                  vertical: 11,
+                  label: inBasket ? '내 장바구니에 담김 · 누르면 빼기' : '내 장바구니에 담기',
                   onTap: () => MyBasket.instance.toggle(item['name'] as String),
-                  behavior: HitTestBehavior.opaque,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 11),
-                    alignment: Alignment.center,
-                    decoration: BoxDecoration(
-                      color: inBasket ? AppColors.ink : null,
-                      border: Border.all(color: AppColors.ink),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Text(
-                      inBasket ? '내 장바구니에 담김 · 누르면 빼기' : '내 장바구니에 담기',
-                      style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: inBasket ? Colors.white : AppColors.ink),
-                    ),
-                  ),
                 );
               },
             ),
@@ -608,7 +563,7 @@ void _showPhotoInfo(BuildContext context, Map<String, dynamic> image) {
             children: [
               SizedBox(width: 64, child: Text(k, style: const TextStyle(fontSize: 13, color: AppColors.inkSoft))),
               Expanded(
-                child: Text(v, style: TextStyle(fontSize: 14, height: 1.4, decoration: url == null ? null : TextDecoration.underline)),
+                child: Text(v, style: TextStyle(fontSize: 13, height: 1.4, decoration: url == null ? null : TextDecoration.underline)),
               ),
             ],
           ),
@@ -631,7 +586,7 @@ void _showPhotoInfo(BuildContext context, Map<String, dynamic> image) {
             row('작가', (image['credit'] as String?) ?? 'Wikimedia Commons'),
             row('라이선스', (image['license'] as String?) ?? '', url: image['license_url'] as String?),
             row('원본', 'Wikimedia Commons에서 보기', url: image['page'] as String?),
-            const Text('크기를 줄이고 일부를 잘라 사용했어요.', style: TextStyle(fontSize: 12, color: AppColors.inkSoft)),
+            const Text('크기를 줄이고 일부를 잘라 사용했어요.', style: TextStyle(fontSize: 13, color: AppColors.inkSoft)),
           ],
         ),
       ),

@@ -85,23 +85,63 @@ class HighlightText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final e = emphasis;
-    final i = e == null ? -1 : text.indexOf(e);
-    if (e == null || i < 0) return Text(text, style: style);
-    return Text.rich(
-      TextSpan(
-        style: style,
-        children: [
-          TextSpan(text: text.substring(0, i)),
+    // 2026-10-16: 한글은 글자 사이 어디서나 줄이 바뀌어 "…21°예 / 요"처럼 마지막 글자가 혼자 내려왔음 →
+    // 단어(띄어쓰기) 단위로만 줄을 바꿈(CSS word-break: keep-all). 공백 하나를 줄바꿈 하나로 바꾸는 거라 글자 위치(강조 구간)는 그대로.
+    return LayoutBuilder(
+      builder: (context, c) {
+        final base = DefaultTextStyle.of(context).style.merge(style);
+        final t = keepAllWrap(text, base, c.maxWidth, MediaQuery.textScalerOf(context));
+        final e = emphasis;
+        final i = e == null ? -1 : text.indexOf(e);
+        if (e == null || i < 0) return Text(t, style: style);
+        return Text.rich(
           TextSpan(
-            text: e,
-            style: TextStyle(backgroundColor: color.withValues(alpha: 0.85)),
+            style: style,
+            children: [
+              TextSpan(text: t.substring(0, i)),
+              TextSpan(
+                text: t.substring(i, i + e.length),
+                style: TextStyle(backgroundColor: color.withValues(alpha: 0.85)),
+              ),
+              TextSpan(text: t.substring(i + e.length)),
+            ],
           ),
-          TextSpan(text: text.substring(i + e.length)),
-        ],
-      ),
+        );
+      },
     );
   }
+}
+
+/// 띄어쓰기 단위로만 줄을 나눔: 한 줄에 안 들어가는 단어 앞의 공백을 줄바꿈으로 바꿔 돌려줌(길이는 같음).
+/// 한 단어가 한 줄보다 길면 어쩔 수 없이 그대로 두어 기본 줄바꿈에 맡김.
+String keepAllWrap(String text, TextStyle style, double maxWidth, TextScaler scaler) {
+  if (!maxWidth.isFinite || !text.contains(' ')) return text;
+  double width(String s) {
+    final tp = TextPainter(text: TextSpan(text: s, style: style), textDirection: TextDirection.ltr, textScaler: scaler, maxLines: 1)..layout();
+    return tp.width;
+  }
+
+  final out = StringBuffer();
+  var line = '';
+  var first = true;
+  for (final w in text.split(' ')) {
+    if (first) {
+      out.write(w);
+      line = w;
+      first = false;
+      continue;
+    }
+    final cand = '$line $w';
+    if (line.isNotEmpty && width(cand) > maxWidth) {
+      out.write('\n');
+      line = w;
+    } else {
+      out.write(' ');
+      line = cand;
+    }
+    out.write(w);
+  }
+  return out.toString();
 }
 
 /// 큰 숫자(세리프 60). 숫자는 처음 나타날 때 0에서 올라가며 멈춤.
@@ -654,7 +694,7 @@ class _TrendChartState extends State<TrendChart>
       if (p.value > hi.value) hi = p;
       if (p.value < lo.value) lo = p;
     }
-    const soft = TextStyle(fontSize: 12, color: AppColors.inkSoft, height: 1.5);
+    const soft = TextStyle(fontSize: 13, color: AppColors.inkSoft, height: 1.5);
     final sel = _sel != null && _sel! < pts.length ? pts[_sel!] : null;
     return Wrap(
       alignment: WrapAlignment.spaceBetween,
@@ -670,7 +710,7 @@ class _TrendChartState extends State<TrendChart>
                     TextSpan(text: '${(widget.selLabel ?? widget.xLabel)?.call(sel.day) ?? '${sel.day}일'}  ', style: soft),
                     TextSpan(
                       text: _fmt(sel.value),
-                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700, color: AppColors.ink),
+                      style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: AppColors.ink),
                     ),
                   ]),
                 )
@@ -1315,7 +1355,7 @@ class ArrowSelector extends StatelessWidget {
             child: Text.rich(
               TextSpan(children: [
                 TextSpan(text: label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
-                TextSpan(text: '   ${index + 1}/$count', style: const TextStyle(fontSize: 12, color: AppColors.inkSoft)),
+                TextSpan(text: '   ${index + 1}/$count', style: const TextStyle(fontSize: 13, color: AppColors.inkSoft)),
               ]),
             ),
           ),
@@ -1329,7 +1369,7 @@ class ArrowSelector extends StatelessWidget {
 
 /// 화면 안 큰 구역 전환(예: 문화 탭의 행사·전시 / 영화 / 음악): 상자 없이 글자만, 고른 것은 굵게 + 밑줄.
 /// 앱의 여백 많은 편집체 분위기에 맞춰 버튼 느낌을 뺌.
-class SegmentToggle extends StatelessWidget {
+class SegmentToggle extends StatefulWidget {
   const SegmentToggle({super.key, required this.labels, required this.index, required this.onChanged});
 
   final List<String> labels;
@@ -1337,52 +1377,228 @@ class SegmentToggle extends StatelessWidget {
   final ValueChanged<int> onChanged;
 
   @override
+  State<SegmentToggle> createState() => _SegmentToggleState();
+}
+
+class _SegmentToggleState extends State<SegmentToggle> {
+  final _c = ScrollController();
+  bool _more = false; // 오른쪽에 더 있음
+
+  @override
+  void initState() {
+    super.initState();
+    _c.addListener(_check);
+  }
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  void _check() {
+    if (!_c.hasClients) return;
+    final more = _c.position.maxScrollExtent - _c.offset > 4;
+    if (more != _more && mounted) setState(() => _more = more);
+  }
+
+  @override
   Widget build(BuildContext context) {
-    // 2026-10-16: 장소 탭처럼 구분이 6개면 폭을 넘어서 가로로 밀어 볼 수 있게(칸이 적으면 그대로 한 줄)
+    final labels = widget.labels;
+    final index = widget.index;
+    WidgetsBinding.instance.addPostFrameCallback((_) => _check());
+    // 2026-10-16: 장소 탭처럼 구분이 6개면 폭을 넘어서 가로로 밀어 볼 수 있게 하고, 더 있다는 걸 오른쪽 끝 흐림+화살표로 알림(칸이 적으면 그대로 한 줄)
     return Padding(
       padding: const EdgeInsets.only(top: 6, bottom: 4),
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: Row(
+      child: Stack(
         children: [
-          for (var i = 0; i < labels.length; i++) ...[
-            GestureDetector(
-              onTap: () => onChanged(i),
-              behavior: HitTestBehavior.opaque,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Container(
-                  padding: const EdgeInsets.only(bottom: 3),
-                  decoration: BoxDecoration(
-                    border: Border(bottom: BorderSide(color: i == index ? AppColors.ink : Colors.transparent, width: 2)),
-                  ),
-                  child: Text(
-                    labels[i],
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: i == index ? FontWeight.w700 : FontWeight.w400,
-                      color: i == index ? AppColors.ink : AppColors.inkSoft,
+          SingleChildScrollView(
+            controller: _c,
+            scrollDirection: Axis.horizontal,
+            child: Row(
+              children: [
+                for (var i = 0; i < labels.length; i++) ...[
+                  GestureDetector(
+                    onTap: () => widget.onChanged(i),
+                    behavior: HitTestBehavior.opaque,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Container(
+                        padding: const EdgeInsets.only(bottom: 3),
+                        decoration: BoxDecoration(
+                          border: Border(bottom: BorderSide(color: i == index ? AppColors.ink : Colors.transparent, width: 2)),
+                        ),
+                        child: Text(
+                          labels[i],
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: i == index ? FontWeight.w700 : FontWeight.w400,
+                            color: i == index ? AppColors.ink : AppColors.inkSoft,
+                          ),
+                        ),
+                      ),
                     ),
                   ),
+                  if (i < labels.length - 1) const SizedBox(width: 26),
+                ],
+              ],
+            ),
+          ),
+          if (_more)
+            Positioned(
+              right: 0,
+              top: 0,
+              bottom: 0,
+              child: IgnorePointer(
+                child: Container(
+                  width: 44,
+                  alignment: Alignment.centerRight,
+                  decoration: const BoxDecoration(
+                    gradient: LinearGradient(colors: [Color(0x00FFFFFF), AppColors.background], stops: [0, 0.7]),
+                  ),
+                  child: const Icon(Icons.chevron_right, size: 18, color: AppColors.inkSoft),
                 ),
               ),
             ),
-            if (i < labels.length - 1) const SizedBox(width: 26),
-          ],
         ],
-      ),
       ),
     );
   }
 }
 
-/// 기간 칩("1개월")과 같은 모양의 알약 칩 — 고르기/걸러 보기용. 선택되면 검정 바탕.
+/// 상세 시트의 공용 틀(2026-10-16): 안전 영역 + 스크롤 + 세리프 24 제목 + 13 회색 부제 + 내용. 혜택·장소·정부 지원·시장 상세가 같이 씀.
+class SheetFrame extends StatelessWidget {
+  const SheetFrame({super.key, required this.title, this.sub, required this.children, this.gapAfterHeader = 22});
+
+  final String title;
+  final String? sub;
+  final List<Widget> children;
+  final double gapAfterHeader; // 제목 묶음과 내용 사이
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(20, 4, 20, 28),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(title, style: AppTheme.displaySerif(size: 24, fontWeight: FontWeight.w700)),
+            if (sub != null && sub!.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              Text(sub!, style: const TextStyle(fontSize: 13, color: AppColors.inkSoft)),
+            ],
+            SizedBox(height: gapAfterHeader),
+            ...children,
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// 앱 공용 알약 칩(고르기/걸러 보기용). 선택되면 검정 바탕. 2026-10-16: 화면마다 따로 만들던 칩(_Pill·_Chip·_MiniPill)을 이것 하나로 합침.
+///  - dotColor: 앞에 붙는 색 점(달력의 종류 칩) / large: 16글자·넉넉한 칩(지역 고르기) / emphasized: 선택 안 됐어도 테두리·글씨 진하게
 class PillChip extends StatelessWidget {
-  const PillChip({super.key, required this.label, required this.selected, required this.onTap, this.vertical = 8});
+  const PillChip({super.key, required this.label, required this.selected, required this.onTap, this.vertical = 8, this.dotColor, this.large = false, this.emphasized = false});
 
   final String label;
   final bool selected;
   final VoidCallback onTap;
+  final double vertical;
+  final Color? dotColor;
+  final bool large;
+  final bool emphasized;
+
+  @override
+  Widget build(BuildContext context) {
+    final strong = selected || emphasized;
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: 14, vertical: large ? 9 : vertical),
+        decoration: BoxDecoration(
+          color: selected ? AppColors.ink : AppColors.background,
+          border: Border.all(color: strong ? AppColors.ink : AppColors.line),
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            if (dotColor != null) ...[Container(width: 7, height: 7, decoration: BoxDecoration(shape: BoxShape.circle, color: dotColor)), const SizedBox(width: 6)],
+            Text(
+              label,
+              style: TextStyle(fontSize: large ? 16 : 13, fontWeight: strong ? FontWeight.w700 : FontWeight.w500, color: selected ? Colors.white : AppColors.ink),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// 앱 공용 가로 버튼(2026-10-16, 8개 파일에서 따로 그리던 윤곽선 버튼을 합침). 기본은 윤곽선, filled는 검정 바탕. 라벨은 13 굵게.
+class ActionButton extends StatelessWidget {
+  const ActionButton({super.key, required this.label, required this.onTap, this.filled = false, this.icon, this.expand = true, this.vertical = 14});
+
+  final String label;
+  final VoidCallback onTap;
+  final bool filled;
+  final IconData? icon;
+  final bool expand; // false면 글자 폭만큼(예: 히어로 안의 작은 버튼)
+  final double vertical;
+
+  @override
+  Widget build(BuildContext context) {
+    final fg = filled ? Colors.white : AppColors.ink;
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        padding: EdgeInsets.symmetric(vertical: vertical, horizontal: expand ? 0 : 16),
+        alignment: expand ? Alignment.center : null,
+        decoration: BoxDecoration(color: filled ? AppColors.ink : null, border: Border.all(color: AppColors.ink), borderRadius: BorderRadius.circular(8)),
+        child: Row(
+          mainAxisSize: expand ? MainAxisSize.max : MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (icon != null) ...[Icon(icon, size: 18, color: fg), const SizedBox(width: 8)],
+            Text(label, style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: fg)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// 받는 중 표시(작은 원 + 문구). 목록 자리에서 쓰는 공용 모양.
+class LoadingNote extends StatelessWidget {
+  const LoadingNote({super.key, this.label = '불러오는 중이에요'});
+
+  final String? label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.ink)),
+        if (label != null) ...[
+          const SizedBox(height: 14),
+          Text(label!, style: const TextStyle(fontSize: 13, color: AppColors.inkSoft)),
+        ],
+      ],
+    );
+  }
+}
+
+/// 목록이 비었거나 못 받았을 때의 한 줄 안내(가운데, 회색 13). onTap이 있으면 눌러서 다시 시도하는 안내로 쓰임.
+class EmptyNote extends StatelessWidget {
+  const EmptyNote(this.text, {super.key, this.onTap, this.vertical = 40});
+
+  final String text;
+  final VoidCallback? onTap;
   final double vertical;
 
   @override
@@ -1390,17 +1606,9 @@ class PillChip extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
-      child: Container(
-        padding: EdgeInsets.symmetric(horizontal: 14, vertical: vertical),
-        decoration: BoxDecoration(
-          color: selected ? AppColors.ink : AppColors.background,
-          border: Border.all(color: selected ? AppColors.ink : AppColors.line),
-          borderRadius: BorderRadius.circular(999),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(fontSize: 13, fontWeight: selected ? FontWeight.w700 : FontWeight.w500, color: selected ? Colors.white : AppColors.ink),
-        ),
+      child: Padding(
+        padding: EdgeInsets.symmetric(vertical: vertical),
+        child: Center(child: Text(text, textAlign: TextAlign.center, style: const TextStyle(fontSize: 13, color: AppColors.inkSoft, height: 1.6))),
       ),
     );
   }
@@ -1444,7 +1652,7 @@ class LicenseFlag extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 color: color,
-                child: Text(label, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.w700, color: Colors.white)),
+                child: Text(label, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.white)),
               ),
             ),
           ),

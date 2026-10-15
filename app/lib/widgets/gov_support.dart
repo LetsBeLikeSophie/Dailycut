@@ -104,14 +104,7 @@ class _GovSupportSectionState extends State<GovSupportSection> {
         if (d == null) {
           // 처음 받는 중: 빈 화면 대신 자리를 잡고 불러오는 중임을 보여줌
           return _message(
-            const Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.ink)),
-                SizedBox(height: 14),
-                Text('지원 정보를 불러오는 중이에요', style: TextStyle(fontSize: 13, color: AppColors.inkSoft)),
-              ],
-            ),
+            const LoadingNote(label: '지원 정보를 불러오는 중이에요'),
           );
         }
         final items = (d['items'] as List).cast<Map<String, dynamic>>();
@@ -154,15 +147,15 @@ class _GovSupportSectionState extends State<GovSupportSection> {
               const SizedBox(height: 18),
               Row(
                 children: [
-                  Expanded(child: Text(_prof.summary, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700))),
+                  Expanded(child: Text(_prof.summary, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700))),
                   const SizedBox(width: 10),
-                  Text('${d['total']}개', style: const TextStyle(fontSize: 12, color: AppColors.inkSoft)),
+                  Text('${d['total']}개', style: const TextStyle(fontSize: 13, color: AppColors.inkSoft)),
                   GestureDetector(
                     onTap: () => _prof.clear(),
                     behavior: HitTestBehavior.opaque,
                     child: const Padding(
                       padding: EdgeInsets.only(left: 14, top: 4, bottom: 4),
-                      child: Text('지우기', style: TextStyle(fontSize: 12, color: AppColors.inkSoft, decoration: TextDecoration.underline)),
+                      child: Text('지우기', style: TextStyle(fontSize: 13, color: AppColors.inkSoft, decoration: TextDecoration.underline)),
                     ),
                   ),
                 ],
@@ -171,10 +164,7 @@ class _GovSupportSectionState extends State<GovSupportSection> {
             const SizedBox(height: 14),
             Container(height: 1, color: AppColors.hair),
             if (items.isEmpty)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 40),
-                child: Center(child: Text('맞는 지원이 없어요. 조건을 조금 넓혀 보세요.', style: TextStyle(fontSize: 13, color: AppColors.inkSoft))),
-              ),
+              const EmptyNote('맞는 지원이 없어요. 조건을 조금 넓혀 보세요.', vertical: 40),
             ExpandableList(
               key: ValueKey('$_scope/${_prof.summary}'),
               children: [for (final it in items) _line(context, it)],
@@ -232,22 +222,18 @@ class _SupportSheet extends StatelessWidget {
           children: [
             Text(title, style: AppTheme.subheading),
             const SizedBox(height: 8),
-            Text(body, style: const TextStyle(fontSize: 15, height: 1.6)),
+            Text(body, style: const TextStyle(fontSize: 16, height: 1.6)),
           ],
         ),
       );
     }
 
     final url = item['url'] as String?;
-    return SafeArea(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(item['name'] as String, style: AppTheme.displaySerif(size: 24, fontWeight: FontWeight.w700)),
-            const SizedBox(height: 8),
-            Text([item['org'], item['field']].where((e) => (e as String?)?.isNotEmpty ?? false).join(' · '), style: const TextStyle(fontSize: 13, color: AppColors.inkSoft)),
+    return SheetFrame(
+      title: item['name'] as String,
+      sub: [item['org'], item['field']].where((e) => (e as String?)?.isNotEmpty ?? false).join(' · '),
+      gapAfterHeader: 0,
+      children: [
             block('지원 내용', item['support'] as String?),
             block('지원 대상', item['target'] as String?),
             block('신청 방법', item['method'] as String?),
@@ -255,21 +241,11 @@ class _SupportSheet extends StatelessWidget {
             block('문의', item['phone'] as String?),
             if (url != null && url.isNotEmpty) ...[
               const SizedBox(height: 28),
-              GestureDetector(
-                onTap: () => launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(border: Border.all(color: AppColors.ink), borderRadius: BorderRadius.circular(8)),
-                  child: const Text('정부24에서 자세히 보기', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
-                ),
-              ),
+              ActionButton(label: '정부24에서 자세히 보기', onTap: () => launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication)),
             ],
             const SizedBox(height: 20),
             const Text('출처: 행정안전부 대한민국 공공서비스(혜택) 정보', style: TextStyle(fontSize: 11, color: AppColors.inkSoft)),
-          ],
-        ),
-      ),
+      ],
     );
   }
 }

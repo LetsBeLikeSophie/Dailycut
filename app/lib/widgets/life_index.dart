@@ -78,7 +78,7 @@ class _LifeSheet extends StatelessWidget {
             const SizedBox(height: 10),
             Text(
               item['value'] as String,
-              style: TextStyle(fontSize: 28, fontWeight: FontWeight.w800, color: levelColor(item['level'] as String?)),
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.w800, color: levelColor(item['level'] as String?)),
             ),
             const SizedBox(height: 20),
             Text('왜 이렇게 나왔나요', style: AppTheme.subheading),
@@ -88,7 +88,7 @@ class _LifeSheet extends StatelessWidget {
             for (final l in lines.where((l) => l.startsWith('판정 기준')))
               Padding(
                 padding: const EdgeInsets.only(top: 6),
-                child: Text(l, style: const TextStyle(fontSize: 12, color: AppColors.inkSoft, height: 1.6)),
+                child: Text(l, style: const TextStyle(fontSize: 13, color: AppColors.inkSoft, height: 1.6)),
               ),
             const SizedBox(height: 14),
             Text('출처 · ${item['source'] ?? ''}', style: const TextStyle(fontSize: 11, color: AppColors.inkSoft, height: 1.6)),
@@ -114,7 +114,7 @@ Widget _detailLine(String line) {
         if (sub != null && sub.isNotEmpty)
           Padding(
             padding: const EdgeInsets.only(top: 2),
-            child: Text(sub, style: const TextStyle(fontSize: 12, color: AppColors.inkSoft, height: 1.5)),
+            child: Text(sub, style: const TextStyle(fontSize: 13, color: AppColors.inkSoft, height: 1.5)),
           ),
       ],
     ),
@@ -161,7 +161,7 @@ class _LifeIndexSectionState extends State<LifeIndexSection> {
               children: [
                 Text('보일 생활 지수', style: AppTheme.subheading),
                 const SizedBox(height: 4),
-                const Text('눌러서 보이거나 숨길 수 있어요', style: TextStyle(fontSize: 12, color: AppColors.inkSoft)),
+                const Text('눌러서 보이거나 숨길 수 있어요', style: TextStyle(fontSize: 13, color: AppColors.inkSoft)),
                 const SizedBox(height: 16),
                 // 2026-10-14: 스위치 대신 알약 칩 — 진한 칩 = 보임(앱의 다른 선택 칩과 같은 모양)
                 Wrap(

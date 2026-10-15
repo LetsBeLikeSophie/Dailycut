@@ -189,14 +189,14 @@ class _ProfileSheetState extends State<_ProfileSheet> {
           keyboardType: TextInputType.number,
           inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(maxLen)],
           onChanged: (_) => setState(() {}),
-          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w700),
+          style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w700),
           cursorColor: AppColors.ink,
           decoration: InputDecoration(
             isDense: true,
             hintText: hint,
-            hintStyle: const TextStyle(fontSize: 20, fontWeight: FontWeight.w400, color: AppColors.line),
+            hintStyle: const TextStyle(fontSize: 24, fontWeight: FontWeight.w400, color: AppColors.line),
             suffixText: suffix,
-            suffixStyle: const TextStyle(fontSize: 14, color: AppColors.inkSoft),
+            suffixStyle: const TextStyle(fontSize: 13, color: AppColors.inkSoft),
             contentPadding: const EdgeInsets.symmetric(vertical: 8),
             enabledBorder: const UnderlineInputBorder(borderSide: BorderSide(color: AppColors.line)),
             focusedBorder: const UnderlineInputBorder(borderSide: BorderSide(color: AppColors.ink, width: 2)),
@@ -237,7 +237,7 @@ class _ProfileSheetState extends State<_ProfileSheet> {
           children: [
             Text('내 조건', style: AppTheme.displaySerif(size: 26, fontWeight: FontWeight.w700)),
             const SizedBox(height: 6),
-            const Text('이 기기에만 저장되고, 서버로는 계산된 만 나이만 전달돼요', style: TextStyle(fontSize: 12, color: AppColors.inkSoft)),
+            const Text('이 기기에만 저장되고, 서버로는 계산된 만 나이만 전달돼요', style: TextStyle(fontSize: 13, color: AppColors.inkSoft)),
             _group(
               '생년월일',
               Column(
@@ -297,18 +297,15 @@ class _ProfileSheetState extends State<_ProfileSheet> {
               note: '여러 개 선택',
             ),
             const SizedBox(height: 36),
-            GestureDetector(
+            ActionButton(
+              filled: true,
+              vertical: 15,
+              label: '이 조건으로 보기',
               onTap: () async {
                 final nav = Navigator.of(context);
                 await _p.save(birth: _birth, gender: _gender, income: _income, traits: _traits);
                 nav.pop();
               },
-              child: Container(
-                padding: const EdgeInsets.symmetric(vertical: 15),
-                alignment: Alignment.center,
-                decoration: BoxDecoration(color: AppColors.ink, borderRadius: BorderRadius.circular(8)),
-                child: const Text('이 조건으로 보기', style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700, color: Colors.white)),
-              ),
             ),
             if (_p.isSet)
               Center(

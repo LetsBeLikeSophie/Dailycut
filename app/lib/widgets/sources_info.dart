@@ -45,9 +45,9 @@ Future<void> showSourcesSheet(BuildContext context, {String? current}) {
               const SizedBox(height: 16),
               Text('이 화면', style: AppTheme.subheading),
               const SizedBox(height: 6),
-              Text(current, style: const TextStyle(fontSize: 15, height: 1.6)),
+              Text(current, style: const TextStyle(fontSize: 16, height: 1.6)),
               const SizedBox(height: 4),
-              const Text('분홍색으로 표시된 부분은 아직 예시 데이터예요.', style: TextStyle(fontSize: 12, color: AppColors.inkSoft)),
+              const Text('분홍색으로 표시된 부분은 아직 예시 데이터예요.', style: TextStyle(fontSize: 13, color: AppColors.inkSoft)),
             ],
             const SizedBox(height: 22),
             Text('데일리컷이 쓰는 데이터', style: AppTheme.subheading),
@@ -58,9 +58,9 @@ Future<void> showSourcesSheet(BuildContext context, {String? current}) {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(name, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+                    Text(name, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
                     const SizedBox(height: 2),
-                    Text(desc, style: const TextStyle(fontSize: 12, color: AppColors.inkSoft, height: 1.5)),
+                    Text(desc, style: const TextStyle(fontSize: 13, color: AppColors.inkSoft, height: 1.5)),
                   ],
                 ),
               ),
@@ -75,7 +75,7 @@ Future<void> showSourcesSheet(BuildContext context, {String? current}) {
               const SizedBox(height: 6),
               const Text(
                 '화면에 "광고"라고 표시된 배너는 카카오 애드핏이 제공해요. 광고 사업자가 광고 제공을 위해 기기 정보나 쿠키를 사용할 수 있고, 이는 위 익명 통계와 별개예요.',
-                style: TextStyle(fontSize: 12, color: AppColors.inkSoft, height: 1.6),
+                style: TextStyle(fontSize: 13, color: AppColors.inkSoft, height: 1.6),
               ),
             ],
             const SizedBox(height: 22),
@@ -83,7 +83,7 @@ Future<void> showSourcesSheet(BuildContext context, {String? current}) {
             const SizedBox(height: 6),
             const Text(
               '어느 화면·기능이 많이 쓰이는지만 익명으로 집계해요. 이름·위치·기기 정보·검색어는 모으지 않고, 개인을 구분할 수도 없어요. 내 장바구니 같은 설정은 이 기기에만 저장돼요.',
-              style: TextStyle(fontSize: 12, color: AppColors.inkSoft, height: 1.6),
+              style: TextStyle(fontSize: 13, color: AppColors.inkSoft, height: 1.6),
             ),
             const _AnalyticsSwitch(),
             const SizedBox(height: 14),
@@ -114,7 +114,7 @@ class _LegalLink extends StatelessWidget {
       onTap: () => launchUrl(Uri.base.resolve(page), mode: LaunchMode.externalApplication),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 6),
-        child: Text(label, style: const TextStyle(fontSize: 12, color: AppColors.inkSoft, decoration: TextDecoration.underline)),
+        child: Text(label, style: const TextStyle(fontSize: 13, color: AppColors.inkSoft, decoration: TextDecoration.underline)),
       ),
     );
   }
@@ -134,7 +134,7 @@ class _AnalyticsSwitchState extends State<_AnalyticsSwitch> {
   Widget build(BuildContext context) {
     return SwitchListTile(
       contentPadding: EdgeInsets.zero,
-      title: const Text('익명 통계 보내기', style: TextStyle(fontSize: 14)),
+      title: const Text('익명 통계 보내기', style: TextStyle(fontSize: 13)),
       value: _on,
       activeThumbColor: AppColors.ink,
       onChanged: (v) {

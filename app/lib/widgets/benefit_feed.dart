@@ -90,14 +90,7 @@ class _BenefitFeedState extends State<BenefitFeed> {
           return _message(const Text('목록을 불러오지 못했어요. 눌러서 다시 시도', style: TextStyle(fontSize: 13, color: AppColors.inkSoft)), onTap: _reload);
         }
         if (d == null) {
-          return _message(const Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.ink)),
-              SizedBox(height: 14),
-              Text('불러오는 중이에요', style: TextStyle(fontSize: 13, color: AppColors.inkSoft)),
-            ],
-          ));
+          return _message(const LoadingNote());
         }
         final items = (d['items'] as List).cast<Map<String, dynamic>>();
         final usages = ((d['usages'] as List?) ?? const []).cast<String>();
@@ -136,10 +129,7 @@ class _BenefitFeedState extends State<BenefitFeed> {
             const SizedBox(height: 14),
             Container(height: 1, color: AppColors.hair),
             if (items.isEmpty)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 40),
-                child: Center(child: Text('지금 접수할 수 있는 공고가 없어요.', style: TextStyle(fontSize: 13, color: AppColors.inkSoft))),
-              ),
+              const EmptyNote('지금 접수할 수 있는 공고가 없어요.', vertical: 40),
             ExpandableList(
               key: ValueKey('${widget.kind.name}/${_usage ?? ''}'),
               children: [
@@ -191,16 +181,10 @@ class _BenefitSheet extends StatelessWidget {
     final url = item['url'] as String?;
     final pin = item['pin'] as Map<String, dynamic>?; // 지도 앱으로 보낼 재료(장소 목록)
     final hasUrl = url != null && url.isNotEmpty;
-    return SafeArea(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(item['name'] as String, style: AppTheme.displaySerif(size: 24, fontWeight: FontWeight.w700)),
-            const SizedBox(height: 8),
-            Text(item['sub'] as String? ?? '', style: const TextStyle(fontSize: 13, color: AppColors.inkSoft)),
-            const SizedBox(height: 22),
+    return SheetFrame(
+      title: item['name'] as String,
+      sub: item['sub'] as String?,
+      children: [
             Container(height: 1, color: AppColors.ink),
             for (final r in rows)
               Container(
@@ -210,43 +194,29 @@ class _BenefitSheet extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     SizedBox(width: 88, child: Text(r[0], style: const TextStyle(fontSize: 13, color: AppColors.inkSoft))),
-                    Expanded(child: Text(r[1], style: const TextStyle(fontSize: 15, height: 1.5))),
+                    Expanded(child: Text(r[1], style: const TextStyle(fontSize: 16, height: 1.5))),
                   ],
                 ),
               ),
             if (hasUrl) ...[
               const SizedBox(height: 26),
-              GestureDetector(
-                onTap: () => launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  alignment: Alignment.center,
-                  decoration: BoxDecoration(border: Border.all(color: AppColors.ink), borderRadius: BorderRadius.circular(8)),
-                  child: Text(item['link_label'] as String? ?? '자세히 보기', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
-                ),
-              ),
+              ActionButton(label: item['link_label'] as String? ?? '자세히 보기', onTap: () => launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication)),
             ],
             if (pin != null) ...[
               SizedBox(height: hasUrl ? 10 : 26),
-              GestureDetector(
-                onTap: () => openMapChooser(context, pin),
-                behavior: HitTestBehavior.opaque,
-                child: hasUrl
-                    ? const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 10),
-                        child: Center(child: Text('지도에서 보기', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, decoration: TextDecoration.underline))),
-                      )
-                    : Container(
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(border: Border.all(color: AppColors.ink), borderRadius: BorderRadius.circular(8)),
-                        child: const Text('지도에서 보기', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
-                      ),
-              ),
+              if (hasUrl)
+                GestureDetector(
+                  onTap: () => openMapChooser(context, pin),
+                  behavior: HitTestBehavior.opaque,
+                  child: const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 10),
+                    child: Center(child: Text('지도에서 보기', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, decoration: TextDecoration.underline))),
+                  ),
+                )
+              else
+                ActionButton(label: '지도에서 보기', onTap: () => openMapChooser(context, pin)),
             ],
-          ],
-        ),
-      ),
+      ],
     );
   }
 }

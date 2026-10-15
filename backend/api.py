@@ -558,13 +558,14 @@ def today(sido: str | None = None, sgg: str | None = None):
     live = culture_src.peek(region["code"], sgg)  # 캐시에 있을 때만(없으면 행사 수집으로 20초+ 걸려서 투데이가 느려짐)
     culture_card = None
     if live and live.get("events"):
-        sat, sun = _weekend_range(_kst.today())
-        n = sum(1 for e in live["events"] if e["start"] <= sun.isoformat() and e["end"] >= sat.isoformat())
+        mon = _kst.today() - timedelta(days=_kst.today().weekday())  # 2026-10-16: 주말만이 아니라 이번 주(월~일) 행사
+        sun = mon + timedelta(days=6)
+        n = sum(1 for e in live["events"] if e["start"] <= sun.isoformat() and e["end"] >= mon.isoformat())
         culture_card = {
             "theme": "culture",
-            "title": "이번 주말 행사" if _kst.today().weekday() != 6 else "오늘 행사",
+            "title": "이번 주 행사",
             "highlight": f"{n}개",
-            "meta": f"{place_name} · {sat.month}/{sat.day}~{sun.day}" if sat != sun else place_name,
+            "meta": place_name,
         }
     benefits = gov_support_src.query(sido, sgg, "all", None, 1)
     benefit_card = (

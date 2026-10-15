@@ -61,7 +61,11 @@ class _BasketHeroState extends State<BasketHero> {
 
   @override
   Widget build(BuildContext context) {
-    final names = [for (final n in _mine.names) if (widget.chartItems[n] != null) n];
+    // 2026-10-16: 담은 품목이 없으면 안내 문장 대신 대표 품목(서버가 정한 8개)의 지수·추이를 먼저 보여줌 — 첫 화면이 비어 보이지 않게.
+    // 하나라도 담으면 내 장바구니 기준으로 바뀜.
+    final mineNames = [for (final n in _mine.names) if (widget.chartItems[n] != null) n];
+    final usingDefault = mineNames.isEmpty;
+    final names = usingDefault ? [for (final n in widget.suggestions) if (widget.chartItems[n] != null) n] : mineNames;
     if (names.isEmpty) return _empty(context);
 
     final pages = names.length + 1;
@@ -75,7 +79,7 @@ class _BasketHeroState extends State<BasketHero> {
     final String sub;
 
     if (isTotal) {
-      label = '장바구니';
+      label = usingDefault ? '대표 장바구니' : '장바구니';
       value = names.fold<double>(0, (a, n) => a + (widget.chartItems[n]['price'] as num).toDouble());
       // 지난주 합계는 지난주 값이 있는 품목끼리만 비교
       final withWeek = [for (final n in names) if (widget.chartItems[n]['week_ago'] != null) n];
@@ -93,7 +97,9 @@ class _BasketHeroState extends State<BasketHero> {
         for (final d in perDay.keys)
           if (perDay[d]!.length == names.length) d: perDay[d]!.values.fold<double>(0, (a, b) => a + b),
       });
-      sub = '담은 ${names.length}품목 합계(1kg·1개 등 1단위씩)';
+      sub = usingDefault
+          ? '대표 ${names.length}품목 합계(1kg·1개 등 1단위씩) · 아래 장보기 시세에서 담으면 내 장바구니로 바뀌어요'
+          : '담은 ${names.length}품목 합계(1kg·1개 등 1단위씩)';
     } else {
       final n = names[page - 1];
       final it = widget.chartItems[n] as Map<String, dynamic>;
@@ -109,7 +115,7 @@ class _BasketHeroState extends State<BasketHero> {
     final changeKey = pct == null || pct.abs() < 0.5 ? 'flat' : (pct > 0 ? 'up' : 'down');
     final emphasis = pct == null || pct.abs() < 0.5 ? '비슷해요' : '${pct.abs().toStringAsFixed(1)}% ${pct < 0 ? '내렸어요' : '올랐어요'}';
     final headline = isTotal
-        ? (changeKey == 'flat' ? '이번 주 장바구니는 지난주와 $emphasis' : '이번 주 장바구니, 지난주보다 $emphasis')
+        ? (changeKey == 'flat' ? '이번 주 $label는 지난주와 $emphasis' : '이번 주 $label, 지난주보다 $emphasis')
         : (changeKey == 'flat' ? '$label은 지난주와 $emphasis' : '$label, 지난주보다 $emphasis');
     final deltaText = pct == null ? '지난주 가격 없음' : '${changeLabel(changeKey)} 지난주 대비 ${pct >= 0 ? '+' : ''}${pct.toStringAsFixed(1)}%';
 
@@ -152,25 +158,16 @@ class _BasketHeroState extends State<BasketHero> {
       body: [
         const Text(
           '아래 장보기 시세에서 품목 오른쪽 끝의 장바구니 버튼을 누르면 담겨요. 담은 품목의 합계 가격과 지난주 대비, 이번 달 추이를 여기서 한눈에 볼 수 있어요.',
-          style: TextStyle(fontSize: 15, height: 1.6),
+          style: TextStyle(fontSize: 16, height: 1.6),
         ),
         const SizedBox(height: 16),
         if (widget.suggestions.isNotEmpty) ...[
-          GestureDetector(
+          ActionButton(
+            expand: false,
+            vertical: 12,
+            icon: Icons.add_shopping_cart,
+            label: '대표 ${widget.suggestions.length}품목으로 시작',
             onTap: () => _mine.addAll(widget.suggestions.where(widget.chartItems.containsKey)),
-            behavior: HitTestBehavior.opaque,
-            child: Container(
-              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-              decoration: BoxDecoration(border: Border.all(color: AppColors.ink), borderRadius: BorderRadius.circular(8)),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.add_shopping_cart, size: 18),
-                  const SizedBox(width: 8),
-                  Text('대표 ${widget.suggestions.length}품목으로 시작', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
-                ],
-              ),
-            ),
           ),
           const SizedBox(height: 6),
           Text(widget.suggestions.join('·'), style: const TextStyle(fontSize: 11, color: AppColors.inkSoft, height: 1.5)),

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 /// 기획 문서 "디자인 방향 v6" 표 그대로 옮긴 토큰.
 /// https://claude.ai/artifact/U8h2Ukqj5FfBkLaPGVgtBZ
 
-enum Section { weather, market, culture, money, ai }
+enum Section { weather, market, culture, place, money, ai }
 
 class SectionTheme {
   const SectionTheme({
@@ -58,6 +58,14 @@ const sectionThemes = <Section, SectionTheme>{
     highlight: Color(0xFFFAD6CC),
     shape: '△',
     shapeAsset: 'assets/shapes/shape_culture.png',
+  ),
+  // 2026-10-16: 장소 탭이 문화와 같은 테라코타색이라 구분이 안 됐음 → 초록(도형은 AI 도형을 같은 색으로 다시 칠함)
+  Section.place: SectionTheme(
+    label: '장소',
+    color: Color(0xFF2E8B57),
+    highlight: Color(0xFFCDEBD9),
+    shape: '✳',
+    shapeAsset: 'assets/shapes/shape_place.png',
   ),
   Section.money: SectionTheme(
     label: '혜택',

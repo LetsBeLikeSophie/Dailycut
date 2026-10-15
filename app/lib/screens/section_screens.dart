@@ -210,13 +210,14 @@ Widget cultureScreen(ApiClient api, Region region, BuildContext shellContext) =>
         Widget weekendHero(List<Map<String, dynamic>> events, bool useLocal, [Widget? toggle]) {
           final now = DateTime.now();
           final today = DateTime(now.year, now.month, now.day);
-          final sat = today.weekday == DateTime.sunday ? today : today.add(Duration(days: (DateTime.saturday - today.weekday) % 7));
-          final sun = today.weekday == DateTime.sunday ? today : sat.add(const Duration(days: 1));
+          // 2026-10-16: 주말만이 아니라 "이번 주"(월~일)에 열리는 행사로 — 주말은 장소 탭이 맡음
+          final mon = today.subtract(Duration(days: today.weekday - 1));
+          final sun = mon.add(const Duration(days: 6));
           String iso(DateTime d) => '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
-          final inWeekend = events.where((e) => (e['start'] as String).compareTo(iso(sun)) <= 0 && (e['end'] as String).compareTo(iso(sat)) >= 0).toList();
+          final inWeekend = events.where((e) => (e['start'] as String).compareTo(iso(sun)) <= 0 && (e['end'] as String).compareTo(iso(mon)) >= 0).toList();
           final list = inWeekend;
           final scopeName = useLocal ? region.label : region.name;
-          final label = today.weekday == DateTime.sunday ? '오늘' : '토·일(${sat.month}/${sat.day}~${sun.day})'; // '이번 주말'은 주말 탭과 헷갈려서 뺌(2026-10-15)
+          const label = '이번 주';
           final emphasis = '${list.length}개 행사';
           return PageHero(
             section: Section.culture,
@@ -346,7 +347,7 @@ Widget cultureScreen(ApiClient api, Region region, BuildContext shellContext) =>
 /// 한산한 곳(주말 관광지 집중률 예측) · 도서관(열람실 빈자리) · 캠핑 · 반려동물 동반 · 웰니스 · 걷기길.
 /// 구역 전환(SegmentedHost)은 문화 탭의 행사/음악, 혜택 탭의 4구역과 같은 방식. 각 구역이 자기 데이터를 받음(시도·시군구 반영).
 Widget placesScreen(ApiClient api, Region region, BuildContext shellContext) => SectionScreen(
-      section: Section.culture,
+      section: Section.place,
       fetch: () async => <String, dynamic>{},
       contentBuilder: (context, data) => [
         SegmentedHost(
@@ -366,7 +367,7 @@ Widget placesScreen(ApiClient api, Region region, BuildContext shellContext) => 
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 PageHero(
-                  section: Section.culture,
+                  section: Section.place,
                   eyebrow: '장소 · ${region.label}',
                   onEyebrowTap: () => showRegionPicker(shellContext),
                   headline: headline,

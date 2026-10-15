@@ -95,7 +95,7 @@ class _LivestockSheet extends StatelessWidget {
             const SizedBox(height: 14),
             const Text(
               '평년은 과거 같은 시기의 평균 가격이에요.',
-              style: TextStyle(fontSize: 12, color: AppColors.inkSoft, height: 1.6),
+              style: TextStyle(fontSize: 13, color: AppColors.inkSoft, height: 1.6),
             ),
           ],
         ),

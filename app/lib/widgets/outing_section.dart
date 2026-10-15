@@ -56,10 +56,7 @@ class _OutingSectionState extends State<OutingSection> {
           return ListSection(
             title: '이번 주말 한산한 곳',
             children: const [
-              Padding(
-                padding: EdgeInsets.symmetric(vertical: 40),
-                child: Center(child: SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.ink))),
-              ),
+              Padding(padding: EdgeInsets.symmetric(vertical: 40), child: Center(child: LoadingNote(label: null))),
             ],
           );
         }

@@ -6,6 +6,7 @@ import 'analytics.dart';
 import 'api_client.dart';
 import 'location.dart';
 import 'theme.dart';
+import 'widgets/components.dart';
 
 /// 앱 전체의 지역 단위: 시도(17곳) + 선택적으로 시군구. 시군구를 안 고르면 "시도 전체"로 동작함.
 /// 날씨·미세먼지·전통시장·문화가 모두 이 한 지역을 기준으로 조회됨(데이터마다 더 거친 단위만
@@ -228,10 +229,7 @@ class _RegionSheetState extends State<_RegionSheet> {
       }
     }
     if (hits.isEmpty) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(vertical: 24),
-        child: Text('찾는 지역이 없어요. 시도를 직접 골라보세요.', style: TextStyle(fontSize: 13, color: AppColors.inkSoft)),
-      );
+      return const EmptyNote('찾는 지역이 없어요. 시도를 직접 골라보세요.', vertical: 24);
     }
     return ListView(
       shrinkWrap: true,
@@ -259,7 +257,7 @@ class _RegionSheetState extends State<_RegionSheet> {
           runSpacing: 8,
           children: [
             for (final r in kSidos)
-              _Chip(label: r.name, selected: r.code == _sido, onTap: () => setState(() => _sido = r.code)),
+              PillChip(large: true, label: r.name, selected: r.code == _sido, onTap: () => setState(() => _sido = r.code)),
           ],
         ),
         const SizedBox(height: 18),
@@ -272,14 +270,14 @@ class _RegionSheetState extends State<_RegionSheet> {
             spacing: 8,
             runSpacing: 8,
             children: [
-              _Chip(
+              PillChip(large: true, 
                 label: '${sidoRegion.name} 전체',
                 selected: _store.current.code == _sido && _store.current.sgg == null,
                 emphasized: true,
                 onTap: () => _pick(sidoRegion),
               ),
               for (final g in sigungu)
-                _Chip(
+                PillChip(large: true, 
                   label: g.name,
                   selected: _store.current.code == _sido && _store.current.sgg == g.name,
                   onTap: () => _pick(sidoRegion.withSgg(g.name)),
@@ -291,34 +289,3 @@ class _RegionSheetState extends State<_RegionSheet> {
   }
 }
 
-class _Chip extends StatelessWidget {
-  const _Chip({required this.label, required this.selected, required this.onTap, this.emphasized = false});
-
-  final String label;
-  final bool selected;
-  final bool emphasized;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
-        decoration: BoxDecoration(
-          color: selected ? AppColors.ink : AppColors.background,
-          border: Border.all(color: selected ? AppColors.ink : (emphasized ? AppColors.ink : AppColors.line)),
-          borderRadius: BorderRadius.circular(999),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: selected || emphasized ? FontWeight.w700 : FontWeight.w500,
-            color: selected ? Colors.white : AppColors.ink,
-          ),
-        ),
-      ),
-    );
-  }
-}

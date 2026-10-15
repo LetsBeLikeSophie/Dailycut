@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../api_client.dart';
 import '../theme.dart';
 import 'components.dart';
+import 'map_links.dart';
 import 'zoom_image.dart';
 
 /// 지역(시군구, 없으면 시도)의 전통시장 목록. 시설(주차장·아케이드 등)로 거르고, 시설 많은 순·가나다순·
@@ -70,7 +70,7 @@ class _MarketListState extends State<MarketList> {
             spacing: 8,
             runSpacing: 8,
             children: [
-              _MiniPill(
+              PillChip(
                 label: '전체',
                 selected: _selected.isEmpty,
                 onTap: () => setState(() {
@@ -79,7 +79,7 @@ class _MarketListState extends State<MarketList> {
                 }),
               ),
               for (final f in _filters)
-                _MiniPill(
+                PillChip(
                   label: f,
                   selected: _selected.contains(f),
                   onTap: () => setState(() {
@@ -118,10 +118,7 @@ class _MarketListState extends State<MarketList> {
         const SizedBox(height: 4),
         Container(height: 1, color: AppColors.hair),
         if (shown.isEmpty)
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 24),
-            child: Text('조건에 맞는 시장이 없어요.', style: TextStyle(fontSize: 13, color: AppColors.inkSoft)),
-          ),
+          const EmptyNote('조건에 맞는 시장이 없어요.', vertical: 24),
         for (final m in shown)
           ListLine(
             name: m['title'] as String,
@@ -146,33 +143,6 @@ class _MarketListState extends State<MarketList> {
   }
 }
 
-class _MiniPill extends StatelessWidget {
-  const _MiniPill({required this.label, required this.selected, required this.onTap});
-
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-        decoration: BoxDecoration(
-          color: selected ? AppColors.ink : AppColors.background,
-          border: Border.all(color: selected ? AppColors.ink : AppColors.line),
-          borderRadius: BorderRadius.circular(999),
-        ),
-        child: Text(
-          label,
-          style: TextStyle(fontSize: 13, fontWeight: selected ? FontWeight.w700 : FontWeight.w500, color: selected ? Colors.white : AppColors.ink),
-        ),
-      ),
-    );
-  }
-}
-
 class _MarketSheet extends StatelessWidget {
   const _MarketSheet({required this.api, required this.market});
 
@@ -181,7 +151,6 @@ class _MarketSheet extends StatelessWidget {
 
   static const _all = ['주차장', '아케이드', '휴게실', '카트', '수유실'];
 
-  Future<void> _open(String url) => launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
 
   @override
   Widget build(BuildContext context) {
@@ -189,28 +158,16 @@ class _MarketSheet extends StatelessWidget {
     final sigungu = market['sigungu'] as String;
     final addr = market['addr'] as String;
     final have = (market['facilities'] as List).cast<String>();
-    final query = Uri.encodeComponent('$name $sigungu');
-    return SafeArea(
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(20, 4, 20, 28),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(name, style: AppTheme.displaySerif(size: 24, fontWeight: FontWeight.w700)),
-            const SizedBox(height: 6),
-            Text('${market['type']} · $sigungu', style: const TextStyle(fontSize: 13, color: AppColors.inkSoft)),
-            const SizedBox(height: 20),
+    return SheetFrame(
+      title: name,
+      sub: '${market['type']} · $sigungu',
+      gapAfterHeader: 20,
+      children: [
             Text('주소', style: AppTheme.subheading),
             const SizedBox(height: 6),
             SelectableText(addr, style: const TextStyle(fontSize: 16, height: 1.5)),
             const SizedBox(height: 14),
-            Row(
-              children: [
-                Expanded(child: _LinkButton(label: '네이버지도', onTap: () => _open('https://map.naver.com/p/search/$query'))),
-                const SizedBox(width: 10),
-                Expanded(child: _LinkButton(label: '카카오맵', onTap: () => _open('https://map.kakao.com/?q=$query'))),
-              ],
-            ),
+            ActionButton(vertical: 12, label: '지도에서 보기', onTap: () => openMapChooser(context, {'name': name, 'q': '$name $sigungu'})),
             const SizedBox(height: 24),
             Text('시설', style: AppTheme.subheading),
             const SizedBox(height: 10),
@@ -256,29 +213,8 @@ class _MarketSheet extends StatelessWidget {
               '소상공인시장진흥공단 전통시장현황(2026-08-04 기준)이에요. 휴장일·영업시간은 이 데이터에 없어서 방문 전에 지도에서 확인해 주세요.',
               style: TextStyle(fontSize: 11, color: AppColors.inkSoft, height: 1.6),
             ),
-          ],
-        ),
-      ),
+      ],
     );
   }
 }
 
-class _LinkButton extends StatelessWidget {
-  const _LinkButton({required this.label, required this.onTap});
-
-  final String label;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        alignment: Alignment.center,
-        decoration: BoxDecoration(border: Border.all(color: AppColors.ink), borderRadius: BorderRadius.circular(8)),
-        child: Text('$label에서 보기', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
-      ),
-    );
-  }
-}

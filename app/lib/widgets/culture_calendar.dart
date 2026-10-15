@@ -130,7 +130,7 @@ class _CultureCalendarState extends State<CultureCalendar> {
             runSpacing: 10,
             children: [
               for (final k in _kinds)
-                _Chip(
+                PillChip(
                   label: k,
                   dotColor: k == '전체' ? null : kindStyle(k).color,
                   selected: _kind == k,
@@ -203,10 +203,7 @@ class _CultureCalendarState extends State<CultureCalendar> {
           ),
         ),
         if (dayEvents.isEmpty)
-          const Padding(
-            padding: EdgeInsets.only(bottom: 16),
-            child: Text('이 날 열리는 행사가 없어요.', style: TextStyle(fontSize: 13, color: AppColors.inkSoft)),
-          ),
+          const EmptyNote('이 날 열리는 행사가 없어요.', vertical: 24),
         for (final e in shown) eventLine(context, widget.api, e),
         if (!_showAll && dayEvents.length > _limit)
           ShowMoreButton(count: dayEvents.length - _limit, onTap: () => setState(() => _showAll = true)),
@@ -292,7 +289,7 @@ class _NavButton extends StatelessWidget {
         width: 44,
         height: 36,
         child: Center(
-          child: Text(label, style: TextStyle(fontSize: 22, color: enabled ? AppColors.ink : AppColors.line)),
+          child: Text(label, style: TextStyle(fontSize: 24, color: enabled ? AppColors.ink : AppColors.line)),
         ),
       ),
     );
@@ -391,15 +388,7 @@ class _EventSheet extends StatelessWidget {
                 ],
                 if (ok && (d['homepage'] as String?) != null) ...[
                   const SizedBox(height: 22),
-                  GestureDetector(
-                    onTap: () => _open(d['homepage'] as String),
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      alignment: Alignment.center,
-                      decoration: BoxDecoration(border: Border.all(color: AppColors.ink), borderRadius: BorderRadius.circular(8)),
-                      child: const Text('누리집에서 자세히 보기', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
-                    ),
-                  ),
+                  ActionButton(vertical: 12, label: '누리집에서 자세히 보기', onTap: () => _open(d['homepage'] as String)),
                 ],
                 if (image != null) ...[
                   const SizedBox(height: 22),
@@ -426,37 +415,3 @@ class _EventSheet extends StatelessWidget {
 }
 
 
-class _Chip extends StatelessWidget {
-  const _Chip({required this.label, required this.selected, required this.onTap, this.dotColor});
-
-  final Color? dotColor; // 종류 칩 앞의 색 점
-  final String label;
-  final bool selected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-        decoration: BoxDecoration(
-          color: selected ? AppColors.ink : AppColors.background,
-          border: Border.all(color: selected ? AppColors.ink : AppColors.line),
-          borderRadius: BorderRadius.circular(999),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (dotColor != null) ...[Container(width: 7, height: 7, decoration: BoxDecoration(shape: BoxShape.circle, color: dotColor)), const SizedBox(width: 6)],
-            Text(
-              label,
-              style: TextStyle(fontSize: 13, fontWeight: selected ? FontWeight.w700 : FontWeight.w500, color: selected ? Colors.white : AppColors.ink),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}

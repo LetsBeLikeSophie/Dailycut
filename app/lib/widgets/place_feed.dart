@@ -85,14 +85,7 @@ class _PlaceFeedState extends State<PlaceFeed> {
           return _message(const Text('목록을 불러오지 못했어요. 눌러서 다시 시도', style: TextStyle(fontSize: 13, color: AppColors.inkSoft)), onTap: () => setState(() => _future = _load()));
         }
         if (d == null) {
-          return _message(const Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              SizedBox(width: 22, height: 22, child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.ink)),
-              SizedBox(height: 14),
-              Text('불러오는 중이에요', style: TextStyle(fontSize: 13, color: AppColors.inkSoft)),
-            ],
-          ));
+          return _message(const LoadingNote());
         }
         final items = (d['items'] as List).cast<Map<String, dynamic>>();
         return ListSection(
@@ -104,10 +97,7 @@ class _PlaceFeedState extends State<PlaceFeed> {
             const SizedBox(height: 14),
             Container(height: 1, color: AppColors.hair),
             if (items.isEmpty)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 40),
-                child: Center(child: Text('이 지역에는 등록된 곳이 없어요.', style: TextStyle(fontSize: 13, color: AppColors.inkSoft))),
-              ),
+              const EmptyNote('이 지역에는 등록된 곳이 없어요.', vertical: 40),
             ExpandableList(
               key: ValueKey('place${_kind.name}'),
               unit: '곳',

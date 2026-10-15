@@ -401,6 +401,11 @@ claude.ai/artifact/17gytwYuXMFkF4vx8tWv65 (사용 중 · 일부만 · 미사용 
   마지막에 쓴 앱을 맨 위에 둠(`LocalPrefs 'map_app'`, 통계 `life_open` 값 `map-○○`). 좌표 있으면 그 자리 핀(카카오 `link/map/이름,위도,경도`·네이버 `p/search/이름?c=경도,위도,15…`·구글 `search/?api=1&query=위도,경도`), 없으면 검색어(q). **앱으로 낼 땐 `mapUri`만 각 지도 앱 딥링크(`kakaomap://`, `nmap://`)로 바꾸면 됨.**
   상세 시트(`_BenefitSheet`)는 누리집·예약 링크(`url`)가 있으면 그것이 대표 버튼, 없으면 "지도에서 보기"가 대표 버튼. ②한산한 곳(관광공사 집중률 원본은 관광지 이름·시군구뿐, 주소·좌표 없음)은 줄을 누르면 "시군구 + 이름" 검색으로 지도 앱 고르기.
   ③주말 날씨는 `WeekendWeather`(`widgets/weekend_weather.dart`) 한 곳 — `/weather`의 주간 목록에서 토·일(일요일이면 오늘)을 뽑아 투데이 주간 날씨와 같은 줄(`weeklyRow`, 투데이 파일에서 이쪽으로 옮김)로 보이고, 밤 5° 이하·강수 50%↑면 줄 밑에 사실 한 줄. 장소 탭 도서관만 빼고 모든 구분 위에 한 번만 나오며, 한산한 곳·캠핑 안에 따로 있던 날씨 줄은 없앰(서버 `/outing` `/places`의 weather 필드는 응답에 남아 있으나 앱은 안 씀).
+- **톤앤매너 정리 (2026-10-16, 점검 보고 → 사용자 지시로 반영)**: ①공용 부품 — `PillChip`(dotColor·large·emphasized 추가; 예전 `_Pill`·`_Chip`·`_MiniPill` 제거), `ActionButton`(윤곽선/filled, 8개 파일의 직접 그린 버튼 대체), `LoadingNote`·`EmptyNote`(로딩·빈 목록 안내),
+  `SheetFrame`(상세 시트 틀: 세리프 24 제목+13 부제; 혜택·장소·정부 지원·시장이 씀; 생활지수·품목·행사 시트는 구조가 달라 아직 따로). 시장 상세의 지도도 장소와 같은 `openMapChooser`.
+  ②글자 크기를 규칙(11/13/16/24/60)에 맞춤: 10→11, 12·14→13, 15·18→16, 20·22·28→24(새로 쓸 때도 이 다섯 값만). ③`HighlightText`가 띄어쓰기 단위로만 줄을 바꿈(`keepAllWrap`, 공백 하나를 줄바꿈 하나로 바꾸므로 글자 위치·강조 구간 유지) — 한글이 글자 사이에서 끊겨 마지막 글자가 혼자 내려오던 것(예: "…21°예 / 요") 해결.
+  ④장소 탭 전용 색(`Section.place`, 초록 `#2E8B57`, 도형 `shape_place.png`는 AI 도형을 같은 색으로 다시 칠함). ⑤`SegmentToggle`이 칸이 넘치면 오른쪽 끝 흐림+화살표 단서(`_more`). ⑥생활 탭: 담은 품목이 없으면 대표 8품목(`suggestions`)의 지수·추이를 기본으로 보여주고, 담으면 내 장바구니로 바뀜(`usingDefault`).
+  ⑦문화 탭 맨 위 숫자는 "이번 주(월~일)에 열리는 행사"(예전 토·일) — 주말은 장소 탭이 맡음. 투데이 카드도 같은 기준("이번 주 행사", `api.py today`).
 - **광고(카카오 애드핏, 웹) 준비됨 (2026-10-12)**: `widgets/ad_slot.dart`의 `AdSlot` + `web/ad.html`(애드핏 스크립트 페이지, 같은 도메인 iframe).
   광고 단위 ID가 없으면 칸이 아예 안 그려짐. 켜는 법: 애드핏에서 사이트(itssophie.dev/dailycut) 등록·승인 → 광고 단위(320x100 등) 생성 →
   `flutter build web … --dart-define=ADFIT_UNIT=DAN-xxxx --dart-define=ADFIT_SIZE=320x100`. 칸 위치: 생활(장보기 시세 아래)·문화(행사/영화 구역 아래)·머니(금리 아래).
