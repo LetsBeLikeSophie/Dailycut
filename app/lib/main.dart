@@ -44,8 +44,8 @@ class _RootShellState extends State<RootShell> {
   // (Section.weather 자체는 투데이 카드 테마용으로 theme.dart에 남겨둠).
   // 2026-10-14: AI 탭은 아직 전부 예시 데이터라 배포본에선 뺌(개발 때만 `--dart-define=SHOW_AI_TAB=true`).
   static const _showAi = bool.fromEnvironment('SHOW_AI_TAB');
-  static const _tabs = ['투데이', '생활', '문화', '주말', '혜택', if (_showAi) 'AI'];
-  static const _tabKeys = ['today', 'life', 'culture', 'weekend', 'money', if (_showAi) 'ai'];
+  static const _tabs = ['투데이', '생활', '문화', '장소', '혜택', if (_showAi) 'AI'];
+  static const _tabKeys = ['today', 'life', 'culture', 'place', 'money', if (_showAi) 'ai'];
 
   @override
   void initState() {
@@ -72,9 +72,11 @@ class _RootShellState extends State<RootShell> {
   }
 
   /// 지역에 따라 달라지는 화면(투데이·생활·문화)은 지역이 바뀌면 새로 만들어서 다시 받아옴.
-  Widget _regional(Widget Function(Region) build) {
+  /// [keyed]가 false면 지역이 바뀌어도 화면을 새로 만들지 않고 그 화면이 스스로 새 지역을 받게 함(투데이: 로딩 원 깜빡임 방지).
+  Widget _regional(Widget Function(Region) build, {bool keyed = true}) {
     final store = RegionStore.instance;
     if (!store.ready) return const Center(child: CircularProgressIndicator());
+    if (!keyed) return build(store.current);
     return KeyedSubtree(key: ValueKey('${store.current.code}/${store.current.sgg ?? ''}'), child: build(store.current));
   }
 
@@ -88,10 +90,10 @@ class _RootShellState extends State<RootShell> {
 
   Widget _scaffold(BuildContext context) {
     final builders = <Widget Function()>[
-      () => _regional((r) => TodayScreen(api: _api, region: r)),
+      () => _regional((r) => TodayScreen(api: _api, region: r), keyed: false),
       () => _regional((r) => marketScreen(_api, r, context)),
       () => _regional((r) => cultureScreen(_api, r, context)),
-      () => _regional((r) => weekendScreen(_api, r, context)),
+      () => _regional((r) => placesScreen(_api, r, context)),
       () => _regional((r) => benefitsScreen(_api, r, context)),
       if (_showAi) () => aiScreen(_api),
     ];

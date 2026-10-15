@@ -389,6 +389,14 @@ claude.ai/artifact/17gytwYuXMFkF4vx8tWv65 (사용 중 · 일부만 · 미사용 
   ②투데이 분리 — `/weather` 응답이 `headline`까지 줘서(`api.py weather_route`, 안쪽 `weather()`는 그대로) 날씨 히어로·주간·생활지수는 이것만으로 그려지고, "오늘의 섹션"은 `/today`를 따로 받아 오면 보임(느리거나 실패하면 그 구역만 빔).
   ③스플래시 날씨 — `index.html`이 앱 부팅과 별개로 `/dailycut-api/weather`를 바로 불러(배포 경로 `/dailycut/`에서만, 저장된 지역 `flutter.region_code/region_sgg` 사용, 8초 지나면 포기) 로고 아래에 "14° 맑음 · 낮 최고/최저 · 옷차림"을 먼저 보임.
   라이브 측정(캐시 있음): 날씨 한 줄 약 1.0초, 앱 본체의 날씨 요청 3.0초(번들 새로 받음), 이어서 market 5.2s·culture 6.5s·혜택 8.7s로 차례로 뒤에서 받음. 서버 반영 순서 주의: `/weather` headline이 먼저 배포돼 있어야 새 앱이 제목을 못 받는 일이 없음.
+- **장소 탭 (2026-10-16, 10-15의 "주말" 탭을 이름·구조 바꿈)**: 탭 `투데이 · 생활 · 문화 · 장소 · 혜택`. 장소(`placesScreen`)는 구역 전환 6개 `한산한 곳 | 도서관 | 캠핑 | 반려동물 | 웰니스 | 걷기길`(`SegmentedHost`, prefKey `place_seg`, 통계는 기존 `culture_kind`로 `seg-○○`) —
+  구역마다 히어로 문장이 다르고, 한산한 곳은 `OutingSection`, 나머지는 `PlaceFeed(kind)`(칩 없이 한 종류만). `SegmentToggle`은 칸이 많으면 가로로 밀어 볼 수 있음. 광고 칸은 구역 목록 아래(애드핏 신청서의 "문화 탭 나들이 목록 아래"는 지금 장소 탭).
+  한산도를 반려동물 목록에 붙이는 안은 서울 기준 이름 매칭 41/75(웰니스·걷기길·캠핑·도서관은 0)라 보류 — 사용자가 구역을 따로 두는 쪽을 택함.
+  **지도 링크(2026-10-16)**: 예전엔 이름으로 네이버 지도 검색(`map.naver.com/p/search/이름`)이라 흔하지 않은 이름은 목록만 떴음 → 좌표가 있는 곳(도서관 lat/lot·캠핑 mapY/mapX·반려동물/웰니스 mapy/mapx)은 `_pin()`으로
+  카카오맵 핀 링크(`map.kakao.com/link/map/이름,위도,경도`)를 줌. 누리집·예약 링크가 있는 항목(도서관·캠핑)은 그걸 대표 버튼으로 두고 `map` 필드로 "지도에서 보기"를 따로 줌(상세 시트 보조 버튼). 걷기길은 좌표가 없어 `시군 + 코스명` 검색.
+  **사진**: 반려동물·웰니스 데이터에는 `firstimage`/`orgImage`와 저작권 유형 `cpyrhtDivCd`(Type1/Type3 …)가 같이 옴. 도서관·캠핑(공개 필드 없음)·걷기길엔 사진 없음. 쓰려면 Type1(출처표시)만 쓰는 기존 원칙(생활 탭 시장 사진과 같음) — 아직 안 붙임.
+- **투데이 로딩 원 깜빡임 수정 (2026-10-16)**: 첫 방문은 서울로 먼저 그리고 위치를 알아낸 뒤 지역이 바뀌는데(`RegionStore._locate`), 그때 투데이가 통째로 새로 만들어져(KeyedSubtree 키 변경) 스플래시가 걷힌 뒤 1초쯤 뒤 로딩 원이 2~3초 다시 돌았음.
+  이제 투데이만 `keyed: false`로 두고 `didUpdateWidget`에서 새 지역 데이터를 받으며, 받는 동안은 이전 내용 위에 가는 진행 막대(`LinearProgressIndicator`)만 보임. 다른 탭은 그대로 지역이 바뀌면 새로 만듦.
 - **광고(카카오 애드핏, 웹) 준비됨 (2026-10-12)**: `widgets/ad_slot.dart`의 `AdSlot` + `web/ad.html`(애드핏 스크립트 페이지, 같은 도메인 iframe).
   광고 단위 ID가 없으면 칸이 아예 안 그려짐. 켜는 법: 애드핏에서 사이트(itssophie.dev/dailycut) 등록·승인 → 광고 단위(320x100 등) 생성 →
   `flutter build web … --dart-define=ADFIT_UNIT=DAN-xxxx --dart-define=ADFIT_SIZE=320x100`. 칸 위치: 생활(장보기 시세 아래)·문화(행사/영화 구역 아래)·머니(금리 아래).

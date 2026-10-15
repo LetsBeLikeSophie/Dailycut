@@ -61,6 +61,18 @@ def _map(name: str) -> str:
     return "https://map.naver.com/p/search/" + quote(name)
 
 
+def _pin(name: str, lat, lng, fallback: str | None = None) -> str:
+    """지도에서 그 장소 하나만 핀으로 보여주는 링크(카카오맵 link/map/이름,위도,경도). 좌표가 없거나 이상하면 이름 검색으로.
+    2026-10-16: 이름만 검색하면 흔하지 않은 이름은 엉뚱한 목록이 떠서(캠핑장 등) 좌표가 있는 곳은 핀으로 바꿈."""
+    try:
+        la, lo = float(lat), float(lng)
+    except (TypeError, ValueError):
+        la = lo = 0.0
+    if 33 <= la <= 39 and 124 <= lo <= 132:  # 한국 안의 좌표만
+        return "https://map.kakao.com/link/map/" + quote(name.replace(",", " "), safe="") + f",{la:.6f},{lo:.6f}"
+    return _map(fallback or name)
+
+
 def _in_region(text: str, region: dict) -> bool:
     prefixes = tuple(region.get("prefixes") or (region["name"],))
     return any(p in text for p in prefixes)
@@ -82,11 +94,11 @@ def _scope(rows: list, sgg: str | None, region: dict) -> tuple[list, str, str | 
     return rows, base, f"{sgg}에는 없어서 {base} 전체를 보여드려요."
 
 
-def _item(id_: str, name: str, sub: str, tag: str, span: str, detail: list[tuple[str, str | None]], url: str, link_label: str) -> dict:
+def _item(id_: str, name: str, sub: str, tag: str, span: str, detail: list[tuple[str, str | None]], url: str, link_label: str, map_url: str | None = None) -> dict:
     return {
         "id": id_, "name": name, "sub": sub, "tag": tag, "span": span,
         "detail": [[k, str(v)] for k, v in detail if v not in (None, "", "0")],
-        "url": url, "link_label": link_label,
+        "url": url, "link_label": link_label, "map": map_url,
     }
 
 
@@ -164,8 +176,9 @@ def library(sido: str | None, sgg: str | None) -> dict:
                 ("주소", _clean(lib.get("pblibRoadNmAddr"))),
                 ("전화", lib.get("pblibTelno")),
             ],
-            lib.get("siteUrlAddr") or _map(_clean(lib.get("pblibNm"))),
-            "도서관 누리집",
+            lib.get("siteUrlAddr") or _pin(_clean(lib.get("pblibNm")), lib.get("lat"), lib.get("lot")),
+            "도서관 누리집" if lib.get("siteUrlAddr") else "지도에서 보기",
+            _pin(_clean(lib.get("pblibNm")), lib.get("lat"), lib.get("lot")) if lib.get("siteUrlAddr") else None,
         )
         out.append((0 if near else 1, 0 if fresh else 1, -remain, item["name"], item))
     out.sort(key=lambda t: t[:4])
@@ -218,8 +231,9 @@ def camp(sido: str | None, sgg: str | None) -> dict:
                 ("주소", _clean(c.get("addr1"))),
                 ("전화", _clean(c.get("tel"))),
             ],
-            c.get("resveUrl") or c.get("homepage") or _map(_clean(c.get("facltNm"))),
+            c.get("resveUrl") or c.get("homepage") or _pin(_clean(c.get("facltNm")), c.get("mapY"), c.get("mapX"), _clean(c.get("addr1"))),
             "예약·누리집 보기" if (c.get("resveUrl") or c.get("homepage")) else "지도에서 보기",
+            _pin(_clean(c.get("facltNm")), c.get("mapY"), c.get("mapX"), _clean(c.get("addr1"))) if (c.get("resveUrl") or c.get("homepage")) else None,
         )
         out.append((0 if near else 1, item["name"], item))
     out.sort(key=lambda t: t[:2])
@@ -263,7 +277,7 @@ def pet(sido: str | None, sgg: str | None) -> dict:
         kind = CONTENT_TYPE.get(str(x.get("contenttypeid")), "")
         item = _item(
             f"pt{x['contentid']}", _clean(x.get("title")), " · ".join(p for p in (kind, addr) if p), "", "",
-            [("종류", kind), ("주소", addr), ("전화", _clean(x.get("tel")))], _map(_clean(x.get("title"))), "지도에서 보기",
+            [("종류", kind), ("주소", addr), ("전화", _clean(x.get("tel")))], _pin(_clean(x.get("title")), x.get("mapy"), x.get("mapx"), addr), "지도에서 보기",
         )
         out.append((0 if near else 1, kind != "관광지", item["name"], item))
     out.sort(key=lambda t: t[:3])
@@ -289,7 +303,7 @@ def wellness(sido: str | None, sgg: str | None) -> dict:
             continue
         near = _has(terms, addr)
         kind = CONTENT_TYPE.get(str(x.get("contentTypeId")), "")
-        item = _item(f"wl{x['contentId']}", _clean(x.get("title")), " · ".join(p for p in (kind, addr) if p), "", "", [("종류", kind), ("주소", addr)], _map(_clean(x.get("title"))), "지도에서 보기")
+        item = _item(f"wl{x['contentId']}", _clean(x.get("title")), " · ".join(p for p in (kind, addr) if p), "", "", [("종류", kind), ("주소", addr)], _pin(_clean(x.get("title")), x.get("mapY"), x.get("mapX"), addr), "지도에서 보기")
         out.append((0 if near else 1, item["name"], item))
     out.sort(key=lambda t: t[:2])
     out, label, scope_note = _scope(out, sgg, region)
@@ -323,7 +337,7 @@ def trail(sido: str | None, sgg: str | None) -> dict:
             f"tr{x['crsIdx']}", _clean(x.get("crsKorNm")), " · ".join(p for p in (sigun, f"{km}km" if km else "", dur.strip()) if p), level.get(str(x.get("crsLevel")), ""), "",
             [("지역", sigun), ("거리", f"{km}km" if km else None), ("소요 시간", dur.strip()), ("난이도", level.get(str(x.get("crsLevel")))), ("형태", _clean(x.get("crsCycle"))),
              ("코스 소개", _clean(x.get("crsSummary"))[:300])],
-            _map(_clean(x.get("crsKorNm"))), "지도에서 보기",
+            _map(f"{sigun} {_clean(x.get('crsKorNm'))}".strip()), "지도에서 보기",
         )
         out.append((0 if near else 1, item["name"], item))
     out.sort(key=lambda t: t[:2])

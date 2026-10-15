@@ -341,25 +341,49 @@ Widget cultureScreen(ApiClient api, Region region, BuildContext shellContext) =>
       },
     );
 
-/// 주말(2026-10-15, 문화 탭의 나들이를 따로 뺌): 이번 주말 한산한 곳 + 도서관·캠핑·반려동물·웰니스·걷기길.
-/// 두 구역이 각자 데이터를 받아서(시도·시군구 반영) 여기선 따로 불러올 게 없음.
-Widget weekendScreen(ApiClient api, Region region, BuildContext shellContext) => SectionScreen(
+/// 장소(2026-10-16; 처음엔 문화 탭의 "나들이", 10-15에 "주말" 탭으로 뺐다가 이름·구조를 바꿈): 갈 만한 곳을 구분별로.
+/// 한산한 곳(주말 관광지 집중률 예측) · 도서관(열람실 빈자리) · 캠핑 · 반려동물 동반 · 웰니스 · 걷기길.
+/// 구역 전환(SegmentedHost)은 문화 탭의 행사/음악, 혜택 탭의 4구역과 같은 방식. 각 구역이 자기 데이터를 받음(시도·시군구 반영).
+Widget placesScreen(ApiClient api, Region region, BuildContext shellContext) => SectionScreen(
       section: Section.culture,
       fetch: () async => <String, dynamic>{},
       contentBuilder: (context, data) => [
-        PageHero(
-          section: Section.culture,
-          eyebrow: '주말 · ${region.label}',
-          onEyebrowTap: () => showRegionPicker(shellContext),
-          headline: '이번 주말, 어디 갈까요?',
-          emphasis: '이번 주말',
-          headlineLines: 2,
-          source: '한국관광공사 · 지역정보개발원',
-          body: const [],
+        SegmentedHost(
+          labels: const ['한산한 곳', '도서관', '캠핑', '반려동물', '웰니스', '걷기길'],
+          prefKey: 'place_seg',
+          builder: (context, index, toggle) {
+            final (headline, emphasis, source) = switch (index) {
+              1 => ('지금 자리 있는 도서관', '자리 있는', '지역정보개발원 공공도서관 열람실'),
+              2 => ('이번 주말 캠핑, 어디로 갈까요?', '캠핑', '한국관광공사 고캠핑'),
+              3 => ('반려동물과 함께 갈 수 있는 곳', '함께', '한국관광공사 반려동물 동반여행'),
+              4 => ('몸과 마음이 쉬어 가는 웰니스 관광지', '웰니스', '한국관광공사 웰니스관광'),
+              5 => ('걷기 좋은 길, 걷기 코스', '걷기 좋은 길', '한국관광공사 두루누비'),
+              _ => ('이번 주말, 한산한 곳은 어디일까요?', '한산한 곳', '한국관광공사 관광지 집중률 예측'),
+            };
+            const kinds = [PlaceKind.library, PlaceKind.camp, PlaceKind.pet, PlaceKind.wellness, PlaceKind.trail];
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                PageHero(
+                  section: Section.culture,
+                  eyebrow: '장소 · ${region.label}',
+                  onEyebrowTap: () => showRegionPicker(shellContext),
+                  headline: headline,
+                  emphasis: emphasis,
+                  headlineLines: 2,
+                  source: source,
+                  topExtra: toggle,
+                  body: const [],
+                ),
+                if (index == 0)
+                  OutingSection(api: api, region: region)
+                else
+                  PlaceFeed(key: ValueKey('place${kinds[index - 1].name}${region.code}${region.sgg}'), api: api, region: region, kind: kinds[index - 1]),
+                const AdSlot(),
+              ],
+            );
+          },
         ),
-        OutingSection(api: api, region: region),
-        PlaceFeed(key: ValueKey('places${region.code}${region.sgg}'), api: api, region: region),
-        const AdSlot(),
       ],
     );
 

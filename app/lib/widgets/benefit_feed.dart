@@ -188,6 +188,7 @@ class _BenefitSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final rows = ((item['detail'] as List?) ?? const []).map((e) => (e as List).cast<String>()).toList();
     final url = item['url'] as String?;
+    final map = item['map'] as String?; // 대표 링크(누리집·예약)와 별도로 지도에서 그 장소 하나만 보는 링크
     return SafeArea(
       child: SingleChildScrollView(
         padding: const EdgeInsets.fromLTRB(20, 4, 20, 32),
@@ -220,6 +221,17 @@ class _BenefitSheet extends StatelessWidget {
                   alignment: Alignment.center,
                   decoration: BoxDecoration(border: Border.all(color: AppColors.ink), borderRadius: BorderRadius.circular(8)),
                   child: Text(item['link_label'] as String? ?? '자세히 보기', style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700)),
+                ),
+              ),
+            ],
+            if (map != null && map.isNotEmpty) ...[
+              const SizedBox(height: 10),
+              GestureDetector(
+                onTap: () => launchUrl(Uri.parse(map), mode: LaunchMode.externalApplication),
+                behavior: HitTestBehavior.opaque,
+                child: const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 10),
+                  child: Center(child: Text('지도에서 보기', style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700, decoration: TextDecoration.underline))),
                 ),
               ),
             ],

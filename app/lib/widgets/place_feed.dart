@@ -6,7 +6,7 @@ import '../theme.dart';
 import 'benefit_feed.dart';
 import 'components.dart';
 
-/// 문화 탭 "나들이": 도서관 열람실 빈자리 · 캠핑장 · 반려동물 동반 · 웰니스 · 걷기길을 칩으로 골라 봄.
+/// 장소 탭의 한 구분(도서관 열람실 빈자리 · 캠핑장 · 반려동물 동반 · 웰니스 · 걷기길 중 하나). 구분 전환은 바깥(SegmentedHost)이 함(2026-10-16).
 /// 서버가 줄여서 준 항목({name, sub, tag, span, detail, url, link_label})을 청약·대출 목록과 같은 모양으로 보여주고,
 /// 누르면 같은 상세 시트가 열림. 지역은 앱 전체 지역(시도·시군구)을 따름. 사진은 쓰지 않음(저작권 구분 확인 전).
 enum PlaceKind { library, camp, pet, wellness, trail }
@@ -19,6 +19,8 @@ const _labels = {
   PlaceKind.trail: '걷기길',
 };
 
+String placeKindLabel(PlaceKind k) => _labels[k]!;
+
 const _titles = {
   PlaceKind.library: '도서관 열람실 빈자리',
   PlaceKind.camp: '근처 캠핑장',
@@ -28,10 +30,11 @@ const _titles = {
 };
 
 class PlaceFeed extends StatefulWidget {
-  const PlaceFeed({super.key, required this.api, required this.region});
+  const PlaceFeed({super.key, required this.api, required this.region, required this.kind});
 
   final ApiClient api;
   final Region region;
+  final PlaceKind kind;
 
   static final Map<String, ({DateTime at, Future<Map<String, dynamic>> future})> _memo = {};
 
@@ -55,30 +58,14 @@ class PlaceFeed extends StatefulWidget {
 }
 
 class _PlaceFeedState extends State<PlaceFeed> {
-  PlaceKind _kind = PlaceKind.library;
+  PlaceKind get _kind => widget.kind;
   late Future<Map<String, dynamic>> _future = _load();
 
   Future<Map<String, dynamic>> _load() => PlaceFeed.fetch(widget.api, widget.region, _kind);
 
-  void _pick(PlaceKind k) {
-    if (k == _kind) return;
-    setState(() {
-      _kind = k;
-      _future = _load();
-    });
-  }
-
-  Widget _chips() => Wrap(
-        spacing: 8,
-        runSpacing: 8,
-        children: [for (final k in PlaceKind.values) PillChip(label: _labels[k]!, selected: _kind == k, onTap: () => _pick(k))],
-      );
-
   Widget _message(Widget child, {VoidCallback? onTap}) => ListSection(
         title: _titles[_kind]!,
         children: [
-          const SizedBox(height: 18),
-          _chips(),
           GestureDetector(
             onTap: onTap,
             behavior: HitTestBehavior.opaque,
@@ -132,8 +119,6 @@ class _PlaceFeedState extends State<PlaceFeed> {
           title: _titles[_kind]!,
           trailing: '${d['total']}곳',
           children: [
-            const SizedBox(height: 18),
-            _chips(),
             if (_kind == PlaceKind.camp && weather.isNotEmpty) _campWeather(weather),
             if (d['scope_note'] != null)
               Padding(padding: const EdgeInsets.only(top: 12), child: Text(d['scope_note'] as String, style: const TextStyle(fontSize: 11, color: AppColors.inkSoft, height: 1.6))),

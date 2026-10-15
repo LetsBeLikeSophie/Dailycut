@@ -33,11 +33,26 @@ class _TodayScreenState extends State<TodayScreen> {
     super.initState();
     // 날씨는 전용 탭이 없고 투데이 맨 위에만 있어서, today()의 요약
     // 필드 말고 weather()의 전체 데이터(시간대별·주간·지수)를 같이 받아옴.
-    // 지역(시도)은 앱 전체가 공유함(region.dart). 지역이 바뀌면 이 화면이 새로 만들어져서 다시 받아옴.
+    // 지역(시도)은 앱 전체가 공유함(region.dart).
+    _load();
+  }
+
+  void _load() {
     _weather = widget.api.weather(sido: widget.region.code, sgg: widget.region.sgg);
     _today = widget.api
         .today(sido: widget.region.code, sgg: widget.region.sgg)
         .then<Map<String, dynamic>?>((v) => v, onError: (_) => null);
+  }
+
+  // 2026-10-16: 첫 방문은 서울로 먼저 그리고 위치를 알아낸 뒤 지역이 바뀌는데, 예전엔 그때 이 화면이 통째로 새로 만들어져서
+  // 스플래시가 걷힌 뒤 1초쯤 뒤에 로딩 원이 2~3초 다시 돌았음 → 이제 화면을 그대로 두고 새 지역 데이터만 받아 바꿔 끼움
+  // (받는 동안은 이전 내용 위에 가는 진행 막대만).
+  @override
+  void didUpdateWidget(TodayScreen old) {
+    super.didUpdateWidget(old);
+    if (old.region.code != widget.region.code || old.region.sgg != widget.region.sgg) {
+      setState(_load);
+    }
   }
 
   @override
@@ -45,7 +60,8 @@ class _TodayScreenState extends State<TodayScreen> {
     return FutureBuilder<Map<String, dynamic>>(
       future: _weather,
       builder: (context, snapshot) {
-        if (snapshot.connectionState != ConnectionState.done) {
+        final waiting = snapshot.connectionState != ConnectionState.done;
+        if (waiting && !snapshot.hasData) {
           return const Center(child: CircularProgressIndicator());
         }
         // 첫 화면 데이터가 준비됐으니 웹 스플래시를 걷음(받는 동안은 스플래시가 덮고 있어서 스피너가 또 보이지 않음)
@@ -84,6 +100,7 @@ class _TodayScreenState extends State<TodayScreen> {
         return ListView(
           padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
           children: [
+            if (waiting) const LinearProgressIndicator(minHeight: 2, color: AppColors.ink, backgroundColor: AppColors.hair),
             PageHero(
               section: Section.weather,
               eyebrow: eyebrow,

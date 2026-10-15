@@ -1338,9 +1338,12 @@ class SegmentToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 2026-10-16: 장소 탭처럼 구분이 6개면 폭을 넘어서 가로로 밀어 볼 수 있게(칸이 적으면 그대로 한 줄)
     return Padding(
       padding: const EdgeInsets.only(top: 6, bottom: 4),
-      child: Row(
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal,
+        child: Row(
         children: [
           for (var i = 0; i < labels.length; i++) ...[
             GestureDetector(
@@ -1367,6 +1370,7 @@ class SegmentToggle extends StatelessWidget {
             if (i < labels.length - 1) const SizedBox(width: 26),
           ],
         ],
+      ),
       ),
     );
   }
