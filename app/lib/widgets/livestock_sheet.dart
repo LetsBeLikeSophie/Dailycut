@@ -68,7 +68,12 @@ class _LivestockSheet extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(item['label'] as String, style: AppTheme.displaySerif(size: 26, fontWeight: FontWeight.w700)),
+            Row(
+              children: [
+                Expanded(child: Text(item['label'] as String, style: AppTheme.displaySerif(size: 24, fontWeight: FontWeight.w700))),
+                const InfoIconButton(title: '안내', lines: ['평년은 과거 같은 시기의 평균 가격이에요.']),
+              ],
+            ),
             const SizedBox(height: 6),
             Text.rich(
               TextSpan(children: [
@@ -92,11 +97,6 @@ class _LivestockSheet extends StatelessWidget {
                   ],
                 ),
               ),
-            const SizedBox(height: 14),
-            const Text(
-              '평년은 과거 같은 시기의 평균 가격이에요.',
-              style: TextStyle(fontSize: 13, color: AppColors.inkSoft, height: 1.6),
-            ),
           ],
         ),
       ),

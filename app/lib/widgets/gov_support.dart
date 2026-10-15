@@ -233,6 +233,7 @@ class _SupportSheet extends StatelessWidget {
       title: item['name'] as String,
       sub: [item['org'], item['field']].where((e) => (e as String?)?.isNotEmpty ?? false).join(' · '),
       gapAfterHeader: 0,
+      infoLines: const ['행정안전부 대한민국 공공서비스(혜택) 정보'],
       children: [
             block('지원 내용', item['support'] as String?),
             block('지원 대상', item['target'] as String?),
@@ -243,8 +244,6 @@ class _SupportSheet extends StatelessWidget {
               const SizedBox(height: 28),
               ActionButton(label: '정부24에서 자세히 보기', onTap: () => launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication)),
             ],
-            const SizedBox(height: 20),
-            const Text('출처: 행정안전부 대한민국 공공서비스(혜택) 정보', style: TextStyle(fontSize: 11, color: AppColors.inkSoft)),
       ],
     );
   }

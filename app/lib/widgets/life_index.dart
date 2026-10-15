@@ -72,7 +72,8 @@ class _LifeSheet extends StatelessWidget {
               children: [
                 Icon(lifeIconFor(key), size: 26),
                 const SizedBox(width: 10),
-                Text(item['title'] as String, style: AppTheme.displaySerif(size: 24, fontWeight: FontWeight.w700)),
+                Expanded(child: Text(item['title'] as String, style: AppTheme.displaySerif(size: 24, fontWeight: FontWeight.w700))),
+                InfoIconButton(title: '출처', lines: ['${item['source'] ?? ''}']),
               ],
             ),
             const SizedBox(height: 10),
@@ -90,8 +91,6 @@ class _LifeSheet extends StatelessWidget {
                 padding: const EdgeInsets.only(top: 6),
                 child: Text(l, style: const TextStyle(fontSize: 13, color: AppColors.inkSoft, height: 1.6)),
               ),
-            const SizedBox(height: 14),
-            Text('출처 · ${item['source'] ?? ''}', style: const TextStyle(fontSize: 11, color: AppColors.inkSoft, height: 1.6)),
           ],
         ),
       ),

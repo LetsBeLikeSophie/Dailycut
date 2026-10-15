@@ -363,6 +363,7 @@ class _ProduceSheet extends StatelessWidget {
                 const Icon(Icons.local_fire_department_outlined, size: 18),
                 const SizedBox(width: 6),
                 Text('영양 · 100g당', style: AppTheme.subheading),
+                InfoIconButton(title: '영양 정보', lines: ['식품의약품안전처 식품영양성분DB(${n['ref']}) 기준이에요.']),
               ],
             ),
             const SizedBox(height: 12),
@@ -374,8 +375,6 @@ class _ProduceSheet extends StatelessWidget {
                 cell(g(n['fat']), '지방'),
               ],
             ),
-            const SizedBox(height: 8),
-            Text('식품의약품안전처 식품영양성분DB(${n['ref']}) 기준이에요.', style: const TextStyle(fontSize: 11, color: AppColors.inkSoft, height: 1.5)),
           ],
         ),
       );
@@ -481,19 +480,6 @@ class _ProduceSheet extends StatelessWidget {
                     ),
                 ],
               ),
-            ),
-            const SizedBox(height: 14),
-            ListenableBuilder(
-              listenable: MyBasket.instance,
-              builder: (context, _) {
-                final inBasket = MyBasket.instance.contains(item['name'] as String);
-                return ActionButton(
-                  filled: inBasket,
-                  vertical: 11,
-                  label: inBasket ? '내 장바구니에 담김 · 누르면 빼기' : '내 장바구니에 담기',
-                  onTap: () => MyBasket.instance.toggle(item['name'] as String),
-                );
-              },
             ),
             if (guide != null) ...[
               const SizedBox(height: 22),

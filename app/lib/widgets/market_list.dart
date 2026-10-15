@@ -162,12 +162,14 @@ class _MarketSheet extends StatelessWidget {
       title: name,
       sub: '${market['type']} · $sigungu',
       gapAfterHeader: 20,
+      infoLines: const ['소상공인시장진흥공단 전통시장현황(2026-08-04 기준)이에요.', '휴장일·영업시간은 이 데이터에 없어서 방문 전에 지도에서 확인해 주세요.'],
       children: [
             Text('주소', style: AppTheme.subheading),
             const SizedBox(height: 6),
             SelectableText(addr, style: const TextStyle(fontSize: 16, height: 1.5)),
             const SizedBox(height: 14),
-            ActionButton(vertical: 12, label: '지도에서 보기', onTap: () => openMapChooser(context, {'name': name, 'q': '$name $sigungu'})),
+            // 좌표가 없어서 도로명 주소로 찾음(시장 이름보다 정확)
+            ActionButton(vertical: 12, label: '지도에서 보기', onTap: () => openMapChooser(context, {'name': name, 'q': addr.isNotEmpty ? addr : '$name $sigungu'})),
             const SizedBox(height: 24),
             Text('시설', style: AppTheme.subheading),
             const SizedBox(height: 10),
@@ -202,16 +204,16 @@ class _MarketSheet extends StatelessWidget {
                     children: [
                       ZoomImage(provider: NetworkImage('${api.baseUrl}${d['image']}')),
                       const SizedBox(height: 6),
-                      Text('사진: ${d['credit']} · ${d['license']}', style: const TextStyle(fontSize: 11, color: AppColors.inkSoft)),
+                      Row(
+                        children: [
+                          Expanded(child: Text('사진 · ${d['credit']}', maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 11, color: AppColors.inkSoft))),
+                          InfoIconButton(title: '사진 정보', lines: ['사진: ${d['credit']}', '이용 조건: ${d['license']}']),
+                        ],
+                      ),
                     ],
                   ),
                 );
               },
-            ),
-            const SizedBox(height: 22),
-            const Text(
-              '소상공인시장진흥공단 전통시장현황(2026-08-04 기준)이에요. 휴장일·영업시간은 이 데이터에 없어서 방문 전에 지도에서 확인해 주세요.',
-              style: TextStyle(fontSize: 11, color: AppColors.inkSoft, height: 1.6),
             ),
       ],
     );

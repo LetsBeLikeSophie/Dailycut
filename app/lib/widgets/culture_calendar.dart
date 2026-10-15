@@ -365,7 +365,17 @@ class _EventSheet extends StatelessWidget {
                   ],
                 ),
                 const SizedBox(height: 8),
-                Text(ok ? (d['title'] as String) : event['title'] as String, style: AppTheme.displaySerif(size: 24, fontWeight: FontWeight.w700)),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Expanded(child: Text(ok ? (d['title'] as String) : event['title'] as String, style: AppTheme.displaySerif(size: 24, fontWeight: FontWeight.w700))),
+                    if (ok)
+                      Padding(
+                        padding: const EdgeInsets.only(top: 6),
+                        child: InfoIconButton(title: '출처', lines: [if (image != null) '사진: ${d['credit']}', '정보: ${d['credit']}']),
+                      ),
+                  ],
+                ),
                 const SizedBox(height: 8),
                 row('기간', period),
                 if (ok) row('시간', d['time'] as String?),
@@ -397,12 +407,6 @@ class _EventSheet extends StatelessWidget {
                     background: t.highlight,
                     onError: ColoredBox(color: t.highlight, child: SizedBox(height: 140, child: Center(child: Image.asset(t.shapeAsset, width: 72, height: 72)))),
                   ),
-                  const SizedBox(height: 6),
-                  Text('사진: ${d!['credit']}', style: const TextStyle(fontSize: 11, color: AppColors.inkSoft)),
-                ],
-                if (ok) ...[
-                  const SizedBox(height: 18),
-                  Text('출처: ${d['credit']}', style: const TextStyle(fontSize: 11, color: AppColors.inkSoft)),
                 ],
               ],
             );
