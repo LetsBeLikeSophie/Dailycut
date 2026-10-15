@@ -385,6 +385,10 @@ claude.ai/artifact/17gytwYuXMFkF4vx8tWv65 (사용 중 · 일부만 · 미사용 
   ②nginx `listen 443 ssl http2`(원래 HTTP/1.1이라 동시 6연결 제한; 백업 `sites-available/itssophie.dev.bak-*`). 캐시된 재방문은 API 요청이 0.9s에 시작(전엔 5.25s).
   측정 스크립트: 브라우저 콘솔에서 `performance.getEntriesByType('resource')`. **남은 개선 후보**: ①`IndexedStack`이 5개 탭을 시작과 동시에 만들어서 `/market`(130KB)·`/culture`가 투데이 요청과 같이 나감(1코어 서버라 투데이가 0.2→0.5s로 밀림) → 탭을 처음 열 때 만들고 투데이가 뜬 뒤 뒤에서 미리 만들기
   ②투데이가 `today()`+`weather()` 둘 다 기다림 → 날씨 히어로를 먼저 그리고 "오늘의 섹션"은 따로 ③스플래시에 날씨 한 줄 먼저 띄우기(index.html에서 바로 `/weather` 호출) ④서울이 아닌 지역은 날씨 첫 요청이 콜드(수 초~수십 초).
+- **첫 로드 3차: 먼저 띄우기 3종 (2026-10-15, 위 "남은 개선 후보" ①②③ 처리)**: ①탭 지연 생성 — `main.dart`가 투데이만 먼저 만들고, 투데이가 그려지면(`boot.dart`의 `kFirstScreenReady`) 나머지 탭을 0.7초 간격으로 뒤에서 차례로 만들며, 탭을 먼저 누르면 그 탭은 바로 만듦(`_visited`).
+  ②투데이 분리 — `/weather` 응답이 `headline`까지 줘서(`api.py weather_route`, 안쪽 `weather()`는 그대로) 날씨 히어로·주간·생활지수는 이것만으로 그려지고, "오늘의 섹션"은 `/today`를 따로 받아 오면 보임(느리거나 실패하면 그 구역만 빔).
+  ③스플래시 날씨 — `index.html`이 앱 부팅과 별개로 `/dailycut-api/weather`를 바로 불러(배포 경로 `/dailycut/`에서만, 저장된 지역 `flutter.region_code/region_sgg` 사용, 8초 지나면 포기) 로고 아래에 "14° 맑음 · 낮 최고/최저 · 옷차림"을 먼저 보임.
+  라이브 측정(캐시 있음): 날씨 한 줄 약 1.0초, 앱 본체의 날씨 요청 3.0초(번들 새로 받음), 이어서 market 5.2s·culture 6.5s·혜택 8.7s로 차례로 뒤에서 받음. 서버 반영 순서 주의: `/weather` headline이 먼저 배포돼 있어야 새 앱이 제목을 못 받는 일이 없음.
 - **광고(카카오 애드핏, 웹) 준비됨 (2026-10-12)**: `widgets/ad_slot.dart`의 `AdSlot` + `web/ad.html`(애드핏 스크립트 페이지, 같은 도메인 iframe).
   광고 단위 ID가 없으면 칸이 아예 안 그려짐. 켜는 법: 애드핏에서 사이트(itssophie.dev/dailycut) 등록·승인 → 광고 단위(320x100 등) 생성 →
   `flutter build web … --dart-define=ADFIT_UNIT=DAN-xxxx --dart-define=ADFIT_SIZE=320x100`. 칸 위치: 생활(장보기 시세 아래)·문화(행사/영화 구역 아래)·머니(금리 아래).

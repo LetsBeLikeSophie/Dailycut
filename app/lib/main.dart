@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'api_client.dart';
+import 'boot.dart';
 import 'screens/today_screen.dart';
 import 'screens/section_screens.dart';
 import 'analytics.dart';
@@ -34,6 +35,9 @@ class RootShell extends StatefulWidget {
 class _RootShellState extends State<RootShell> {
   final _api = ApiClient();
   int _index = 0;
+  // 2026-10-15: 5개 탭을 시작과 동시에 다 만들면 생활·문화 요청이 투데이 요청과 겹쳐 첫 화면이 밀림 → 투데이만 먼저,
+  // 첫 화면이 그려진 뒤 나머지를 0.7초 간격으로 뒤에서 만들어 둠(탭을 먼저 누르면 그 탭은 바로 만듦).
+  final Set<int> _visited = {0};
 
   // 2026-09-30: 날씨를 생활에서 빼되, 별도 탭/전용 화면까지는 필요 없고
   // 투데이 카드로만 있으면 충분하다는 피드백 — 탭은 원래 5개로 되돌림
@@ -49,6 +53,22 @@ class _RootShellState extends State<RootShell> {
     // 지역(시도)을 정함: 저장된 선택 → 위치 권한(허용 시 내 시도) → 기본 서울
     RegionStore.instance.init(_api);
     Analytics.instance.track('tab_view', 'today');
+    kFirstScreenReady.addListener(_warmOtherTabs);
+  }
+
+  @override
+  void dispose() {
+    kFirstScreenReady.removeListener(_warmOtherTabs);
+    super.dispose();
+  }
+
+  void _warmOtherTabs() {
+    if (!kFirstScreenReady.value) return;
+    for (var i = 1; i < _tabs.length; i++) {
+      Future<void>.delayed(Duration(milliseconds: 700 * i), () {
+        if (mounted) setState(() => _visited.add(i));
+      });
+    }
   }
 
   /// 지역에 따라 달라지는 화면(투데이·생활·문화)은 지역이 바뀌면 새로 만들어서 다시 받아옴.
@@ -67,14 +87,15 @@ class _RootShellState extends State<RootShell> {
   }
 
   Widget _scaffold(BuildContext context) {
-    final screens = [
-      _regional((r) => TodayScreen(api: _api, region: r)),
-      _regional((r) => marketScreen(_api, r, context)),
-      _regional((r) => cultureScreen(_api, r, context)),
-      _regional((r) => weekendScreen(_api, r, context)),
-      _regional((r) => benefitsScreen(_api, r, context)),
-      if (_showAi) aiScreen(_api),
+    final builders = <Widget Function()>[
+      () => _regional((r) => TodayScreen(api: _api, region: r)),
+      () => _regional((r) => marketScreen(_api, r, context)),
+      () => _regional((r) => cultureScreen(_api, r, context)),
+      () => _regional((r) => weekendScreen(_api, r, context)),
+      () => _regional((r) => benefitsScreen(_api, r, context)),
+      if (_showAi) () => aiScreen(_api),
     ];
+    final screens = [for (var i = 0; i < builders.length; i++) _visited.contains(i) ? builders[i]() : const SizedBox.shrink()];
 
     return Scaffold(
       body: SafeArea(child: IndexedStack(index: _index, children: screens)),
@@ -92,7 +113,10 @@ class _RootShellState extends State<RootShell> {
                   Expanded(
                     child: GestureDetector(
                       onTap: () {
-                        setState(() => _index = i);
+                        setState(() {
+                          _index = i;
+                          _visited.add(i);
+                        });
                         Analytics.instance.track('tab_view', _tabKeys[i]);
                       },
                       behavior: HitTestBehavior.opaque,

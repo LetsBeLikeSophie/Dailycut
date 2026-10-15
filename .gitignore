@@ -13,7 +13,7 @@ app/ios/.symlinks/
 
 # Python
 backend/venv/
-backend/__pycache__/
+__pycache__/
 backend/*.pyc
 backend/*.db
 

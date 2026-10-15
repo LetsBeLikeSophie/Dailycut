@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../splash_stub.dart' if (dart.library.js_interop) '../splash_web.dart';
 
 import '../api_client.dart';
+import '../boot.dart';
 import '../region.dart';
 import '../theme.dart';
 import '../widgets/components.dart';
@@ -22,8 +23,10 @@ class TodayScreen extends StatefulWidget {
 }
 
 class _TodayScreenState extends State<TodayScreen> {
-  late Future<({Map<String, dynamic> today, Map<String, dynamic> weather})>
-  _future;
+  // 2026-10-15: 날씨(맨 위 히어로·주간·생활지수)만 오면 먼저 그림. `/today`(오늘의 섹션 카드)는 따로 받아서
+  // 느려도 화면을 막지 않고, 실패하면 그 구역만 안 보임.
+  late Future<Map<String, dynamic>> _weather;
+  late Future<Map<String, dynamic>?> _today;
 
   @override
   void initState() {
@@ -31,25 +34,25 @@ class _TodayScreenState extends State<TodayScreen> {
     // 날씨는 전용 탭이 없고 투데이 맨 위에만 있어서, today()의 요약
     // 필드 말고 weather()의 전체 데이터(시간대별·주간·지수)를 같이 받아옴.
     // 지역(시도)은 앱 전체가 공유함(region.dart). 지역이 바뀌면 이 화면이 새로 만들어져서 다시 받아옴.
-    _future = () async {
-      final results = await Future.wait([
-        widget.api.today(sido: widget.region.code, sgg: widget.region.sgg),
-        widget.api.weather(sido: widget.region.code, sgg: widget.region.sgg),
-      ]);
-      return (today: results[0], weather: results[1]);
-    }();
+    _weather = widget.api.weather(sido: widget.region.code, sgg: widget.region.sgg);
+    _today = widget.api
+        .today(sido: widget.region.code, sgg: widget.region.sgg)
+        .then<Map<String, dynamic>?>((v) => v, onError: (_) => null);
   }
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder(
-      future: _future,
+    return FutureBuilder<Map<String, dynamic>>(
+      future: _weather,
       builder: (context, snapshot) {
         if (snapshot.connectionState != ConnectionState.done) {
           return const Center(child: CircularProgressIndicator());
         }
         // 첫 화면 데이터가 준비됐으니 웹 스플래시를 걷음(받는 동안은 스플래시가 덮고 있어서 스피너가 또 보이지 않음)
-        WidgetsBinding.instance.addPostFrameCallback((_) => hideSplash());
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          hideSplash();
+          kFirstScreenReady.value = true; // 이제 다른 탭을 뒤에서 만들어 둠(main.dart)
+        });
         if (snapshot.hasError) {
           return Center(
             child: Text(
@@ -58,14 +61,9 @@ class _TodayScreenState extends State<TodayScreen> {
             ),
           );
         }
-        final data = snapshot.data!.today;
-        final weather = snapshot.data!.weather;
+        final weather = snapshot.data!;
         final eyebrow = '오늘 · ${RegionStore.instance.label}';
         final t = sectionThemes[Section.weather]!;
-        final others = (data['cards'] as List)
-            .cast<Map<String, dynamic>>()
-            .where((c) => c['section'] != 'weather' && ((data['live_sections'] as List?)?.contains(c['section']) ?? false)) // 예시(스텁) 카드는 뺌
-            .toList();
 
         final today = weather['today'] as Map<String, dynamic>;
         final hourly = (weather['hourly'] as List).cast<Map<String, dynamic>>();
@@ -82,9 +80,6 @@ class _TodayScreenState extends State<TodayScreen> {
             const [];
         final indexes = (weather['indexes'] as List?)
             ?.cast<Map<String, dynamic>>();
-        final liveSections =
-            (data['live_sections'] as List?)?.cast<String>() ??
-            const <String>[];
 
         return ListView(
           padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
@@ -94,7 +89,7 @@ class _TodayScreenState extends State<TodayScreen> {
               eyebrow: eyebrow,
               onEyebrowTap: () => showRegionPicker(context),
               stub: !weatherLive,
-              headline: data['headline'] as String,
+              headline: (weather['headline'] as String?) ?? '오늘의 날씨',
               source: weatherLive
                   ? weather['source'] as String?
                   : '${weather['source']} · 예시 데이터',
@@ -205,25 +200,39 @@ class _TodayScreenState extends State<TodayScreen> {
             ),
             // 생활 탭에서 담아 둔 품목이 있을 때만 보임(없으면 아무것도 안 그림)
             MyBasketToday(api: widget.api, region: widget.region),
-            ListSection(
-              title: '오늘의 섹션',
-              children: [
-                for (final c in others)
-                  ListLine(
-                    stub: !liveSections.contains(c['section']),
-                    name: (c['title'] ?? c['label'] ?? '') as String,
-                    sub:
-                        sectionThemes[Section.values.byName(
-                              c['section'] as String,
-                            )]!
-                            .label,
-                    value: (c['highlight'] ?? c['meta'] ?? c['value'] ?? '')
-                        .toString(),
-                    valueSub: c['highlight'] != null
-                        ? (c['meta'] ?? c['value'])?.toString()
-                        : null,
-                  ),
-              ],
+            FutureBuilder<Map<String, dynamic>?>(
+              future: _today,
+              builder: (context, snap) {
+                final data = snap.data;
+                if (data == null) return const SizedBox.shrink(); // 받는 중이거나 실패 — 이 구역만 비움
+                final liveSections = (data['live_sections'] as List?)?.cast<String>() ?? const <String>[];
+                // 예시(스텁) 카드는 뺌
+                final others = (data['cards'] as List)
+                    .cast<Map<String, dynamic>>()
+                    .where((c) => c['section'] != 'weather' && liveSections.contains(c['section']))
+                    .toList();
+                if (others.isEmpty) return const SizedBox.shrink();
+                return ListSection(
+                              title: '오늘의 섹션',
+                              children: [
+                                for (final c in others)
+                                  ListLine(
+                                    stub: !liveSections.contains(c['section']),
+                                    name: (c['title'] ?? c['label'] ?? '') as String,
+                                    sub:
+                                        sectionThemes[Section.values.byName(
+                                              c['section'] as String,
+                                            )]!
+                                            .label,
+                                    value: (c['highlight'] ?? c['meta'] ?? c['value'] ?? '')
+                                        .toString(),
+                                    valueSub: c['highlight'] != null
+                                        ? (c['meta'] ?? c['value'])?.toString()
+                                        : null,
+                                  ),
+                              ],
+                            );
+              },
             ),
           ],
         );

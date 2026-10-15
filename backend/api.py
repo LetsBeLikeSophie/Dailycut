@@ -337,7 +337,6 @@ def _mock_weekly(base_high: int, base_low: int, days: int = 6) -> list[dict]:
     return out
 
 
-@app.get("/weather")
 @live_geo(weather_src)
 def weather(sido: str | None = None, sgg: str | None = None):
     return {
@@ -357,6 +356,13 @@ def weather(sido: str | None = None, sgg: str | None = None):
         ],
         "air_quality": {"pm10": "보통", "pm25": "좋음"},
     }
+
+
+@app.get("/weather")
+def weather_route(sido: str | None = None, sgg: str | None = None):
+    """투데이 첫 화면은 이것만으로 그려짐(2026-10-15): 맨 위 한 문장(headline)을 함께 줌 — /today가 느려도 날씨 히어로가 안 막히게."""
+    w = weather(sido=sido, sgg=sgg)
+    return {**w, "headline": _headline(w)}
 
 
 # 2026-09-29: 처음엔 "시세"를 품목 가격 순위만 보여주는 좁은 지표로
