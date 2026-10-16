@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -111,7 +112,8 @@ class _LegalLink extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
-      onTap: () => launchUrl(Uri.base.resolve(page), mode: LaunchMode.externalApplication),
+      // 웹은 같은 사이트의 상대 주소, 설치형 앱은 배포 사이트의 절대 주소(앱에서는 Uri.base가 파일 경로라 깨짐)
+      onTap: () => launchUrl(kIsWeb ? Uri.base.resolve(page) : Uri.parse('https://itssophie.dev/dailycut/$page'), mode: LaunchMode.externalApplication),
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 6),
         child: Text(label, style: const TextStyle(fontSize: 13, color: AppColors.inkSoft, decoration: TextDecoration.underline)),

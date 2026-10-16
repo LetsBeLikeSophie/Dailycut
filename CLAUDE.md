@@ -445,6 +445,9 @@ claude.ai/artifact/17gytwYuXMFkF4vx8tWv65 (사용 중 · 일부만 · 미사용 
   공공누리 1유형(출처표시) = 기상청 단기·중기예보·기상특보·꽃가루; **공공누리 3유형(출처표시·변경금지) = 한국환경공단 에어코리아(15073861)**. 사진은 관광공사 Type1만·위키미디어 CC만(위 기존 규칙). 금융위·금감원·KOBIS는 그대로 제거 상태(코드 import 없음).
   **에어코리아 3유형(변경금지) 대응 완료 (2026-10-16)**: 예전엔 시군구 측정소 평균을 내고 등급을 직접 다시 매겼으나(2차 저작물 소지) → `weather._air`가 **측정소 한 곳의 실시간 원값과 에어코리아가 준 1시간 등급(`pm10Grade1h`·`pm25Grade1h`, API `ver=1.3`)을 그대로** 보여줌.
   측정소 선택: 시군구를 골랐으면 그 시군구 측정소 목록에서 값이 있는 첫 곳, 시도만 골랐으면 시도청에 가장 가까운 시군구의 측정소부터(서울→중구, 부산→연산동). 화면 설명·출처 문구도 "○○ 측정소 · 측정 시각 · 가공 없이 표시"로 바꿈. **이 값에 평균·재등급·반올림 같은 가공을 다시 넣지 말 것.** 빨래·세차 판정의 입력으로 쓰는 건 그대로(우리 자체 지수).
+- **안드로이드 APK 빌드 (2026-10-17)**: `cd app && flutter build apk --release --dart-define=API_BASE_URL=https://itssophie.dev/dailycut-api` → `app/build/app/outputs/flutter-apk/app-release.apk`(약 55MB, 모든 CPU 포함; 복사본은 `dist/`, git 제외). 패키지 `com.dailycut.dailycut`, 앱 이름 `데일리컷`, 버전은 `pubspec.yaml version`.
+  **릴리스 매니페스트에는 `INTERNET` 권한이 기본으로 없어서** `AndroidManifest.xml`에 직접 넣음(없으면 폰에서 데이터를 못 받음) + 위치(`ACCESS_COARSE_LOCATION`) + 웹 링크용 `<queries> https VIEW`. 웹 전용 코드 주의: 앱에서는 `Uri.base`가 파일 경로라 상대 링크가 깨짐(`sources_info.dart`는 `kIsWeb` 분기).
+  지금 APK는 **디버그 키로 서명**(`build.gradle.kts`의 release 서명) — 기기 설치·테스트용. **스토어 출시 전에 할 일**: 업로드 키스토어 만들기(분실하면 업데이트 불가, 비밀번호는 git 밖에), `key.properties`+서명 설정, 앱 아이콘·스플래시(지금은 플러터 기본 아이콘), AAB(`flutter build appbundle`)로 올리기, 개인정보처리방침 URL(`itssophie.dev/dailycut/privacy.html`)·데이터 보안 양식, 광고는 웹 애드핏이 아니라 앱용(애드몹 등)으로 교체(`ad_view_stub.dart`).
 - **광고(카카오 애드핏, 웹) 준비됨 (2026-10-12)**: `widgets/ad_slot.dart`의 `AdSlot` + `web/ad.html`(애드핏 스크립트 페이지, 같은 도메인 iframe).
   광고 단위 ID가 없으면 칸이 아예 안 그려짐. 켜는 법: 애드핏에서 사이트(itssophie.dev/dailycut) 등록·승인 → 광고 단위(320x100 등) 생성 →
   `flutter build web … --dart-define=ADFIT_UNIT=DAN-xxxx --dart-define=ADFIT_SIZE=320x100`. 칸 위치: 생활(장보기 시세 아래)·문화(행사/영화 구역 아래)·머니(금리 아래).

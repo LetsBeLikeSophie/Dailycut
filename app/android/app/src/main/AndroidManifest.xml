@@ -1,8 +1,10 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- 공공데이터 서버(itssophie.dev/dailycut-api)와 통신 — 릴리스 빌드에는 기본으로 없어서 꼭 필요 -->
+    <uses-permission android:name="android.permission.INTERNET" />
     <!-- 내 주변 날씨·문화 정보용(대략적인 위치만 요청) -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
     <application
-        android:label="dailycut"
+        android:label="데일리컷"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
@@ -42,6 +44,11 @@
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
+        </intent>
+        <!-- 웹 링크(누리집·지도·출처)를 브라우저/지도 앱으로 열기(url_launcher) -->
+        <intent>
+            <action android:name="android.intent.action.VIEW"/>
+            <data android:scheme="https"/>
         </intent>
     </queries>
 </manifest>

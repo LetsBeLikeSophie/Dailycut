@@ -30,3 +30,4 @@ backend/.env
 
 scratch_fonts/
 scratch_cond.pkl
+dist/
