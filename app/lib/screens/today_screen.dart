@@ -261,7 +261,7 @@ class _TodayScreenState extends State<TodayScreen> {
   }
 }
 
-/// 미세먼지 줄 설명: 에어코리아 시도 내 측정소 평균값과 등급 기준(환경부).
+/// 미세먼지 줄 설명: 에어코리아 측정소 한 곳의 실시간 값과 등급 기준(가공 없이).
 String? _airBasis(
   Map<String, dynamic> air,
   String valueKey,
@@ -270,5 +270,5 @@ String? _airBasis(
 ) {
   final v = air[valueKey];
   if (v == null) return null;
-  return '$name $v㎍/㎥ · 에어코리아 ${air['scope'] ?? ''} 측정소 ${air['stations'] ?? '여러'}곳 평균 · 환경부 기준($cuts)';
+  return '$name $v㎍/㎥ · 에어코리아 ${air['station'] ?? ''} 측정소 · 환경부 기준($cuts)';
 }

@@ -168,37 +168,61 @@ def _air_rows(sido_air: str) -> list[dict]:
     def load() -> dict:
         body = _http.get_json(
             _cfg("AIRKOREA_AIR_QUALITY_BASE_URL") + "/getCtprvnRltmMesureDnsty",
-            {"returnType": "json", "numOfRows": 300, "pageNo": 1, "sidoName": sido_air, "ver": "1.0"},
+            {"returnType": "json", "numOfRows": 300, "pageNo": 1, "sidoName": sido_air, "ver": "1.3"},
         )
         return {"rows": _http.items_of(body)}
 
-    return _cache.cached("air", f"air:{sido_air}", 25, load)["rows"]
+    return _cache.cached("air", f"air13:{sido_air}", 25, load)["rows"]
+
+
+_GRADE_NAME = {"1": "좋음", "2": "보통", "3": "나쁨", "4": "매우나쁨"}
+
+
+def _num(v) -> float | None:
+    try:
+        return float(v)
+    except (TypeError, ValueError):
+        return None
+
+
+def _air_station(place: dict, rows: list[dict]) -> dict | None:
+    """보여줄 측정소 한 곳: 고른 시군구의 측정소(목록 순서대로 값이 있는 첫 곳), 시도만 골랐으면 시도청에 가장 가까운 시군구의 측정소부터."""
+    by_name = {r.get("stationName"): r for r in rows}
+
+    def usable(r) -> bool:
+        return bool(r) and (_num(r.get("pm10Value")) is not None or _num(r.get("pm25Value")) is not None)
+
+    names = list(place.get("stations") or [])
+    if not names:
+        near = sorted(geo.sigungu_list(place["code"]), key=lambda g: geo.haversine_km((place["lat"], place["lon"]), (g["lat"], g["lon"])))
+        for g in near:
+            names += g.get("stations", [])
+    for n in names:
+        if usable(by_name.get(n)):
+            return by_name[n]
+    return next((r for r in rows if usable(r)), None)
 
 
 def _air(place: dict) -> dict:
-    """고른 시군구의 측정소 평균(없으면 시도 전체 평균). 미세먼지 30/80/150, 초미세먼지 15/35/75 기준 등급.
-    측정소마다 값이 달라서 평균을 쓰고, 값이 빈 측정소는 뺌."""
-    rows = _air_rows(place["air"])
-    mine = [r for r in rows if r.get("stationName") in place["stations"]]
-    use, scope = (mine, place["label"]) if mine else (rows, place["sido"])
+    """에어코리아(공공누리 3유형: 출처표시·**변경금지**) 값을 가공하지 않고 보여줌(2026-10-16 광고 대비).
+    예전엔 시군구 측정소 평균을 내고 등급을 직접 다시 매겼는데, 변경금지에 걸릴 소지가 있어 → 측정소 한 곳의 실시간 원값과
+    에어코리아가 준 1시간 등급(pm10Grade1h·pm25Grade1h)을 그대로 씀."""
+    r = _air_station(place, _air_rows(place["air"]))
+    if not r:
+        return {"pm10": "정보 없음", "pm25": "정보 없음"}
 
-    def avg(field: str) -> float | None:
-        vals = []
-        for r in use:
-            try:
-                vals.append(float(r[field]))
-            except (KeyError, TypeError, ValueError):
-                pass
-        return sum(vals) / len(vals) if vals else None
+    def grade(key: str) -> str:
+        return _GRADE_NAME.get(str(r.get(key + "Grade1h") or r.get(key + "Grade") or ""), "정보 없음")
 
-    pm10, pm25 = avg("pm10Value"), avg("pm25Value")
+    pm10, pm25 = _num(r.get("pm10Value")), _num(r.get("pm25Value"))
     return {
-        "pm10": _grade(pm10, (30, 80, 150)) if pm10 is not None else "정보 없음",
-        "pm25": _grade(pm25, (15, 35, 75)) if pm25 is not None else "정보 없음",
-        "pm10_value": round(pm10) if pm10 is not None else None,
-        "pm25_value": round(pm25) if pm25 is not None else None,
-        "stations": len(use),
-        "scope": scope,
+        "pm10": grade("pm10"),
+        "pm25": grade("pm25"),
+        "pm10_value": int(pm10) if pm10 is not None else None,
+        "pm25_value": int(pm25) if pm25 is not None else None,
+        "station": r.get("stationName"),
+        "data_time": r.get("dataTime"),
+        "scope": place["label"],
     }
 
 
@@ -547,12 +571,12 @@ def fetch(code: str, sgg: str | None = None) -> dict:
          "source": "데일리컷 기준(공식 지수 아님) · 기상청 단기예보 강수확률로 계산"},
         {"key": "pm10", "title": "미세먼지", "value": air.get("pm10", "정보 없음"), "level": GRADE_LEVEL.get(air.get("pm10")),
          "detail": [f"PM10 {air.get('pm10_value')}㎍/㎥" if air.get("pm10_value") is not None else "측정값 없음",
-                    f"{air.get('scope', '')} 측정소 {air.get('stations', '')}곳 평균", "등급 기준(환경부): 좋음 30 이하 · 보통 80 이하 · 나쁨 150 이하 · 매우나쁨 초과"],
-         "source": "에어코리아 실시간 측정값을 데일리컷이 평균내 환경부 기준으로 등급화"},
+                    f"{air.get('station', '')} 측정소 · {air.get('data_time', '')} 측정", "등급은 에어코리아가 준 값 그대로예요(좋음 30 이하 · 보통 80 이하 · 나쁨 150 이하 · 매우나쁨 초과)"],
+         "source": "한국환경공단 에어코리아 실시간 측정값(가공 없이 표시)"},
         {"key": "pm25", "title": "초미세먼지", "value": air.get("pm25", "정보 없음"), "level": GRADE_LEVEL.get(air.get("pm25")),
          "detail": [f"PM2.5 {air.get('pm25_value')}㎍/㎥" if air.get("pm25_value") is not None else "측정값 없음",
-                    f"{air.get('scope', '')} 측정소 {air.get('stations', '')}곳 평균", "등급 기준(환경부): 좋음 15 이하 · 보통 35 이하 · 나쁨 75 이하 · 매우나쁨 초과"],
-         "source": "에어코리아 실시간 측정값을 데일리컷이 평균내 환경부 기준으로 등급화"},
+                    f"{air.get('station', '')} 측정소 · {air.get('data_time', '')} 측정", "등급은 에어코리아가 준 값 그대로예요(좋음 15 이하 · 보통 35 이하 · 나쁨 75 이하 · 매우나쁨 초과)"],
+         "source": "한국환경공단 에어코리아 실시간 측정값(가공 없이 표시)"},
     ]
     if uv_row:
         indexes.append(
