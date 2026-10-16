@@ -450,6 +450,10 @@ claude.ai/artifact/17gytwYuXMFkF4vx8tWv65 (사용 중 · 일부만 · 미사용 
   지금 APK는 **디버그 키로 서명**(`build.gradle.kts`의 release 서명) — 기기 설치·테스트용. **스토어 출시 전에 할 일**: 업로드 키스토어 만들기(분실하면 업데이트 불가, 비밀번호는 git 밖에), `key.properties`+서명 설정, 앱 아이콘·스플래시(지금은 플러터 기본 아이콘), AAB(`flutter build appbundle`)로 올리기, 개인정보처리방침 URL(`itssophie.dev/dailycut/privacy.html`)·데이터 보안 양식, 광고는 웹 애드핏이 아니라 앱용(애드몹 등)으로 교체(`ad_view_stub.dart`).
 - **APK 내려받기 링크 (2026-10-17)**: `https://itssophie.dev/dailycut/download.html`(설치 안내+버튼, `app/web/download.html`, `noindex`) → 파일 `https://itssophie.dev/dailycut/dailycut.apk`(서버 `/var/www/dailycut-app/dailycut.apk`, 웹 배포 `tar`는 파일을 덮어쓰기만 해서 지워지지 않음).
   **새 APK를 올리는 법**: 빌드 후 `scp`로 `/tmp`에 올리고 `sudo cp /tmp/dailycut.apk /var/www/dailycut-app/dailycut.apk`, 그리고 `download.html`의 버전·크기·SHA-256(`sha256sum`)을 갱신해 같이 올릴 것. nginx에 apk MIME이 없어 `application/octet-stream`으로 나가지만 내려받기는 정상(필요하면 `types { application/vnd.android.package-archive apk; }`).
+- **위치 안내 흐름 개편 (2026-10-17, 폰 테스트 피드백)**: 예전엔 앱을 켜자마자 시스템 권한 창이 불쑥 떴고, 저장된 지역이 없으면(GPS로 찾은 지역은 저장 안 했음) **켤 때마다 위치를 다시 읽었음**. 지금은 `lib/location_flow.dart`:
+  ①첫 화면이 뜬 0.8초 뒤 **설명 시트**("내 지역으로 시작할까요?" — 대략적 위치를 한 번만, 정확한 위치는 저장 안 함) → "내 위치로 시작"을 눌렀을 때만 권한 창(`LocationService.request`), "직접 고를게요"는 지역 선택 시트. 한 번 물어본 기기는 `loc_asked` 플래그로 다시 안 띄움(이미 허용된 기기는 묻지 않고 조용히 한 번 맞춤).
+  ②찾은 지역은 `RegionStore.locate()`가 **저장**(`choose`) → 다음 실행부턴 위치를 읽지 않음. 이사·여행은 지역 선택 시트 맨 위 **"현재 위치로 찾기"** 버튼. ③거부(`askable`)·"다시 묻지 않음"(`blocked`, 폰 설정 열기 버튼)·위치 서비스 꺼짐(`off`)·못 찾음이면 잠깐 뜨는 안내 시트로 "지역 직접 고르기".
+  ④투데이 맨 위 "서울 · 기본"의 **"· 기본" 꼬리 삭제**(다른 탭엔 없어서). `LocationService`는 이제 `access()`(묻지 않고 상태)·`request()`(권한 창)·`read()`(대략 위치)로 나뉨.
 - **광고(카카오 애드핏, 웹) 준비됨 (2026-10-12)**: `widgets/ad_slot.dart`의 `AdSlot` + `web/ad.html`(애드핏 스크립트 페이지, 같은 도메인 iframe).
   광고 단위 ID가 없으면 칸이 아예 안 그려짐. 켜는 법: 애드핏에서 사이트(itssophie.dev/dailycut) 등록·승인 → 광고 단위(320x100 등) 생성 →
   `flutter build web … --dart-define=ADFIT_UNIT=DAN-xxxx --dart-define=ADFIT_SIZE=320x100`. 칸 위치: 생활(장보기 시세 아래)·문화(행사/영화 구역 아래)·머니(금리 아래).

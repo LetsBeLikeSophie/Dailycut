@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'api_client.dart';
 import 'boot.dart';
+import 'location_flow.dart';
 import 'widgets/swipe.dart';
 import 'screens/today_screen.dart';
 import 'screens/section_screens.dart';
@@ -89,6 +90,10 @@ class _RootShellState extends State<RootShell> {
 
   void _warmOtherTabs() {
     if (!kFirstScreenReady.value) return;
+    // 첫 화면을 먼저 보여 준 뒤(0.8초) 위치 안내를 띄움 — 켜자마자 권한 창이 불쑥 뜨지 않게
+    Future<void>.delayed(const Duration(milliseconds: 800), () {
+      if (mounted) offerLocationOnFirstRun(context);
+    });
     for (var i = 1; i < _tabs.length; i++) {
       Future<void>.delayed(Duration(milliseconds: 700 * i), () {
         if (mounted) setState(() => _visited.add(i));

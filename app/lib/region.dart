@@ -4,6 +4,7 @@ import 'analytics.dart';
 
 import 'api_client.dart';
 import 'local_prefs.dart';
+import 'location_flow.dart';
 import 'location.dart';
 import 'theme.dart';
 import 'widgets/components.dart';
@@ -53,8 +54,9 @@ class SigunguNode {
   final List<String> aliases;
 }
 
-/// 현재 지역과 정한 방법(gps: 내 위치, saved: 사용자가 고른 지역, default: 기본 서울).
-/// 고른 지역은 기기에 저장해서 다음 실행에도 유지하고, 저장된 값이 없을 때만 위치 권한을 요청함.
+/// 현재 지역과 정한 방법(saved: 고르거나 내 위치로 찾아 저장한 지역, default: 아직 안 정해서 기본 서울).
+/// 고른·찾은 지역은 기기에 저장해서 다음 실행에도 유지하고, **위치는 다시 읽지 않음**(2026-10-17: 예전엔 저장이 없으면 켤 때마다 읽었음).
+/// 첫 실행의 위치 안내·권한 요청은 location_flow.dart가 첫 화면이 뜬 뒤에 설명부터 보여 주고 시작함.
 class RegionStore extends ChangeNotifier {
   RegionStore._();
   static final RegionStore instance = RegionStore._();
@@ -79,25 +81,23 @@ class RegionStore extends ChangeNotifier {
       current = _sidoByCode(saved).withSgg(LocalPrefs.stringSync(_prefSgg));
       source = 'saved';
     }
-    // 2026-10-12: 위치 권한 확인(허용 창 + 최대 8초)이 끝나길 기다렸다가 데이터를 받던 걸 바꿈 — 첫 방문자는 그동안
-    // 빈 화면만 봤음. 이제 기본 지역(서울)으로 바로 보여주고, 위치는 뒤에서 알아내서 맞으면 그 지역으로 바꿈.
+    // 기본 지역(서울)으로 바로 첫 화면을 보여줌(위치 확인을 기다리지 않음).
     ready = true;
     notifyListeners();
-    if (source == 'default') _locate(api);
   }
 
-  Future<void> _locate(ApiClient api) async {
+  /// 내 위치로 지역을 찾아 **저장**함(권한은 이미 허용된 상태에서만). 좌표는 이 한 번에만 서버로 보내고(뭉갠 값) 저장하지 않음. 성공하면 true.
+  Future<bool> locate() async {
+    final api = _api;
+    if (api == null) return false;
+    final loc = await LocationService.read();
+    if (loc == null) return false;
     try {
-      final loc = await LocationService.get();
-      if (!loc.real || source != 'default') return; // 위치를 못 받았거나, 그 사이 사용자가 지역을 직접 골랐으면 그대로
-      // 좌표는 지역을 알아내는 이 한 번에만 서버로 보내고, 이후엔 지역 이름만 씀
       final r = await api.resolveRegion(lat: loc.lat, lon: loc.lon);
-      if (source != 'default') return;
-      current = _sidoByCode(r['code'] as String?).withSgg(r['sgg'] as String?);
-      source = 'gps';
-      notifyListeners();
+      await choose(_sidoByCode(r['code'] as String?).withSgg(r['sgg'] as String?));
+      return true;
     } catch (_) {
-      // 위치 오류면 기본(서울) 유지
+      return false;
     }
   }
 
@@ -114,8 +114,8 @@ class RegionStore extends ChangeNotifier {
     }
   }
 
-  /// 화면 맨 위 줄에 붙일 지역 문구(예: "서울 중구", 위치를 못 받아 기본값이면 "서울 · 기본").
-  String get label => source == 'default' ? '${current.label} · 기본' : current.label;
+  /// 화면 맨 위 줄에 붙일 지역 문구(예: "서울 중구"). 다른 탭엔 없는 "· 기본" 꼬리는 뺌(2026-10-17).
+  String get label => current.label;
 
   /// 시도별 시군구 목록(서버에서 한 번 받아 보관).
   Future<Map<String, List<SigunguNode>>> loadTree() async {
@@ -176,9 +176,21 @@ class _RegionSheetState extends State<_RegionSheet> {
             const SizedBox(height: 4),
             Text(
               _store.source == 'default'
-                  ? '위치를 받지 못해 서울로 보여드리고 있어요. 지역을 골라주세요.'
+                  ? '지금은 서울 기준이에요. 지역을 골라 주세요.'
                   : '날씨·미세먼지·전통시장·문화가 고른 지역 기준으로 바뀌어요.',
               style: const TextStyle(fontSize: 13, color: AppColors.inkSoft, height: 1.5),
+            ),
+            const SizedBox(height: 12),
+            // 위치는 켤 때마다 읽지 않으니, 이사·여행 때는 여기서 다시 찾음
+            ActionButton(
+              label: '현재 위치로 찾기',
+              icon: Icons.my_location,
+              vertical: 11,
+              onTap: () async {
+                final nav = Navigator.of(context);
+                final ok = await useMyLocation(context, fromPicker: true);
+                if (ok) nav.pop();
+              },
             ),
             const SizedBox(height: 12),
             TextField(
