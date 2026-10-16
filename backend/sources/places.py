@@ -85,14 +85,15 @@ def _has(terms: list[str], *texts) -> bool:
 
 
 def _scope(rows: list, sgg: str | None, region: dict) -> tuple[list, str, str | None]:
-    """시군구를 골랐고 그 시군구 항목이 있으면 그것만, 없으면 시도 전체(안내 글 포함). rows의 첫 칸은 0=그 시군구, 1=그 밖."""
+    """시군구를 골랐으면 그 시군구 항목만, 없으면 **비워서** 돌려줌(2026-10-16: 상위 시도 전체로 채우던 걸 뺌 — 앱이
+    "다른 지역으로 찾아보세요"를 안내). 시도만 골랐으면 시도 전체. rows의 첫 칸은 0=그 시군구, 1=그 밖. 셋째 값은 앱이 쓸 안내(없으면 None)."""
     base = region["name"]
     if not sgg:
         return rows, base, None
     near = [r for r in rows if r[0] == 0]
     if near:
         return near, f"{base} {sgg}", None
-    return rows, base, f"{sgg}에는 없어서 {base} 전체를 보여드려요."
+    return [], f"{base} {sgg}", f"{sgg}에는 등록된 곳이 없어요."
 
 
 def _item(id_: str, name: str, sub: str, tag: str, span: str, detail: list[tuple[str, str | None]], url: str, link_label: str, pin: dict | None = None) -> dict:

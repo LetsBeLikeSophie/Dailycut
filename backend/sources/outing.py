@@ -138,13 +138,12 @@ def weekend(sido: str | None, sgg: str | None, weekly: list[dict], limit: int = 
     """이번 주말 "예상 집중도가 낮은 관광지" 한 목록 — 토·일을 열로 나란히(2026-10-16: 토/일 알약으로 나누던 걸 표로 바꿈).
     spots[].rates는 days 순서대로의 집중률(없으면 None). 정렬은 토·일 평균이 낮은 순, 두 날 다 값이 있는 곳을 우선."""
     data = get(sido, sgg)
-    scope_note = None
-    if not data and sgg:  # 그 시군구에 관광지 데이터가 없으면 시도 전체로
-        data = get(sido, None)
-        scope_note = f"{sgg}에는 집중률 예측이 있는 관광지가 없어서 {geo.region(sido)['name']} 전체를 보여드려요."
-        sgg = None
+    if not data and sgg:
+        # 2026-10-16: 그 시군구에 집중률 예측이 있는 관광지가 없으면 시도 전체로 채우지 않고 "없음"으로(앱이 다른 지역을 안내)
+        return {"live": True, "days": [], "spots": [], "empty": True, "region": geo.place(sido, sgg)["label"], "scope_note": f"{sgg}에는 집중률 예측이 있는 관광지가 없어요."}
     if not data:
         return {"live": False, "days": [], "spots": []}
+    scope_note = None
     today = _kst.today()
     days = []
     for d in weekend_days(today):

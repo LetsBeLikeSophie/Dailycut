@@ -79,12 +79,11 @@ class _PlaceFeedState extends State<PlaceFeed> {
           trailing: '${d['total']}곳',
           info: (d['note'] as String?)?.isNotEmpty ?? false ? InfoIconButton(title: '안내', lines: [d['note'] as String]) : null,
           children: [
-            if (d['scope_note'] != null)
-              Padding(padding: const EdgeInsets.only(top: 12), child: Text(d['scope_note'] as String, style: const TextStyle(fontSize: 11, color: AppColors.inkSoft, height: 1.6))),
             const SizedBox(height: 14),
             Container(height: 1, color: AppColors.hair),
             if (items.isEmpty)
-              const EmptyNote('이 지역에는 등록된 곳이 없어요.', vertical: 40),
+              // 2026-10-16: 시군구에 없으면 상위 지역으로 채우지 않고 없다고 알림(누르면 지역 고르기)
+              EmptyNote('${d['region']}에는 등록된 곳이 없어요.\n다른 지역으로 찾아보세요 ›', vertical: 40, onTap: () => showRegionPicker(context)),
             ExpandableList(
               key: ValueKey('place${_kind.name}'),
               unit: '곳',
