@@ -144,6 +144,11 @@ def record_prices(source: str, rows: list[dict]) -> int:
     return len(rows)
 
 
+def price_days(source: str) -> set[str]:
+    """그 소스의 가격 기록이 이미 있는 날짜(YYYY-MM-DD)들."""
+    return {r["day"] for r in _query("SELECT DISTINCT day FROM price_history WHERE source=?", (source,))}
+
+
 def price_series(source: str, item: str, since: str) -> list[tuple[str, float]]:
     """since(YYYY-MM-DD) 이후의 (날짜, 가격) 오름차순."""
     rows = _query(

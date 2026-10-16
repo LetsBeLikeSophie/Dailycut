@@ -31,6 +31,7 @@ from sources import benefits as benefits_src
 from sources import gov_support as gov_support_src
 from sources import markets as markets_src
 from sources import outing as outing_src
+from sources import livestock as livestock_src
 from sources import places as places_src
 from sources import _kst
 from sources import weather as weather_src
@@ -422,7 +423,6 @@ def _price_row(label: str, price: int, change: str, pct: float, sub: str | None 
     }
 
 
-@app.get("/market")
 @live_merge(("market", "livestock"), regional=markets_src)
 def market(sido: str | None = None, sgg: str | None = None):
     # 2026-10-10: 추이 차트 X축을 "이번 달 1일~말일" 고정축으로 바꿈 — 시리즈는
@@ -469,6 +469,17 @@ def market(sido: str | None = None, sgg: str | None = None):
             {"title": "OO전통시장", "meta": "휴장일: 매월 둘째·넷째 화요일"},
         ],
     }
+
+
+@app.get("/market")
+def market_route(sido: str | None = None, sgg: str | None = None):
+    """장보기 시세: 채소·과일·수산·곡물·양념(aT)에 정육(축산물품질평가원 소·돼지 소비자가격)을 같은 목록으로 섞어 줌(2026-10-17).
+    기존 `livestock` 필드는 옛 앱 호환을 위해 그대로 둠."""
+    m = market(sido=sido, sgg=sgg)
+    extra = livestock_src.catalog_rows()
+    if extra and m.get("catalog") is not None:
+        m = {**m, "catalog": [*m["catalog"], *extra]}
+    return m
 
 
 # TODO: KOBIS 박스오피스 (https://www.kobis.or.kr/kobisopenapi/homepg/apiservice/searchServiceInfo.do)

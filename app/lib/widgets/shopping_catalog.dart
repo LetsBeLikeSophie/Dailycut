@@ -5,6 +5,7 @@ import '../analytics.dart';
 import '../my_basket.dart';
 import '../theme.dart';
 import 'components.dart';
+import 'livestock_sheet.dart';
 
 /// 생활 탭의 "장보기 시세": 카테고리(채소·과일·수산·축산·곡물)를 고르면 그 안의 품목이
 /// "이름 · 제철 표시 · 작은 추이 · 가격과 지난주 대비" 한 줄로 나오고, 누르면 고르는 법·보관법·
@@ -27,9 +28,9 @@ class _ShoppingCatalogState extends State<ShoppingCatalog> {
   bool _onlyMine = false; // 걸러 보기 ②: 내 장바구니에 담은 것만
   bool _showAll = false;
 
-  /// 분류는 백엔드(market.py NAME_CATEGORY)에서 정함: 채소·과일·수산·곡물·두류·양념(·축산)
+  /// 분류는 백엔드(market.py NAME_CATEGORY)에서 정함: 채소·과일·수산·정육·곡물·양념(정육은 축산물품질평가원 소·돼지 소비자가격을 같은 목록에 섞은 것)
   List<String> get _categories {
-    const order = ['채소', '과일', '수산', '곡물·두류', '양념', '축산'];
+    const order = ['채소', '과일', '수산', '정육', '곡물', '양념'];
     final present = widget.catalog.map((e) => e['category'] as String).toSet();
     return [for (final c in order) if (present.contains(c)) c];
   }
@@ -54,6 +55,12 @@ class _ShoppingCatalogState extends State<ShoppingCatalog> {
 
     return ListSection(
       title: '장보기 시세',
+      // 읽는 법은 제목 옆 ⓘ에(오른쪽 작은 그래프의 기간·색의 뜻)
+      info: const InfoIconButton(title: '읽는 법', lines: [
+        '오른쪽 작은 그래프는 최근 2주 동안의 가격 흐름이에요(하루 한 점, 최대 8점). 아직 기록이 3일 치 미만인 품목은 그래프가 없어요.',
+        '빨강 ▲는 지난주보다 올랐고, 파랑 ▼는 내렸어요. 회색 －는 지난주와 거의 같다는 뜻이에요(변동 0.5% 이내).',
+        '채소·과일·수산·곡물은 한국농수산식품유통공사(aT) 소매가격, 정육은 축산물품질평가원 소비자가격(100g당)이에요.',
+      ]),
       trailing: asOf == null ? '지난주 대비' : '${asOf.month}/${asOf.day} 기준 · 지난주 대비',
       children: [
         // 1줄: 분류(하나만 고름)
@@ -138,6 +145,7 @@ class _ShoppingCatalogState extends State<ShoppingCatalog> {
     final pct = it['pct'] as num?;
     final series = (it['series'] as List?)?.map((e) => (e as num).toDouble()).toList();
     final name = it['name'] as String;
+    final meat = it['detail'] != null; // 정육 행(축산물품질평가원)
     final inBasket = MyBasket.instance.contains(name);
     final line = ListLine(
       name: name,
@@ -147,14 +155,17 @@ class _ShoppingCatalogState extends State<ShoppingCatalog> {
       value: '${formatNumber(it['price'] as num)}원',
       valueSub: pct == null ? null : changeLabel(change, pct: pct),
       valueSubColor: changeColor(change),
-      onTap: () => showProduceSheet(context, it, widget.guide[it['guide']] as Map<String, dynamic>?),
+      onTap: meat ? () => showLivestockSheet(context, it) : () => showProduceSheet(context, it, widget.guide[it['guide']] as Map<String, dynamic>?),
       // 2026-10-14: 밀어야만 담기던 걸 줄 끝 버튼 한 번으로(밀기는 그대로 남김). 누른 줄은 상세로 안 넘어감.
-      trailing: _BasketButton(
-        inBasket: inBasket,
-        color: sectionThemes[Section.market]!.color,
-        onTap: () => _toggle(context, name),
-      ),
+      trailing: meat
+          ? null
+          : _BasketButton(
+              inBasket: inBasket,
+              color: sectionThemes[Section.market]!.color,
+              onTap: () => _toggle(context, name),
+            ),
     );
+    if (meat) return line;
     // 왼쪽으로 밀면 담기/빼기 버튼이 보이고, 놓으면 바로 적용(줄은 제자리로 돌아옴)
     return Dismissible(
       key: ValueKey('b$name'),

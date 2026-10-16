@@ -11,7 +11,6 @@ import '../widgets/weekend_weather.dart';
 import '../widgets/benefit_feed.dart';
 import '../widgets/components.dart';
 import '../widgets/ad_slot.dart';
-import '../widgets/livestock_sheet.dart';
 import '../widgets/outing_section.dart';
 import '../widgets/place_feed.dart';
 import '../widgets/reels_links.dart';
@@ -81,7 +80,6 @@ Widget marketScreen(ApiClient api, Region region, BuildContext shellContext) => 
       section: Section.market,
       fetch: () => api.market(sido: region.code, sgg: region.sgg),
       contentBuilder: (context, data) {
-        final livestock = (data['livestock'] as List).cast<Map<String, dynamic>>();
         final essentials = (data['essentials'] as List).cast<Map<String, dynamic>>();
         final marketsNearby = (data['markets_nearby'] as List).cast<Map<String, dynamic>>();
 
@@ -105,19 +103,6 @@ Widget marketScreen(ApiClient api, Region region, BuildContext shellContext) => 
               asOf: data['as_of'] as String?,
             ),
             const AdSlot(), // 광고(ADFIT_UNIT을 빌드에 줬을 때만 보임)
-            // 축산물(소·돼지 부위별 소비자가격, 평년 대비) — 키가 있고 수집이 되면 보임
-            if (_isLive(data, 'livestock'))
-              ListSection(
-                title: '축산물 시세',
-                trailing: data['livestock_date'] == null
-                    ? '평년 대비'
-                    : '${DateTime.parse(data['livestock_date'] as String).month}/${DateTime.parse(data['livestock_date'] as String).day} 기준 · 지난주 대비',
-                children: [
-                  ExpandableList(
-                    children: [for (final it in (data['livestock'] as List).cast<Map<String, dynamic>>()) livestockLine(context, it)],
-                  ),
-                ],
-              ),
           ];
         } else {
           // 예시 데이터(서버에 키가 없을 때): 예전 화면
@@ -181,9 +166,6 @@ Widget marketScreen(ApiClient api, Region region, BuildContext shellContext) => 
         return [
           hero,
           ...listing,
-          // 실데이터(소·돼지)는 위 listing 안의 "축산물 시세"가 보여주므로, 예시 구간은 실데이터가 없을 때만
-          if (!_isLive(data, 'livestock'))
-            ListSection(title: '축산물 시세(계란·돼지고기)', trailing: '지난주 대비', stub: true, children: [ExpandableList(children: _priceRows(livestock))]),
           // 2026-10-14: 예시(스텁) 구간은 광고 심사 전에 화면에서 뺌 — 실데이터가 붙으면 자동으로 나타남
           if (_isLive(data, 'essentials'))
             ListSection(title: '생필품 물가지수', trailing: '전월 대비', children: [ExpandableList(children: _priceRows(essentials))]),
