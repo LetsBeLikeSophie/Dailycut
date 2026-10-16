@@ -97,8 +97,8 @@ class _BasketHeroState extends State<BasketHero> {
           if (perDay[d]!.length == names.length) d: perDay[d]!.values.fold<double>(0, (a, b) => a + b),
       });
       sub = usingDefault
-          ? '대표 ${names.length}품목 합계(1kg·1개 등 1단위씩) · 아래 장보기 시세에서 담으면 내 장바구니로 바뀌어요'
-          : '담은 ${names.length}품목 합계(1kg·1개 등 1단위씩)';
+          ? '대표 ${names.length}품목 합계(1kg·1개·100g 등 1단위씩) · 아래 장보기 시세에서 담으면 내 장바구니로 바뀌어요'
+          : '담은 ${names.length}품목 합계(1kg·1개·100g 등 1단위씩)';
     } else {
       final n = names[page - 1];
       final it = widget.chartItems[n] as Map<String, dynamic>;

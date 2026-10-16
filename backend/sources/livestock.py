@@ -151,3 +151,21 @@ def catalog_rows() -> list[dict]:
             row["series"] = [round(p) for _, p in pts[-8:]]
         out.append(row)
     return out
+
+
+def chart_items(month_start: str) -> dict:
+    """내 장바구니(생활 맨 위 지수·차트)에 정육도 담을 수 있게, aT 품목의 chart_items와 같은 모양으로 만든 소·돼지 부위별 값(2026-10-17).
+    키는 화면에 보이는 이름(예: "돼지 삼겹살"), 단위는 원/100g. 이번 달 흐름은 price_history(축산물)에서."""
+    live = jobs.get_live("livestock")
+    out = {}
+    for r in (live or {}).get("livestock", []):
+        d = r.get("detail") or {}
+        if not d.get("price"):
+            continue
+        out[r["label"]] = {
+            "unit": "원/100g",
+            "price": d["price"],
+            "week_ago": d.get("week"),
+            "series": [{"date": day, "price": round(p)} for day, p in store.price_series(SOURCE, r["label"], month_start)],
+        }
+    return out

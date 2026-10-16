@@ -157,15 +157,12 @@ class _ShoppingCatalogState extends State<ShoppingCatalog> {
       valueSubColor: changeColor(change),
       onTap: meat ? () => showLivestockSheet(context, it) : () => showProduceSheet(context, it, widget.guide[it['guide']] as Map<String, dynamic>?),
       // 2026-10-14: 밀어야만 담기던 걸 줄 끝 버튼 한 번으로(밀기는 그대로 남김). 누른 줄은 상세로 안 넘어감.
-      trailing: meat
-          ? null
-          : _BasketButton(
-              inBasket: inBasket,
-              color: sectionThemes[Section.market]!.color,
-              onTap: () => _toggle(context, name),
-            ),
+      trailing: _BasketButton(
+        inBasket: inBasket,
+        color: sectionThemes[Section.market]!.color,
+        onTap: () => _toggle(context, name),
+      ),
     );
-    if (meat) return line;
     // 왼쪽으로 밀면 담기/빼기 버튼이 보이고, 놓으면 바로 적용(줄은 제자리로 돌아옴)
     return Dismissible(
       key: ValueKey('b$name'),

@@ -479,6 +479,9 @@ def market_route(sido: str | None = None, sgg: str | None = None):
     extra = livestock_src.catalog_rows()
     if extra and m.get("catalog") is not None:
         m = {**m, "catalog": [*m["catalog"], *extra]}
+        if m.get("chart_items") is not None:  # 내 장바구니에 정육도 담을 수 있게(단위는 100g)
+            month_start = date.today().replace(day=1).isoformat()
+            m["chart_items"] = {**m["chart_items"], **livestock_src.chart_items(month_start)}
     return m
 
 
