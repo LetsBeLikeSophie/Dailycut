@@ -23,6 +23,14 @@ _guard = threading.Lock()
 _STALE_EXTRA_MIN = 180
 
 
+def peek(key: str, ttl_min: int) -> dict | None:
+    """저장돼 있고 아직 신선하면 그 값, 아니면 None(외부를 부르지 않음)."""
+    hit = store.load_cache(key)
+    if hit and datetime.now() - datetime.fromisoformat(hit[1]) < timedelta(minutes=ttl_min):
+        return hit[0]
+    return None
+
+
 def _refresh_async(source: str, key: str, fn: Callable[[], dict]) -> None:
     """만료된 칸을 뒤에서 새로 받음. 이미 누가 받는 중이면 아무것도 안 함(락을 못 잡으면 그냥 지나감)."""
     with _guard:

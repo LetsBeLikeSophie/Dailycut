@@ -17,7 +17,9 @@ import html
 import re
 from urllib.parse import quote
 
+import re
 import requests
+from concurrent.futures import ThreadPoolExecutor, wait
 
 import config
 import geo
@@ -26,6 +28,7 @@ from sources import _cache, _http, _kst, outing
 LIB_BASE = "https://apis.data.go.kr/B551982/plr_v2"
 CAMP_URL = "https://apis.data.go.kr/B551011/GoCamping/basedList"
 PET_URL = "https://apis.data.go.kr/B551011/KorPetTourService2/areaBasedList2"
+PET_DETAIL_URL = "https://apis.data.go.kr/B551011/KorPetTourService2/detailPetTour2"
 WELL_URL = "https://apis.data.go.kr/B551011/WellnessTursmService/areaBasedList"
 TRAIL_URL = "https://apis.data.go.kr/B551011/Durunubi/courseList"
 
@@ -72,6 +75,47 @@ def _pin(name: str, lat, lng, q: str | None = None) -> dict:
     if 33 <= la <= 39 and 124 <= lo <= 132:
         pin.update({"lat": round(la, 6), "lng": round(lo, 6)})
     return pin
+
+
+_PET_POOL = ThreadPoolExecutor(max_workers=8)  # 응답을 돌려준 뒤에도 남은 상세를 계속 받음
+
+
+def pet_level(text: str | None, kind_hint: str = "") -> dict | None:
+    """"동반 가능 동물" 문구를 앱이 아이콘으로 보일 단계로 줄임(2026-10-16). level:
+    small 소형견만 · mid 중·소형견(대형견 제외) · all 모든 크기 · guide 안내견·보조견만 · no 동반 불가 · other 조건 있음 · ok 동반 가능(크기 안내 없음).
+    문구가 비어 있으면 None(아이콘을 안 붙임). 원문은 상세 시트에 그대로 보임."""
+    raw = (text or "").strip()
+    t = re.sub(r"\s+", "", raw)
+    if not t:
+        return None
+    if "안내견" in t or "보조견" in t:
+        return {"level": "guide", "label": "안내견·보조견만"}
+    if t in ("불가", "불가능", "동반불가") or t.startswith("동반불가"):
+        return {"level": "no", "label": "동반 불가"}
+    if "대형견" in t and "제외" in t:
+        return {"level": "mid", "label": "중·소형견"}
+    if "소형견" in t or re.search(r"\d+(\.\d+)?kg(이하|미만)", t, re.I):
+        return {"level": "small", "label": "소형견만"}
+    if "전견종" in t or "전견동" in t or "모든견" in t or "크기제한없" in t:
+        return {"level": "all", "label": "모든 크기"}
+    if "고양이" in t:
+        return {"level": "all", "label": "개·고양이"}
+    return {"level": "other", "label": "조건 있음"}
+
+
+def _pet_detail(cid: str) -> dict | None:
+    """반려동물 동반여행 한 곳의 상세(동반 유형·가능 동물·필요 사항). 장소마다 한 번 받아 7일 보관(바뀔 일이 드묾). 실패하면 None."""
+
+    def load() -> dict:
+        r = requests.get(PET_DETAIL_URL, params={**_tour(), "contentId": cid}, timeout=20)
+        r.raise_for_status()
+        rows = _rows(r.json())
+        return {"d": rows[0] if rows else None}
+
+    try:
+        return _cache.cached("pet_detail", f"petd:{cid}", 7 * 24 * 60, load)["d"]
+    except Exception:
+        return None
 
 
 def _in_region(text: str, region: dict) -> bool:
@@ -216,11 +260,12 @@ def camp(sido: str | None, sgg: str | None) -> dict:
         ]
         near = _has(terms, c.get("sigunguNm"), c.get("addr1"))
         pet = _clean(c.get("animalCmgCl"))
+        pet_badge = {"level": "small", "label": "소형견만"} if pet == "가능(소형견)" else ({"level": "ok", "label": "동반 가능"} if pet == "가능" else None)
         item = _item(
             f"cp{c['contentId']}",
             _clean(c.get("facltNm")),
             " · ".join(x for x in (c.get("sigunguNm"), _clean(c.get("induty")).split(",")[0], _clean(c.get("lctCl"))) if x),
-            f"반려동물 {pet}" if pet in ("가능", "가능(소형견)") else "",
+            "",
             " · ".join(sites[:2]),
             [
                 ("소개", _clean(c.get("lineIntro")) or _clean(c.get("intro"))[:160]),
@@ -237,10 +282,12 @@ def camp(sido: str | None, sgg: str | None) -> dict:
             "예약·누리집 보기",
             _pin(_clean(c.get("facltNm")), c.get("mapY"), c.get("mapX"), _clean(c.get("addr1")) or None),
         )
+        if pet_badge:
+            item["pet"] = pet_badge
         out.append((0 if near else 1, item["name"], item))
     out.sort(key=lambda t: t[:2])
     out, label, scope_note = _scope(out, sgg, region)
-    return {"live": True, "total": len(out), "items": [t[2] for t in out[:150]], "region": label, "scope_note": scope_note, "note": "운영 중인 캠핑장만이에요. 예약·운영 여부는 누리집에서 꼭 확인해 주세요."}
+    return {"live": True, "total": len(out), "items": [t[2] for t in out[:150]], "region": label, "scope_note": scope_note, "note": "운영 중인 캠핑장만이에요. 예약·운영 여부는 누리집에서 꼭 확인해 주세요. 발바닥은 반려동물 동반 가능 표시예요(1개 소형견만, 회색은 크기 안내 없이 동반 가능)."}
 
 
 # ---------------- 반려동물 · 웰니스 ----------------
@@ -284,7 +331,35 @@ def pet(sido: str | None, sgg: str | None) -> dict:
         out.append((0 if near else 1, kind != "관광지", item["name"], item))
     out.sort(key=lambda t: t[:3])
     out, label, scope_note = _scope(out, sgg, region)
-    return {"live": True, "total": len(out), "items": [t[3] for t in out[:150]], "region": label, "scope_note": scope_note, "note": "반려동물 동반 가능 여부와 조건(크기·종류 제한 등)은 방문 전에 시설에 확인해 주세요."}
+    items = [t[3] for t in out[:150]]
+    # 크기 구분은 상세 조회에만 있어서 장소마다 한 번 받아 7일 보관함. 처음 여는 지역이 오래 걸리지 않게 2.5초 안에 받은 것만
+    # 이번 응답에 싣고, 나머지는 뒤에서 계속 받아 둠(다음에 열면 더 채워짐). 서울은 places_warm이 미리 받아 둠.
+    ready: dict[str, dict | None] = {}
+    futs = {}
+    for it in items:
+        cid = it["id"][2:]
+        hit = _cache.peek(f"petd:{cid}", 7 * 24 * 60)  # 이미 받아 둔 건 바로(기다리지 않음)
+        if hit is not None:
+            ready[cid] = hit.get("d")
+        else:
+            futs[cid] = _PET_POOL.submit(_pet_detail, cid)
+    wait(list(futs.values()), timeout=2.5)
+    for cid, f in futs.items():
+        if f.done():
+            ready[cid] = f.result()
+    details = [ready.get(it["id"][2:]) for it in items]
+    for it, d in zip(items, details):
+        if not d:
+            continue
+        it["pet"] = pet_level(d.get("acmpyPsblCpam")) or ({"level": "no", "label": "동반 불가"} if "불가" in (d.get("acmpyTypeCd") or "") else None)
+        extra = [
+            ("동반 유형", _clean(d.get("acmpyTypeCd"))),
+            ("동반 가능 동물", _clean(d.get("acmpyPsblCpam"))),
+            ("필요 사항", _clean(d.get("acmpyNeedMtr"))),
+            ("참고", _clean(d.get("etcAcmpyInfo"))[:200]),
+        ]
+        it["detail"] += [[k, str(v)] for k, v in extra if v]
+    return {"live": True, "total": len(out), "items": items, "region": label, "scope_note": scope_note, "note": "발바닥 개수는 함께 갈 수 있는 크기예요: 1개 소형견만 · 2개 중·소형견 · 3개 모든 크기. 회색은 안내견만이거나 조건이 따로 있는 곳이에요. 동반 가능 여부와 조건은 방문 전에 시설에 꼭 확인해 주세요."}
 
 
 def _wellness(area: str) -> list[dict]:
