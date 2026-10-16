@@ -375,9 +375,9 @@ Widget placesScreen(ApiClient api, Region region, BuildContext shellContext) => 
                   headlineLines: 2,
                   source: source,
                   topExtra: toggle,
-                  body: const [],
+                  // 도서관만 날씨와 무관. 나머지는 이번 주말 날씨 한 문장(투데이의 옷차림 문장처럼)
+                  body: [if (index != 1) WeekendWeatherLine(key: ValueKey('wk${region.code}${region.sgg}'), api: api, region: region)],
                 ),
-                if (index != 1) WeekendWeather(key: ValueKey('wk${region.code}${region.sgg}'), api: api, region: region), // 도서관만 날씨와 무관
                 if (index == 0)
                   OutingSection(api: api, region: region)
                 else

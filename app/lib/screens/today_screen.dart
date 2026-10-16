@@ -10,7 +10,7 @@ import '../widgets/components.dart';
 import '../widgets/hourly_strip.dart';
 import '../widgets/life_index.dart';
 import '../widgets/my_basket_today.dart';
-import '../widgets/weekend_weather.dart';
+import '../widgets/weekly_row.dart';
 import '../widgets/weather_icon.dart';
 
 class TodayScreen extends StatefulWidget {

@@ -38,7 +38,6 @@ class OutingSection extends StatefulWidget {
 
 class _OutingSectionState extends State<OutingSection> {
   late final Future<Map<String, dynamic>> _future = OutingSection.fetch(widget.api, widget.region);
-  int _day = 0;
 
   static const _explain =
       '한국관광공사 관광지 집중률 방문자 추이 예측 정보예요. 관광지별로 예상되는 방문 집중도를 0~100으로 나타내고, 높을수록 붐빈다는 뜻이에요. '
@@ -61,8 +60,10 @@ class _OutingSectionState extends State<OutingSection> {
           );
         }
         final days = (d['days'] as List).cast<Map<String, dynamic>>();
-        final day = days[_day.clamp(0, days.length - 1)];
-        final spots = (day['spots'] as List).cast<Map<String, dynamic>>();
+        final spots = (d['spots'] as List).cast<Map<String, dynamic>>();
+        // 2026-10-16: 토/일 알약으로 나눠 보던 걸 한 표로 — 날마다 열을 두고 같은 곳의 집중률을 나란히
+        const colW = 56.0;
+        Widget cols(Widget Function(int i) cell) => Row(mainAxisSize: MainAxisSize.min, children: [for (var i = 0; i < days.length; i++) SizedBox(width: colW, child: cell(i))]);
         return ListSection(
           title: '이번 주말 한산한 곳',
           action: GestureDetector(
@@ -77,35 +78,32 @@ class _OutingSectionState extends State<OutingSection> {
             ),
           ),
           children: [
-            if (days.length > 1) ...[
-              const SizedBox(height: 18),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  for (var i = 0; i < days.length; i++)
-                    PillChip(
-                      label: '${days[i]['label']} ${days[i]['md']}',
-                      selected: _day == i,
-                      onTap: () => setState(() => _day = i),
-                    ),
-                ],
-              ),
-            ],
             if (d['scope_note'] != null)
               Padding(padding: const EdgeInsets.only(top: 12), child: Text(d['scope_note'] as String, style: const TextStyle(fontSize: 11, color: AppColors.inkSoft, height: 1.6))),
             const SizedBox(height: 14),
+            Row(
+              children: [
+                const Expanded(child: Text('예상 집중률 · 낮을수록 한산해요', style: TextStyle(fontSize: 11, color: AppColors.inkSoft))),
+                cols((i) => Text('${days[i]['label']} ${days[i]['md']}', textAlign: TextAlign.right, style: const TextStyle(fontSize: 11, color: AppColors.inkSoft))),
+              ],
+            ),
+            const SizedBox(height: 8),
             Container(height: 1, color: AppColors.hair),
             ExpandableList(
-              key: ValueKey('outing$_day'),
               unit: '곳',
               children: [
                 for (final s in spots)
                   ListLine(
                     name: s['name'] as String,
                     sub: s['sgg'] as String?,
-                    value: '${s['rate']}',
-                    valueSub: '집중률',
+                    middle: cols((i) {
+                      final r = (s['rates'] as List)[i];
+                      return Text(
+                        r == null ? '-' : '$r',
+                        textAlign: TextAlign.right,
+                        style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, fontFeatures: [FontFeature.tabularFigures()]),
+                      );
+                    }),
                     onTap: s['pin'] == null ? null : () => openMapChooser(context, (s['pin'] as Map).cast<String, dynamic>()), // 주소·좌표는 없어서 시군구+이름으로 찾음
                   ),
               ],

@@ -97,7 +97,7 @@ class _BenefitFeedState extends State<BenefitFeed> {
         return ListSection(
           title: _title,
           trailing: widget.kind == BenefitKind.loan ? null : '${d['total']}건',
-          action: InfoIconButton(title: '안내', lines: [if (d['region'] != null) '${d['region']} 기준이에요.', _footnote]),
+          action: InfoIconButton(title: '안내', lines: [_footnote]),
           children: [
             if (widget.kind == BenefitKind.loan && usages.isNotEmpty) ...[
               const SizedBox(height: 18),

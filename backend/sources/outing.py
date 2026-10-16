@@ -134,8 +134,9 @@ def weekend_days(today: date) -> list[date]:
     return [sat, sat + timedelta(days=1)]
 
 
-def weekend(sido: str | None, sgg: str | None, weekly: list[dict], limit: int = 12) -> dict:
-    """토·일별 "예상 집중도가 낮은 관광지" 목록 + 그날 날씨(주간 날씨에서)."""
+def weekend(sido: str | None, sgg: str | None, weekly: list[dict], limit: int = 30) -> dict:
+    """이번 주말 "예상 집중도가 낮은 관광지" 한 목록 — 토·일을 열로 나란히(2026-10-16: 토/일 알약으로 나누던 걸 표로 바꿈).
+    spots[].rates는 days 순서대로의 집중률(없으면 None). 정렬은 토·일 평균이 낮은 순, 두 날 다 값이 있는 곳을 우선."""
     data = get(sido, sgg)
     scope_note = None
     if not data and sgg:  # 그 시군구에 관광지 데이터가 없으면 시도 전체로
@@ -143,30 +144,46 @@ def weekend(sido: str | None, sgg: str | None, weekly: list[dict], limit: int = 
         scope_note = f"{sgg}에는 집중률 예측이 있는 관광지가 없어서 {geo.region(sido)['name']} 전체를 보여드려요."
         sgg = None
     if not data:
-        return {"live": False, "days": []}
+        return {"live": False, "days": [], "spots": []}
     today = _kst.today()
     days = []
     for d in weekend_days(today):
         ymd = d.strftime("%Y%m%d")
-        rows = [(s["r"][ymd], s["n"], s["g"]) for s in data["spots"] if ymd in s["r"]]
-        if not rows:
+        if not any(ymd in s["r"] for s in data["spots"]):
             continue
-        rows.sort()
         wd = next((w for w in weekly if w.get("date") == f"{d.month}/{d.day}"), None)
         days.append(
             {
                 "date": d.isoformat(),
+                "ymd": ymd,
                 "label": "월화수목금토일"[d.weekday()],
                 "md": f"{d.month}/{d.day}",
-                "avg": round(sum(r for r, _, _ in rows) / len(rows), 1),
                 "weather": {"condition": wd["condition"], "high": wd["high"], "low": wd["low"], "pop": wd.get("pop")} if wd else None,
-                "spots": [{"name": n, "sgg": g, "rate": round(r), "pin": {"name": n, "q": f"{g} {n}"}} for r, n, g in rows[:limit]],
-                "count": len(rows),
             }
         )
     if not days:
-        return {"live": False, "days": []}
-    return {"live": True, "days": days, "at": data["at"], "region": geo.place(sido, sgg)["label"], "scope_note": scope_note}
+        return {"live": False, "days": [], "spots": []}
+    rows = []
+    for s in data["spots"]:
+        rates = [s["r"].get(d["ymd"]) for d in days]
+        vals = [r for r in rates if r is not None]
+        if not vals:
+            continue
+        rows.append((0 if len(vals) == len(days) else 1, sum(vals) / len(vals), s["n"], s["g"], rates))
+    rows.sort(key=lambda t: t[:3])
+    spots = [
+        {"name": n, "sgg": g, "rates": [None if r is None else round(r) for r in rates], "pin": {"name": n, "q": f"{g} {n}"}}
+        for _, _, n, g, rates in rows[:limit]
+    ]
+    return {
+        "live": True,
+        "days": [{k: v for k, v in d.items() if k != "ymd"} for d in days],
+        "spots": spots,
+        "count": len(rows),
+        "at": data["at"],
+        "region": geo.place(sido, sgg)["label"],
+        "scope_note": scope_note,
+    }
 
 
 def _warm() -> dict:

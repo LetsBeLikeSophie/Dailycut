@@ -108,14 +108,13 @@ class _GovSupportSectionState extends State<GovSupportSection> {
           );
         }
         final items = (d['items'] as List).cast<Map<String, dynamic>>();
-        final regionName = (d['region'] as String?) ?? _region.label;
         final set = _prof.isSet;
         return ListSection(
           title: '정부 지원·혜택',
           action: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              InfoIconButton(title: '안내', lines: ['$regionName 기준이에요.', '받을 수 있는지는 대상·조건을 확인하고 해당 기관에 문의해 주세요.']),
+              InfoIconButton(title: '안내', lines: ['받을 수 있는지는 대상·조건을 확인하고 해당 기관에 문의해 주세요.']),
               GestureDetector(
                 onTap: () => showSupportProfileSheet(context),
                 behavior: HitTestBehavior.opaque,
