@@ -417,6 +417,15 @@ claude.ai/artifact/17gytwYuXMFkF4vx8tWv65 (사용 중 · 일부만 · 미사용 
   ③ⓘ 안의 "○○ 기준이에요" 줄은 뺌(지역 안내 `scope_note`가 따로 있어서).
 - **나들이 날씨 문장 고정·형광펜 조정 (2026-10-16)**: 주말 날씨 문장(`WeekendWeatherLine`)을 도서관 포함 모든 구분의 히어로 안에 항상 같은 자리·같은 키로 둠(구분을 바꿔도 다시 만들어지지 않음). 받아 둔 값은 `_done`에 보관해 `initialData`로 써서 다시 그려도 빈 칸이 비치지 않고, 받는 동안은 한 줄 높이(30)만 비워 둠.
   형광펜은 문장 전체가 아니라 '토요일'·'일요일' 글자(모든 등장 위치)만 — `HighlightText.emphasisAll`(여러 낱말·여러 위치 지원, 기존 `emphasis` 한 개와 같이 쓸 수 있음).
+- **전체 최적화: 두 번·세 번 하던 일 정리 (2026-10-16)**
+  ①**저장값 두 번 그리기 제거**: `main()`이 `LocalPrefs.init()`으로 설정을 먼저 읽고 `MyBasket.loadSync()`·`SupportProfile.loadSync()`를 부른 뒤 `runApp` — 지역(`RegionStore`)·내 장바구니·마지막 구역(`SegmentedHost`)·숨긴 생활지수·달력 종류 칩·통계 스위치·내 조건이 **첫 프레임부터 저장값**으로 시작.
+  예전엔 기본값으로 한 번 그리고(요청까지 보내고) 저장값으로 다시 그려서, 정부 지원이 조건 없이 한 번·조건으로 또 한 번 요청하고, 구역 전환이 첫 구역 요청을 먼저 보내고, 장바구니 히어로가 "대표 → 내 것"으로 깜빡였음. 새 저장값을 화면에서 읽을 땐 `LocalPrefs.stringSync/listSync`를 쓸 것(비동기로 읽어 `setState`하지 말 것).
+  ②**요청 기억을 한 곳으로**: 화면마다 따로 있던 TTL 메모 6개(장소·혜택·정부 지원·한산한 곳·장바구니 카드·날씨 문장)를 `ApiClient._memoGet`으로 합침(같은 조건은 ttl 동안 재요청 없음, 받는 중인 요청도 공유, 실패는 기억 안 함). 그 덕에 투데이와 나들이 날씨 문장이 `/weather`를, 생활과 투데이 장바구니가 `/market`을 **한 번만** 받음.
+  ③**스플래시가 받은 날씨를 앱이 재사용**: `index.html`이 `window.__dcEarly = {key:'시도|시군구', p: Promise<본문>}`을 만들고 `splash_web.dart takeEarlyWeather`가 같은 지역이면 첫 `weather()`에 한 번 꺼내 씀 → 시작할 때 `/weather`가 2번 → 1번(라이브 확인: 시작 요청은 weather·today 둘).
+  ④작은 것들: 투데이의 스플래시 걷기·준비 신호는 한 번만(`kFirstScreenReady` 확인), `keepAllWrap`은 같은 글·폭이면 다시 재지 않음(`_wrapMemo`), `SegmentToggle`의 후처리 예약은 처음 한 번.
+  ⑤**서버**: `store.load_cache(name, shared=True)`가 파싱한 JSON을 기억(저장 시각이 같으면 재사용, 최대 8개 LRU)하고 `_cache.cached(..., shared=True)`로 큰 읽기 전용 캐시(캠핑 3,000곳·도서관·반려동물·웰니스·한산한 곳)에 적용 — 따뜻한 상태에서 캠핑 145→26ms, 한산한 곳 28→11ms, 응답은 같음.
+  **`shared=True`로 받은 값은 읽기만 할 것**(여러 요청이 같은 객체를 씀). 측정: 서버 응답은 대부분 35ms 이하라 병목은 서버가 아니라 앱의 중복 요청·재렌더였음.
+- **ⓘ는 제목 바로 뒤에 (2026-10-16)**: 오른쪽 끝 정렬이 아니라 제목 글 끝에 붙임(맨 위 "데일리컷 날짜 ⓘ"처럼) — `ListSection(info:)`(오른쪽 끝 `action`은 `내 조건` 같은 버튼 전용), `SheetFrame`·생활지수·축산물·행사 시트 제목은 `Flexible`+ⓘ.
 - **광고(카카오 애드핏, 웹) 준비됨 (2026-10-12)**: `widgets/ad_slot.dart`의 `AdSlot` + `web/ad.html`(애드핏 스크립트 페이지, 같은 도메인 iframe).
   광고 단위 ID가 없으면 칸이 아예 안 그려짐. 켜는 법: 애드핏에서 사이트(itssophie.dev/dailycut) 등록·승인 → 광고 단위(320x100 등) 생성 →
   `flutter build web … --dart-define=ADFIT_UNIT=DAN-xxxx --dart-define=ADFIT_SIZE=320x100`. 칸 위치: 생활(장보기 시세 아래)·문화(행사/영화 구역 아래)·머니(금리 아래).

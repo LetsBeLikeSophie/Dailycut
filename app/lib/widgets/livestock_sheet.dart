@@ -70,7 +70,7 @@ class _LivestockSheet extends StatelessWidget {
           children: [
             Row(
               children: [
-                Expanded(child: Text(item['label'] as String, style: AppTheme.displaySerif(size: 24, fontWeight: FontWeight.w700))),
+                Flexible(child: Text(item['label'] as String, style: AppTheme.displaySerif(size: 24, fontWeight: FontWeight.w700))),
                 const InfoIconButton(title: '안내', lines: ['평년은 과거 같은 시기의 평균 가격이에요.']),
               ],
             ),

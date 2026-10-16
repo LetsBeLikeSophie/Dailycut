@@ -11,6 +11,7 @@
 from __future__ import annotations
 
 import json
+from collections import OrderedDict
 import os
 import sqlite3
 import threading
@@ -98,9 +99,33 @@ def save_cache(name: str, payload: dict) -> None:
     )
 
 
-def load_cache(name: str) -> tuple[dict, str] | None:
+_parsed: "OrderedDict[str, tuple[str, dict]]" = OrderedDict()
+_PARSED_MAX = 8  # 메모리가 작은 서버라 큰 캐시 몇 개만(가장 오래 안 쓴 것부터 버림)
+
+
+def load_cache(name: str, shared: bool = False) -> tuple[dict, str] | None:
+    """저장된 마지막 응답. shared=True면 파싱한 결과를 기억해 같은 저장 시각이면 다시 파싱하지 않음(2026-10-16: 캠핑 3,000곳 등
+    큰 캐시를 요청마다 JSON으로 풀던 것). **돌려받은 값은 읽기만 해야 함**(여러 요청이 같은 객체를 씀 — 고치면 안 됨)."""
+    if shared:
+        stamp = _query("SELECT fetched_at FROM cache WHERE name=?", (name,))
+        if not stamp:
+            return None
+        with _lock:
+            hit = _parsed.get(name)
+            if hit and hit[0] == stamp[0]["fetched_at"]:
+                _parsed.move_to_end(name)
+                return hit[1], hit[0]
     rows = _query("SELECT payload, fetched_at FROM cache WHERE name=?", (name,))
-    return (json.loads(rows[0]["payload"]), rows[0]["fetched_at"]) if rows else None
+    if not rows:
+        return None
+    payload, at = json.loads(rows[0]["payload"]), rows[0]["fetched_at"]
+    if shared:
+        with _lock:
+            _parsed[name] = (at, payload)
+            _parsed.move_to_end(name)
+            while len(_parsed) > _PARSED_MAX:
+                _parsed.popitem(last=False)
+    return payload, at
 
 
 def record_prices(source: str, rows: list[dict]) -> int:

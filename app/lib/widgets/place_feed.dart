@@ -36,22 +36,8 @@ class PlaceFeed extends StatefulWidget {
   final Region region;
   final PlaceKind kind;
 
-  static final Map<String, ({DateTime at, Future<Map<String, dynamic>> future})> _memo = {};
-
-  static Future<Map<String, dynamic>> fetch(ApiClient api, Region r, PlaceKind kind) {
-    final key = '${kind.name}/${r.code}/${r.sgg ?? ''}';
-    final hit = _memo[key];
-    // 도서관 좌석은 자주 바뀌니 짧게(2분), 나머지는 길게
-    final ttl = kind == PlaceKind.library ? 2 : 30;
-    if (hit != null && DateTime.now().difference(hit.at).inMinutes < ttl) return hit.future;
-    final f = api.places(kind: kind.name, sido: r.code, sgg: r.sgg);
-    _memo[key] = (at: DateTime.now(), future: f);
-    f.catchError((_) {
-      _memo.remove(key);
-      return <String, dynamic>{};
-    });
-    return f;
-  }
+  // 같은 조건의 요청은 ApiClient가 기억함(도서관 좌석은 1분, 나머지는 30분)
+  static Future<Map<String, dynamic>> fetch(ApiClient api, Region r, PlaceKind kind) => api.places(kind: kind.name, sido: r.code, sgg: r.sgg);
 
   @override
   State<PlaceFeed> createState() => _PlaceFeedState();
@@ -91,7 +77,7 @@ class _PlaceFeedState extends State<PlaceFeed> {
         return ListSection(
           title: _titles[_kind]!,
           trailing: '${d['total']}곳',
-          action: InfoIconButton(title: '안내', lines: [if ((d['note'] as String?)?.isNotEmpty ?? false) d['note'] as String]),
+          info: (d['note'] as String?)?.isNotEmpty ?? false ? InfoIconButton(title: '안내', lines: [d['note'] as String]) : null,
           children: [
             if (d['scope_note'] != null)
               Padding(padding: const EdgeInsets.only(top: 12), child: Text(d['scope_note'] as String, style: const TextStyle(fontSize: 11, color: AppColors.inkSoft, height: 1.6))),

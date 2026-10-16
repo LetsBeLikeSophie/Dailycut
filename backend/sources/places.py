@@ -137,7 +137,7 @@ def _fresh(tot_dt: str, hours: int = 4) -> bool:
 
 
 def library(sido: str | None, sgg: str | None) -> dict:
-    info = _cache.cached("places", "places:lib:info", 1440, lambda: {"v": _lib_info()})["v"]
+    info = _cache.cached("places", "places:lib:info", 1440, lambda: {"v": _lib_info()}, shared=True)["v"]
     rooms = _cache.cached("places", "places:lib:rooms", 10, lambda: {"v": _lib_rooms()})["v"]
     region = geo.region(sido)
     # 도서관 번호(PLR001…)는 지자체마다 겹쳐서(광진·강북이 모두 PLR001) 지자체 코드 + 이름으로 짝지음
@@ -203,7 +203,7 @@ def _camps() -> list[dict]:
 
 
 def camp(sido: str | None, sgg: str | None) -> dict:
-    camps = _cache.cached("places", "places:camps", 1440, lambda: {"v": _camps()})["v"]
+    camps = _cache.cached("places", "places:camps", 1440, lambda: {"v": _camps()}, shared=True)["v"]
     region = geo.region(sido)
     terms = geo.sgg_terms(sido, sgg)
     out = []
@@ -266,7 +266,7 @@ def _pet(area: str) -> list[dict]:
 
 def pet(sido: str | None, sgg: str | None) -> dict:
     area = _tour_area(sido)
-    rows = _cache.cached("places", f"places:pet:{area}", 1440, lambda: {"v": _pet(area)})["v"]
+    rows = _cache.cached("places", f"places:pet:{area}", 1440, lambda: {"v": _pet(area)}, shared=True)["v"]
     region = geo.region(sido)
     terms = geo.sgg_terms(sido, sgg)
     out = []
@@ -294,7 +294,7 @@ def _wellness(area: str) -> list[dict]:
 
 def wellness(sido: str | None, sgg: str | None) -> dict:
     area = _tour_area(sido)
-    rows = _cache.cached("places", f"places:well:{area}", 1440, lambda: {"v": _wellness(area)})["v"]
+    rows = _cache.cached("places", f"places:well:{area}", 1440, lambda: {"v": _wellness(area)}, shared=True)["v"]
     region = geo.region(sido)
     terms = geo.sgg_terms(sido, sgg)
     out = []

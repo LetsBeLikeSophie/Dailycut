@@ -15,23 +15,15 @@ class WeekendWeatherLine extends StatefulWidget {
   final ApiClient api;
   final Region region;
 
-  static final Map<String, ({DateTime at, Future<Map<String, dynamic>> future})> _memo = {};
-
-  // 받아 둔 값(동기로 꺼낼 수 있게): 구분을 오가며 위젯이 다시 만들어져도 빈 칸이 한 프레임 비쳤다 채워지지 않게 initialData로 씀
+  // 받아 둔 값(동기로 꺼낼 수 있게): 구분을 오가며 위젯이 다시 만들어져도 빈 칸이 한 프레임 비쳤다 채워지지 않게 initialData로 씀.
+  // 요청 자체는 투데이와 같은 /weather라 ApiClient가 한 번만 보냄.
   static final Map<String, Map<String, dynamic>> _done = {};
 
   static String _key(Region r) => '${r.code}/${r.sgg ?? ''}';
 
   static Future<Map<String, dynamic>> fetch(ApiClient api, Region r) {
-    final key = _key(r);
-    final hit = _memo[key];
-    if (hit != null && DateTime.now().difference(hit.at).inMinutes < 10) return hit.future;
     final f = api.weather(sido: r.code, sgg: r.sgg);
-    _memo[key] = (at: DateTime.now(), future: f);
-    f.then((v) => _done[key] = v, onError: (_) {
-      _memo.remove(key);
-      return <String, dynamic>{};
-    });
+    f.then((v) => _done[_key(r)] = v, onError: (_) => <String, dynamic>{});
     return f;
   }
 

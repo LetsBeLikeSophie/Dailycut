@@ -72,7 +72,7 @@ class _LifeSheet extends StatelessWidget {
               children: [
                 Icon(lifeIconFor(key), size: 26),
                 const SizedBox(width: 10),
-                Expanded(child: Text(item['title'] as String, style: AppTheme.displaySerif(size: 24, fontWeight: FontWeight.w700))),
+                Flexible(child: Text(item['title'] as String, style: AppTheme.displaySerif(size: 24, fontWeight: FontWeight.w700))),
                 InfoIconButton(title: '출처', lines: ['${item['source'] ?? ''}']),
               ],
             ),
@@ -134,15 +134,7 @@ class LifeIndexSection extends StatefulWidget {
 
 class _LifeIndexSectionState extends State<LifeIndexSection> {
   static const _key = 'life_hidden';
-  List<String> _hidden = const [];
-
-  @override
-  void initState() {
-    super.initState();
-    LocalPrefs.getList(_key).then((v) {
-      if (mounted) setState(() => _hidden = v);
-    });
-  }
+  List<String> _hidden = LocalPrefs.listSync(_key);
 
   Future<void> _edit() async {
     Analytics.instance.track('life_edit');

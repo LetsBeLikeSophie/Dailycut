@@ -66,10 +66,12 @@ class _TodayScreenState extends State<TodayScreen> {
           return const Center(child: CircularProgressIndicator());
         }
         // 첫 화면 데이터가 준비됐으니 웹 스플래시를 걷음(받는 동안은 스플래시가 덮고 있어서 스피너가 또 보이지 않음)
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          hideSplash();
-          kFirstScreenReady.value = true; // 이제 다른 탭을 뒤에서 만들어 둠(main.dart)
-        });
+        if (!kFirstScreenReady.value) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            hideSplash();
+            kFirstScreenReady.value = true; // 이제 다른 탭을 뒤에서 만들어 둠(main.dart) — 다시 그릴 때마다 되풀이하지 않음
+          });
+        }
         if (snapshot.hasError) {
           return Center(
             child: Text(

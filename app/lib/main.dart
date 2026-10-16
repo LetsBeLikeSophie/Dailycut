@@ -4,10 +4,18 @@ import 'boot.dart';
 import 'screens/today_screen.dart';
 import 'screens/section_screens.dart';
 import 'analytics.dart';
+import 'local_prefs.dart';
+import 'my_basket.dart';
+import 'widgets/support_profile.dart';
 import 'region.dart';
 import 'theme.dart';
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  // 저장된 설정(지역·장바구니·내 조건·마지막 구역)을 첫 프레임 전에 읽어 둠 → 화면이 기본값으로 그렸다가 다시 그리지 않음
+  await LocalPrefs.init();
+  MyBasket.instance.loadSync();
+  SupportProfile.instance.loadSync();
   runApp(const DailyCutApp());
 }
 

@@ -36,7 +36,6 @@ class _BasketHeroState extends State<BasketHero> {
   void initState() {
     super.initState();
     _mine.suggestions = widget.suggestions;
-    _mine.load();
     _mine.addListener(_changed);
   }
 

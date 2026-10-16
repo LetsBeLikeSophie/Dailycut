@@ -84,7 +84,10 @@
         var q = '?sido=' + encodeURIComponent(sido || '11') + (sgg ? '&sgg=' + encodeURIComponent(sgg) : '');
         var ctl = window.AbortController ? new AbortController() : null;
         setTimeout(function () { if (ctl) ctl.abort(); }, 8000);
-        fetch('/dailycut-api/weather' + q, ctl ? { signal: ctl.signal } : {}).then(function (r) { return r.json(); }).then(function (w) {
+        // 받은 본문은 앱(Flutter)도 같은 지역이면 그대로 씀(window.__dcEarly) — 앱이 뜬 뒤 같은 /weather를 또 요청하지 않게
+        var p = fetch('/dailycut-api/weather' + q, ctl ? { signal: ctl.signal } : {}).then(function (r) { return r.ok ? r.text() : null; });
+        window.__dcEarly = { key: (sido || '11') + '|' + (sgg || ''), p: p.catch(function () { return null; }) };
+        p.then(function (t) { return t ? JSON.parse(t) : null; }).then(function (w) {
           var box = document.getElementById('splash-wx'), sub = document.querySelector('#splash .sub');
           var t = w && w.today;
           if (!box || !t || (w.live_keys || []).indexOf('today') < 0) return;

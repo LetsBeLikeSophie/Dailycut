@@ -1,4 +1,3 @@
-import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -17,28 +16,16 @@ class GovSupportSection extends StatefulWidget {
 
   final ApiClient api;
 
-  // 같은 조건으로 이미 받은(받는 중인) 요청은 다시 보내지 않음 — 구역 전환·탭 이동 때 빈 화면 없이 바로 보이게.
-  static final Map<String, ({DateTime at, Future<Map<String, dynamic>> future})> _memo = {};
-
+  // 같은 조건의 요청은 ApiClient가 10분 동안 다시 보내지 않음 — 구역 전환·탭 이동 때 빈 화면 없이 바로 보임.
   static Future<Map<String, dynamic>> fetch(ApiClient api, Region region, String scope, SupportProfile prof) {
     final body = prof.isSet ? prof.toRequest() : null;
-    final key = '${region.code}/${region.sgg ?? ''}/$scope/${body == null ? '' : jsonEncode(body)}';
-    final hit = _memo[key];
-    if (hit != null && DateTime.now().difference(hit.at).inMinutes < 10) return hit.future;
-    final f = body == null
+    return body == null
         ? api.support(sido: region.code, sgg: region.sgg, scope: scope)
         : api.supportSearch(sido: region.code, sgg: region.sgg, scope: scope, profile: body);
-    _memo[key] = (at: DateTime.now(), future: f);
-    f.catchError((_) {
-      _memo.remove(key); // 실패는 기억하지 않음(다시 시도할 수 있게)
-      return <String, dynamic>{};
-    });
-    return f;
   }
 
   /// 머니 탭이 열릴 때 미리 받아 둠(혜택 구역을 눌렀을 때 바로 보이게).
   static Future<void> prefetch(ApiClient api) async {
-    await SupportProfile.instance.load();
     try {
       await fetch(api, RegionStore.instance.current, 'all', SupportProfile.instance);
     } catch (_) {}
@@ -62,9 +49,7 @@ class _GovSupportSectionState extends State<GovSupportSection> {
     super.initState();
     RegionStore.instance.addListener(_reload); // 지역을 바꾸면 그 지역 기준으로 다시 받음
     _prof.addListener(_reload); // "내 조건"을 바꾸면 그 조건으로 다시 받음
-    _prof.load().then((_) {
-      if (mounted && _prof.isSet) _reload(); // 저장된 조건이 있으면 처음부터 적용
-    });
+    // 저장된 "내 조건"은 main에서 먼저 읽어 둬서(SupportProfile.loadSync) 첫 요청부터 반영됨 — 따로 다시 받지 않음
   }
 
   @override
@@ -111,25 +96,20 @@ class _GovSupportSectionState extends State<GovSupportSection> {
         final set = _prof.isSet;
         return ListSection(
           title: '정부 지원·혜택',
-          action: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              InfoIconButton(title: '안내', lines: ['받을 수 있는지는 대상·조건을 확인하고 해당 기관에 문의해 주세요.']),
-              GestureDetector(
-                onTap: () => showSupportProfileSheet(context),
-                behavior: HitTestBehavior.opaque,
-                child: Padding(
-                  padding: const EdgeInsets.only(left: 12),
-                  child: Text.rich(
-                    const TextSpan(children: [
-                      WidgetSpan(alignment: PlaceholderAlignment.middle, child: Icon(Icons.tune, size: 15)),
-                      TextSpan(text: ' 내 조건'),
-                    ]),
-                    style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: set ? AppColors.ink : AppColors.inkSoft),
-                  ),
-                ),
+          info: const InfoIconButton(title: '안내', lines: ['받을 수 있는지는 대상·조건을 확인하고 해당 기관에 문의해 주세요.']),
+          action: GestureDetector(
+            onTap: () => showSupportProfileSheet(context),
+            behavior: HitTestBehavior.opaque,
+            child: Padding(
+              padding: const EdgeInsets.only(left: 12),
+              child: Text.rich(
+                const TextSpan(children: [
+                  WidgetSpan(alignment: PlaceholderAlignment.middle, child: Icon(Icons.tune, size: 15)),
+                  TextSpan(text: ' 내 조건'),
+                ]),
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700, color: set ? AppColors.ink : AppColors.inkSoft),
               ),
-            ],
+            ),
           ),
           children: [
             const SizedBox(height: 18),

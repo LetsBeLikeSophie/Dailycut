@@ -128,8 +128,15 @@ class HighlightText extends StatelessWidget {
 
 /// 띄어쓰기 단위로만 줄을 나눔: 한 줄에 안 들어가는 단어 앞의 공백을 줄바꿈으로 바꿔 돌려줌(길이는 같음).
 /// 한 단어가 한 줄보다 길면 어쩔 수 없이 그대로 두어 기본 줄바꿈에 맡김.
+final Map<String, String> _wrapMemo = {};
+
 String keepAllWrap(String text, TextStyle style, double maxWidth, TextScaler scaler) {
   if (!maxWidth.isFinite || !text.contains(' ')) return text;
+  // 같은 글·폭·글꼴 크기면 다시 재지 않음(다시 그릴 때마다 글자 폭을 재던 것). 글꼴 크기·굵기·배율이 키에 들어감.
+  final memoKey = '${maxWidth.toStringAsFixed(1)}|${style.fontSize}|${style.fontWeight?.value}|${style.fontFamily}|${scaler.scale(10)}|$text';
+  final memo = _wrapMemo[memoKey];
+  if (memo != null) return memo;
+  if (_wrapMemo.length > 200) _wrapMemo.clear();
   double width(String s) {
     final tp = TextPainter(text: TextSpan(text: s, style: style), textDirection: TextDirection.ltr, textScaler: scaler, maxLines: 1)..layout();
     return tp.width;
@@ -155,7 +162,7 @@ String keepAllWrap(String text, TextStyle style, double maxWidth, TextScaler sca
     }
     out.write(w);
   }
-  return out.toString();
+  return _wrapMemo[memoKey] = out.toString();
 }
 
 /// 큰 숫자(세리프 60). 숫자는 처음 나타날 때 0에서 올라가며 멈춤.
@@ -971,11 +978,13 @@ class ListSection extends StatelessWidget {
     required this.title,
     this.trailing,
     this.action,
+    this.info,
     this.stub = false,
     required this.children,
   });
 
-  final Widget? action; // 제목 줄 오른쪽 끝의 작은 아이콘 버튼(예: 설정)
+  final Widget? action; // 제목 줄 오른쪽 끝의 작은 버튼(예: 내 조건)
+  final Widget? info; // 제목 글 바로 뒤에 붙는 ⓘ(출처·안내, 맨 위 "데일리컷 날짜 ⓘ"처럼)
 
   final String title;
   final String? trailing;
@@ -997,7 +1006,14 @@ class ListSection extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.baseline,
               textBaseline: TextBaseline.alphabetic,
               children: [
-                Expanded(child: Text(title, style: AppTheme.subheading)),
+                Expanded(
+                  child: Row(
+                    children: [
+                      Flexible(child: Text(title, style: AppTheme.subheading)),
+                      ?info,
+                    ],
+                  ),
+                ),
                 if (trailing != null || stub)
                   Text(
                     [?trailing, if (stub) '예시 데이터'].join(' · '),
@@ -1397,6 +1413,7 @@ class SegmentToggle extends StatefulWidget {
 class _SegmentToggleState extends State<SegmentToggle> {
   final _c = ScrollController();
   bool _more = false; // 오른쪽에 더 있음
+  bool _checked = false;
 
   @override
   void initState() {
@@ -1420,7 +1437,10 @@ class _SegmentToggleState extends State<SegmentToggle> {
   Widget build(BuildContext context) {
     final labels = widget.labels;
     final index = widget.index;
-    WidgetsBinding.instance.addPostFrameCallback((_) => _check());
+    if (!_checked) {
+      _checked = true; // 처음 그린 뒤 한 번만 확인(이후엔 스크롤할 때 listener가 확인)
+      WidgetsBinding.instance.addPostFrameCallback((_) => _check());
+    }
     // 2026-10-16: 장소 탭처럼 구분이 6개면 폭을 넘어서 가로로 밀어 볼 수 있게 하고, 더 있다는 걸 오른쪽 끝 흐림+화살표로 알림(칸이 적으면 그대로 한 줄)
     return Padding(
       padding: const EdgeInsets.only(top: 6, bottom: 4),
@@ -1544,7 +1564,7 @@ class SheetFrame extends StatelessWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(child: Text(title, style: AppTheme.displaySerif(size: 24, fontWeight: FontWeight.w700))),
+                Flexible(child: Text(title, style: AppTheme.displaySerif(size: 24, fontWeight: FontWeight.w700))),
                 if (infoLines != null) Padding(padding: const EdgeInsets.only(top: 6), child: InfoIconButton(title: '출처·안내', lines: infoLines!)),
               ],
             ),

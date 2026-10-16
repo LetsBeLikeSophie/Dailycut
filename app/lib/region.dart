@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'analytics.dart';
 
 import 'api_client.dart';
+import 'local_prefs.dart';
 import 'location.dart';
 import 'theme.dart';
 import 'widgets/components.dart';
@@ -73,15 +73,11 @@ class RegionStore extends ChangeNotifier {
   Future<void> init(ApiClient api) async {
     _api = api;
     if (ready) return;
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final saved = prefs.getString(_prefSido);
-      if (saved != null) {
-        current = _sidoByCode(saved).withSgg(prefs.getString(_prefSgg));
-        source = 'saved';
-      }
-    } catch (_) {
-      // 저장소 오류면 기본(서울)으로
+    // 저장된 지역은 main에서 미리 읽어 둔 값으로 바로(동기) — 스피너 한 프레임 없이 첫 화면이 곧바로 그 지역으로 시작
+    final saved = LocalPrefs.stringSync(_prefSido);
+    if (saved != null) {
+      current = _sidoByCode(saved).withSgg(LocalPrefs.stringSync(_prefSgg));
+      source = 'saved';
     }
     // 2026-10-12: 위치 권한 확인(허용 창 + 최대 8초)이 끝나길 기다렸다가 데이터를 받던 걸 바꿈 — 첫 방문자는 그동안
     // 빈 화면만 봤음. 이제 기본 지역(서울)으로 바로 보여주고, 위치는 뒤에서 알아내서 맞으면 그 지역으로 바꿈.
@@ -110,15 +106,12 @@ class RegionStore extends ChangeNotifier {
     current = r;
     source = 'saved';
     notifyListeners();
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(_prefSido, r.code);
-      if (r.sgg == null) {
-        await prefs.remove(_prefSgg);
-      } else {
-        await prefs.setString(_prefSgg, r.sgg!);
-      }
-    } catch (_) {}
+    await LocalPrefs.setString(_prefSido, r.code);
+    if (r.sgg == null) {
+      await LocalPrefs.remove(_prefSgg);
+    } else {
+      await LocalPrefs.setString(_prefSgg, r.sgg!);
+    }
   }
 
   /// 화면 맨 위 줄에 붙일 지역 문구(예: "서울 중구", 위치를 못 받아 기본값이면 "서울 · 기본").

@@ -493,16 +493,12 @@ class SegmentedHost extends StatefulWidget {
 }
 
 class _SegmentedHostState extends State<SegmentedHost> {
-  int _index = 0;
-
-  @override
-  void initState() {
-    super.initState();
-    LocalPrefs.getString(widget.prefKey).then((v) {
-      final i = v == null ? -1 : widget.labels.indexOf(v);
-      if (i >= 0 && mounted) setState(() => _index = i);
-    });
-  }
+  // 마지막으로 고른 구역으로 첫 프레임부터 엶(예전엔 첫 구역으로 그리고 요청까지 보낸 뒤 바꿔서 두 번 그렸음)
+  late int _index = () {
+    final v = LocalPrefs.stringSync(widget.prefKey);
+    final i = v == null ? -1 : widget.labels.indexOf(v);
+    return i >= 0 ? i : 0;
+  }();
 
   @override
   Widget build(BuildContext context) {

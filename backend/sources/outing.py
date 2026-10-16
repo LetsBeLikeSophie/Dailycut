@@ -121,7 +121,7 @@ def get(sido: str | None, sgg: str | None = None) -> dict | None:
     region = geo.region(sido)
     key = f"outing3:{region['code']}:{sgg or '*'}"
     try:
-        return _cache.cached("outing", key, 1440, lambda: _build(sido, sgg))
+        return _cache.cached("outing", key, 1440, lambda: _build(sido, sgg), shared=True)
     except Exception:
         return None
 

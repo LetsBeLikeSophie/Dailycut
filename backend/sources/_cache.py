@@ -42,9 +42,10 @@ def _refresh_async(source: str, key: str, fn: Callable[[], dict]) -> None:
     threading.Thread(target=work, daemon=True).start()
 
 
-def cached(source: str, key: str, ttl_min: int, fn: Callable[[], dict]) -> dict:
-    """source: 상태 표시용 이름(예: "weather"), key: 캐시 키(위치 칸 포함)."""
-    hit = store.load_cache(key)
+def cached(source: str, key: str, ttl_min: int, fn: Callable[[], dict], shared: bool = False) -> dict:
+    """source: 상태 표시용 이름(예: "weather"), key: 캐시 키(위치 칸 포함).
+    shared=True: 큰 읽기 전용 캐시(파싱 결과를 기억) — 돌려받은 값을 고치면 안 됨."""
+    hit = store.load_cache(key, shared)
     if hit:
         age = datetime.now() - datetime.fromisoformat(hit[1])
         if age < timedelta(minutes=ttl_min):
@@ -57,7 +58,7 @@ def cached(source: str, key: str, ttl_min: int, fn: Callable[[], dict]) -> dict:
     with _guard:
         lock = _locks.setdefault(key, threading.Lock())
     with lock:  # 같은 칸을 동시에 여러 번 부르지 않게
-        hit = store.load_cache(key)
+        hit = store.load_cache(key, shared)
         if hit and datetime.now() - datetime.fromisoformat(hit[1]) < timedelta(minutes=ttl_min):
             return hit[0]
         try:

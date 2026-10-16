@@ -17,20 +17,8 @@ class OutingSection extends StatefulWidget {
   final ApiClient api;
   final Region region;
 
-  static final Map<String, ({DateTime at, Future<Map<String, dynamic>> future})> _memo = {};
-
-  static Future<Map<String, dynamic>> fetch(ApiClient api, Region r) {
-    final key = '${r.code}/${r.sgg ?? ''}';
-    final hit = _memo[key];
-    if (hit != null && DateTime.now().difference(hit.at).inMinutes < 30) return hit.future;
-    final f = api.outing(sido: r.code, sgg: r.sgg);
-    _memo[key] = (at: DateTime.now(), future: f);
-    f.catchError((_) {
-      _memo.remove(key);
-      return <String, dynamic>{};
-    });
-    return f;
-  }
+  // 같은 지역의 요청은 ApiClient가 30분 동안 기억함
+  static Future<Map<String, dynamic>> fetch(ApiClient api, Region r) => api.outing(sido: r.code, sgg: r.sgg);
 
   @override
   State<OutingSection> createState() => _OutingSectionState();
@@ -66,14 +54,14 @@ class _OutingSectionState extends State<OutingSection> {
         Widget cols(Widget Function(int i) cell) => Row(mainAxisSize: MainAxisSize.min, children: [for (var i = 0; i < days.length; i++) SizedBox(width: colW, child: cell(i))]);
         return ListSection(
           title: '이번 주말 한산한 곳',
-          action: GestureDetector(
+          info: GestureDetector(
             onTap: () {
               Analytics.instance.track('sources_open');
               showSourcesSheet(context, current: _explain);
             },
             behavior: HitTestBehavior.opaque,
             child: const Padding(
-              padding: EdgeInsets.only(left: 10),
+              padding: EdgeInsets.fromLTRB(8, 4, 0, 4),
               child: Icon(Icons.info_outline, size: 15, color: AppColors.inkSoft),
             ),
           ),

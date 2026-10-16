@@ -20,25 +20,12 @@ class BenefitFeed extends StatefulWidget {
   final Region region;
   final BenefitKind kind;
 
-  // 같은 조건으로 받은(받는 중인) 요청은 10분 동안 다시 보내지 않음 — 구역을 오가도 바로 보이게.
-  static final Map<String, ({DateTime at, Future<Map<String, dynamic>> future})> _memo = {};
-
-  static Future<Map<String, dynamic>> fetch(ApiClient api, Region r, BenefitKind kind, String? usage) {
-    final key = '${kind.name}/${r.code}/${r.sgg ?? ''}/${usage ?? ''}'; // usage는 쉼표로 이은 여러 개
-    final hit = _memo[key];
-    if (hit != null && DateTime.now().difference(hit.at).inMinutes < 10) return hit.future;
-    final f = switch (kind) {
-      BenefitKind.apply => api.benefitsHousing(kind: 'apply', sido: r.code, sgg: r.sgg),
-      BenefitKind.rent => api.benefitsHousing(kind: 'rent', sido: r.code, sgg: r.sgg),
-      BenefitKind.loan => api.benefitsLoans(usage: usage, sido: r.code),
-    };
-    _memo[key] = (at: DateTime.now(), future: f);
-    f.catchError((_) {
-      _memo.remove(key);
-      return <String, dynamic>{};
-    });
-    return f;
-  }
+  // 같은 조건의 요청은 ApiClient가 10분 동안 다시 보내지 않음(구역을 오가도 바로 보임). usage는 쉼표로 이은 여러 개.
+  static Future<Map<String, dynamic>> fetch(ApiClient api, Region r, BenefitKind kind, String? usage) => switch (kind) {
+        BenefitKind.apply => api.benefitsHousing(kind: 'apply', sido: r.code, sgg: r.sgg),
+        BenefitKind.rent => api.benefitsHousing(kind: 'rent', sido: r.code, sgg: r.sgg),
+        BenefitKind.loan => api.benefitsLoans(usage: usage, sido: r.code),
+      };
 
   @override
   State<BenefitFeed> createState() => _BenefitFeedState();
@@ -97,7 +84,7 @@ class _BenefitFeedState extends State<BenefitFeed> {
         return ListSection(
           title: _title,
           trailing: widget.kind == BenefitKind.loan ? null : '${d['total']}건',
-          action: InfoIconButton(title: '안내', lines: [_footnote]),
+          info: InfoIconButton(title: '안내', lines: [_footnote]),
           children: [
             if (widget.kind == BenefitKind.loan && usages.isNotEmpty) ...[
               const SizedBox(height: 18),

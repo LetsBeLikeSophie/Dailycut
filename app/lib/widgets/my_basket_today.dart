@@ -19,8 +19,6 @@ class MyBasketToday extends StatefulWidget {
 }
 
 class _MyBasketTodayState extends State<MyBasketToday> {
-  static final _memo = <String, ({DateTime at, Future<Map<String, dynamic>> data})>{};
-
   final _mine = MyBasket.instance;
   Future<Map<String, dynamic>>? _future;
 
@@ -28,7 +26,6 @@ class _MyBasketTodayState extends State<MyBasketToday> {
   void initState() {
     super.initState();
     _mine.addListener(_changed);
-    _mine.load().then((_) => _changed());
   }
 
   @override
@@ -41,18 +38,8 @@ class _MyBasketTodayState extends State<MyBasketToday> {
     if (mounted) setState(() {});
   }
 
-  Future<Map<String, dynamic>> _fetch() {
-    final key = '${widget.region.code}/${widget.region.sgg ?? ''}';
-    final hit = _memo[key];
-    if (hit != null && DateTime.now().difference(hit.at).inMinutes < 10) return hit.data;
-    final f = widget.api.market(sido: widget.region.code, sgg: widget.region.sgg);
-    _memo[key] = (at: DateTime.now(), data: f);
-    f.catchError((_) {
-      _memo.remove(key); // 실패는 기억하지 않음
-      return <String, dynamic>{};
-    });
-    return f;
-  }
+  // 생활 탭과 같은 /market 요청 — ApiClient가 한 번만 받아 둘이 같이 씀
+  Future<Map<String, dynamic>> _fetch() => widget.api.market(sido: widget.region.code, sgg: widget.region.sgg);
 
   @override
   Widget build(BuildContext context) {

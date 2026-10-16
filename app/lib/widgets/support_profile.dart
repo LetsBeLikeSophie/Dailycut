@@ -30,10 +30,21 @@ class SupportProfile extends ChangeNotifier {
 
   bool get isSet => age != null || gender != null || income != null || traits.isNotEmpty;
 
+  /// 앱이 뜨기 전에 한 번(main). 화면이 첫 요청부터 저장된 조건을 쓰게 함.
+  void loadSync() {
+    if (_loaded) return;
+    _loaded = true;
+    _apply(LocalPrefs.stringSync(_key));
+  }
+
   Future<void> load() async {
     if (_loaded) return;
     _loaded = true;
-    final raw = await LocalPrefs.getString(_key);
+    _apply(await LocalPrefs.getString(_key));
+    notifyListeners();
+  }
+
+  void _apply(String? raw) {
     if (raw == null || raw.isEmpty) return;
     try {
       final m = jsonDecode(raw) as Map<String, dynamic>;
@@ -44,7 +55,6 @@ class SupportProfile extends ChangeNotifier {
       traits
         ..clear()
         ..addAll(((m['traits'] as List?) ?? const []).cast<String>());
-      notifyListeners();
     } catch (_) {}
   }
 

@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'analytics.dart';
+import 'local_prefs.dart';
 
 /// 내 장바구니: 생활 탭 맨 위 차트에 올릴 품목. 기본값 없음(비어 있음) — 사용자가 장보기 시세에서
 /// 밀어서 담은 것만 들어감. 로그인이 없어서 기기에만 저장함(shared_preferences).
@@ -19,22 +19,23 @@ class MyBasket extends ChangeNotifier {
   bool get isEmpty => _names.isEmpty;
   bool contains(String name) => _names.contains(name);
 
-  Future<void> load() async {
+  /// 앱이 뜨기 전에 한 번(main) — 첫 프레임부터 저장된 품목이 보이게(예전엔 비동기로 읽어 "비었음 → 채워짐"으로 두 번 그렸음).
+  void loadSync() {
     if (_loaded) return;
     _loaded = true;
-    try {
-      final p = await SharedPreferences.getInstance();
-      _names = p.getStringList(_key) ?? [];
-      notifyListeners();
-    } catch (_) {}
+    _names = [...LocalPrefs.listSync(_key)];
+  }
+
+  Future<void> load() async {
+    if (_loaded) return;
+    await LocalPrefs.init();
+    loadSync();
+    notifyListeners();
   }
 
   Future<void> _save() async {
     notifyListeners();
-    try {
-      final p = await SharedPreferences.getInstance();
-      await p.setStringList(_key, _names);
-    } catch (_) {}
+    await LocalPrefs.setList(_key, _names);
   }
 
   /// 담았으면 true, 뺐으면 false

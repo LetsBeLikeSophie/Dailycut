@@ -75,16 +75,11 @@ class _CultureCalendarState extends State<CultureCalendar> {
   late DateTime _month = DateTime(DateTime.now().year, DateTime.now().month);
   late DateTime _selected = DateTime(DateTime.now().year, DateTime.now().month, DateTime.now().day);
   bool _showAll = false;
-  String _kind = '전체';
-
-  @override
-  void initState() {
-    super.initState();
-    // 마지막으로 고른 종류(축제·전시 등)를 기억해서 다음에도 그 종류로 열어 줌
-    LocalPrefs.getString('culture_kind').then((v) {
-      if (v != null && mounted && _kinds.contains(v)) setState(() => _kind = v);
-    });
-  }
+  // 마지막으로 고른 종류(축제·전시 등)를 기억해서 다음에도 그 종류로 첫 프레임부터 열어 줌
+  late String _kind = () {
+    final v = LocalPrefs.stringSync('culture_kind');
+    return v != null && _kinds.contains(v) ? v : '전체';
+  }();
 
   String _iso(DateTime d) => '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
 
@@ -368,7 +363,7 @@ class _EventSheet extends StatelessWidget {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(child: Text(ok ? (d['title'] as String) : event['title'] as String, style: AppTheme.displaySerif(size: 24, fontWeight: FontWeight.w700))),
+                    Flexible(child: Text(ok ? (d['title'] as String) : event['title'] as String, style: AppTheme.displaySerif(size: 24, fontWeight: FontWeight.w700))),
                     if (ok)
                       Padding(
                         padding: const EdgeInsets.only(top: 6),
