@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'api_client.dart';
 import 'boot.dart';
+import 'widgets/swipe.dart';
 import 'screens/today_screen.dart';
 import 'screens/section_screens.dart';
 import 'analytics.dart';
@@ -62,12 +63,28 @@ class _RootShellState extends State<RootShell> {
     RegionStore.instance.init(_api);
     Analytics.instance.track('tab_view', 'today');
     kFirstScreenReady.addListener(_warmOtherTabs);
+    swipeToTab = _swipeTab;
   }
 
   @override
   void dispose() {
     kFirstScreenReady.removeListener(_warmOtherTabs);
+    swipeToTab = null;
     super.dispose();
+  }
+
+  void _select(int i) {
+    if (i == _index) return;
+    setState(() {
+      _index = i;
+      _visited.add(i);
+    });
+    Analytics.instance.track('tab_view', _tabKeys[i]);
+  }
+
+  void _swipeTab(int step) {
+    final next = _index + step;
+    if (next >= 0 && next < _tabs.length) _select(next);
   }
 
   void _warmOtherTabs() {
@@ -108,7 +125,8 @@ class _RootShellState extends State<RootShell> {
     final screens = [for (var i = 0; i < builders.length; i++) _visited.contains(i) ? builders[i]() : const SizedBox.shrink()];
 
     return Scaffold(
-      body: SafeArea(child: IndexedStack(index: _index, children: screens)),
+      // 옆으로 밀면 이웃 탭(기본 동작). 달력·하위 구분 본문은 안쪽에서 먼저 받음(widgets/swipe.dart)
+      body: SafeArea(child: SwipeDetector(onSwipe: _swipeTab, child: IndexedStack(index: _index, children: screens))),
       bottomNavigationBar: DecoratedBox(
         decoration: const BoxDecoration(
           border: Border(top: BorderSide(color: AppColors.hair)),
@@ -122,13 +140,7 @@ class _RootShellState extends State<RootShell> {
                 for (var i = 0; i < _tabs.length; i++)
                   Expanded(
                     child: GestureDetector(
-                      onTap: () {
-                        setState(() {
-                          _index = i;
-                          _visited.add(i);
-                        });
-                        Analytics.instance.track('tab_view', _tabKeys[i]);
-                      },
+                      onTap: () => _select(i),
                       behavior: HitTestBehavior.opaque,
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,

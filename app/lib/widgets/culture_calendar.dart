@@ -6,6 +6,7 @@ import '../analytics.dart';
 import '../local_prefs.dart';
 import '../theme.dart';
 import 'components.dart';
+import 'swipe.dart';
 import 'zoom_image.dart';
 
 String _md(String iso) {
@@ -97,6 +98,23 @@ class _CultureCalendarState extends State<CultureCalendar> {
     return ['전체', for (final k in const ['축제', '전시', '공연', '체험', '기타']) if (present.contains(k)) k];
   }
 
+  void _goNext() {
+    if (_hasNext) setState(() => _month = DateTime(_month.year, _month.month + 1));
+  }
+
+  void _goPrev() {
+    final now = DateTime.now();
+    final isThisMonth = _month.year == now.year && _month.month == now.month;
+    if (!isThisMonth) setState(() => _month = DateTime(_month.year, _month.month - 1)); // 지난 달은 끝난 행사라 데이터가 없어 이번 달까지만
+  }
+
+  /// 이 달에 걸치는(지금 칩 기준) 행사 수
+  int get _monthCount {
+    final a = _iso(DateTime(_month.year, _month.month));
+    final b = _iso(DateTime(_month.year, _month.month + 1, 0));
+    return _filtered.where((e) => (e['start'] as String).compareTo(b) <= 0 && (e['end'] as String).compareTo(a) >= 0).length;
+  }
+
   bool get _hasNext {
     final next = DateTime(_month.year, _month.month + 1);
     final k = _iso(next);
@@ -139,37 +157,51 @@ class _CultureCalendarState extends State<CultureCalendar> {
             ],
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.only(top: 10),
-          child: Row(
+        // 달력 위에서 옆으로 밀면 달이 넘어감(가장 안쪽이 이기므로 탭·구분 이동은 일어나지 않음). 이번 달 이전·마지막 달 이후는 그대로
+        SwipeDetector(
+          onSwipe: (step) => step > 0 ? _goNext() : _goPrev(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _NavButton(label: '‹', enabled: !isThisMonth, onTap: () => setState(() => _month = DateTime(_month.year, _month.month - 1))),
-              Expanded(
-                child: Center(
-                  child: Text('${_month.year}년 ${_month.month}월', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+          Padding(
+            padding: const EdgeInsets.only(top: 10),
+            child: Row(
+              children: [
+                _NavButton(label: '‹', enabled: !isThisMonth, onTap: _goPrev),
+                Expanded(
+                  child: Center(
+                    child: Text('${_month.year}년 ${_month.month}월', style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
+                  ),
                 ),
-              ),
-              _NavButton(label: '›', enabled: _hasNext && isThisMonth, onTap: () => setState(() => _month = DateTime(_month.year, _month.month + 1))),
+                _NavButton(label: '›', enabled: _hasNext, onTap: _goNext),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              for (final w in const ['일', '월', '화', '수', '목', '금', '토'])
+                Expanded(
+                  child: Center(
+                    child: Text(w, style: TextStyle(fontSize: 11, color: w == '일' ? AppColors.up : AppColors.inkSoft)),
+                  ),
+                ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          for (var r = 0; r < rows; r++)
+            Row(
+              children: [
+                for (var c = 0; c < 7; c++) Expanded(child: _cell(r * 7 + c - lead + 1, days, today)),
+              ],
+            ),
             ],
           ),
         ),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            for (final w in const ['일', '월', '화', '수', '목', '금', '토'])
-              Expanded(
-                child: Center(
-                  child: Text(w, style: TextStyle(fontSize: 11, color: w == '일' ? AppColors.up : AppColors.inkSoft)),
-                ),
-              ),
-          ],
-        ),
-        const SizedBox(height: 4),
-        for (var r = 0; r < rows; r++)
-          Row(
-            children: [
-              for (var c = 0; c < 7; c++) Expanded(child: _cell(r * 7 + c - lead + 1, days, today)),
-            ],
+        if (_monthCount < 5)
+          const Padding(
+            padding: EdgeInsets.only(top: 10),
+            child: Text('이 달은 아직 등록된 행사가 적어요', style: TextStyle(fontSize: 11, color: AppColors.inkSoft)),
           ),
         const SizedBox(height: 8),
         Wrap(

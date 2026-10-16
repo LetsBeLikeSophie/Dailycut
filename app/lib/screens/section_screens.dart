@@ -4,6 +4,8 @@ import '../api_client.dart';
 import '../local_prefs.dart';
 import '../region.dart';
 import '../theme.dart';
+import '../boot.dart';
+import '../widgets/swipe.dart';
 import '../widgets/basket_hero.dart';
 import '../widgets/weekend_weather.dart';
 import '../widgets/benefit_feed.dart';
@@ -500,17 +502,26 @@ class _SegmentedHostState extends State<SegmentedHost> {
     return i >= 0 ? i : 0;
   }();
 
+  void _select(int i) {
+    if (i == _index) return;
+    setState(() => _index = i);
+    LocalPrefs.setString(widget.prefKey, widget.labels[i]);
+    Analytics.instance.track(widget.trackName, 'seg-${widget.labels[i]}');
+  }
+
+  // 본문에서 옆으로 밀면 이웃 구분으로. 첫 구분에서 오른쪽으로·마지막에서 왼쪽으로 밀면 이웃 탭으로 이어짐
+  void _swipe(int step) {
+    final next = _index + step;
+    if (next < 0 || next >= widget.labels.length) {
+      swipeToTab?.call(step);
+    } else {
+      _select(next);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final toggle = SegmentToggle(
-      labels: widget.labels,
-      index: _index,
-      onChanged: (i) {
-        setState(() => _index = i);
-        LocalPrefs.setString(widget.prefKey, widget.labels[i]);
-        Analytics.instance.track(widget.trackName, 'seg-${widget.labels[i]}');
-      },
-    );
-    return widget.builder(context, _index, toggle);
+    final toggle = SegmentToggle(labels: widget.labels, index: _index, onChanged: _select);
+    return SwipeDetector(onSwipe: _swipe, child: widget.builder(context, _index, toggle));
   }
 }
