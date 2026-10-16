@@ -75,12 +75,14 @@ class HighlightText extends StatelessWidget {
     required this.text,
     required this.color,
     this.emphasis,
+    this.emphasisAll = const [],
     required this.style,
   });
 
   final String text;
   final Color color;
   final String? emphasis;
+  final List<String> emphasisAll; // 글 안에 나오는 모든 자리를 칠할 낱말들(예: '토요일', '일요일')
   final TextStyle style;
 
   @override
@@ -91,22 +93,34 @@ class HighlightText extends StatelessWidget {
       builder: (context, c) {
         final base = DefaultTextStyle.of(context).style.merge(style);
         final t = keepAllWrap(text, base, c.maxWidth, MediaQuery.textScalerOf(context));
+        final ranges = <(int, int)>[];
         final e = emphasis;
-        final i = e == null ? -1 : text.indexOf(e);
-        if (e == null || i < 0) return Text(t, style: style);
-        return Text.rich(
-          TextSpan(
-            style: style,
-            children: [
-              TextSpan(text: t.substring(0, i)),
-              TextSpan(
-                text: t.substring(i, i + e.length),
-                style: TextStyle(backgroundColor: color.withValues(alpha: 0.85)),
-              ),
-              TextSpan(text: t.substring(i + e.length)),
-            ],
-          ),
-        );
+        if (e != null) {
+          final i = text.indexOf(e);
+          if (i >= 0) ranges.add((i, i + e.length));
+        }
+        for (final w in emphasisAll) {
+          var from = 0;
+          while (w.isNotEmpty) {
+            final i = text.indexOf(w, from);
+            if (i < 0) break;
+            ranges.add((i, i + w.length));
+            from = i + w.length;
+          }
+        }
+        if (ranges.isEmpty) return Text(t, style: style);
+        ranges.sort((x, y) => x.$1.compareTo(y.$1));
+        final marked = TextStyle(backgroundColor: color.withValues(alpha: 0.85));
+        final spans = <TextSpan>[];
+        var pos = 0;
+        for (final (start, end) in ranges) {
+          if (start < pos) continue; // 겹치면 앞의 것만
+          if (start > pos) spans.add(TextSpan(text: t.substring(pos, start)));
+          spans.add(TextSpan(text: t.substring(start, end), style: marked));
+          pos = end;
+        }
+        if (pos < t.length) spans.add(TextSpan(text: t.substring(pos)));
+        return Text.rich(TextSpan(style: style, children: spans));
       },
     );
   }

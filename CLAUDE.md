@@ -415,6 +415,8 @@ claude.ai/artifact/17gytwYuXMFkF4vx8tWv65 (사용 중 · 일부만 · 미사용 
 - **나들이 탭 표·날씨 개편 (2026-10-16)**: ①한산한 곳은 토/일 알약 대신 **한 표에 토·일 열을 나란히**(`/outing` 응답이 `days`(열 정의)+`spots[].rates`(열 순서 집중률)로 바뀜; 정렬은 두 날 평균이 낮은 순, 두 날 값이 다 있는 곳 우선, 최대 30곳).
   ②주말 날씨는 목록이 아니라 **히어로 안의 한 문장**(`WeekendWeatherLine`: 서버 `/weather`의 `weekend` 문장 + 비 50%↑·밤 5° 이하면 "○요일엔 우산을 챙기세요/○요일 밤엔 많이 추워요", 16 굵게 + 나들이 색 형광펜, 도서관 구분만 제외). 옛 `WeekendWeather`(줄 목록)는 삭제, 투데이 주간 날씨 줄은 `widgets/weekly_row.dart`로 분리.
   ③ⓘ 안의 "○○ 기준이에요" 줄은 뺌(지역 안내 `scope_note`가 따로 있어서).
+- **나들이 날씨 문장 고정·형광펜 조정 (2026-10-16)**: 주말 날씨 문장(`WeekendWeatherLine`)을 도서관 포함 모든 구분의 히어로 안에 항상 같은 자리·같은 키로 둠(구분을 바꿔도 다시 만들어지지 않음). 받아 둔 값은 `_done`에 보관해 `initialData`로 써서 다시 그려도 빈 칸이 비치지 않고, 받는 동안은 한 줄 높이(30)만 비워 둠.
+  형광펜은 문장 전체가 아니라 '토요일'·'일요일' 글자(모든 등장 위치)만 — `HighlightText.emphasisAll`(여러 낱말·여러 위치 지원, 기존 `emphasis` 한 개와 같이 쓸 수 있음).
 - **광고(카카오 애드핏, 웹) 준비됨 (2026-10-12)**: `widgets/ad_slot.dart`의 `AdSlot` + `web/ad.html`(애드핏 스크립트 페이지, 같은 도메인 iframe).
   광고 단위 ID가 없으면 칸이 아예 안 그려짐. 켜는 법: 애드핏에서 사이트(itssophie.dev/dailycut) 등록·승인 → 광고 단위(320x100 등) 생성 →
   `flutter build web … --dart-define=ADFIT_UNIT=DAN-xxxx --dart-define=ADFIT_SIZE=320x100`. 칸 위치: 생활(장보기 시세 아래)·문화(행사/영화 구역 아래)·머니(금리 아래).
