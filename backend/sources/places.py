@@ -287,7 +287,7 @@ def camp(sido: str | None, sgg: str | None) -> dict:
         out.append((0 if near else 1, item["name"], item))
     out.sort(key=lambda t: t[:2])
     out, label, scope_note = _scope(out, sgg, region)
-    return {"live": True, "total": len(out), "items": [t[2] for t in out[:150]], "region": label, "scope_note": scope_note, "note": "운영 중인 캠핑장만이에요. 예약·운영 여부는 누리집에서 꼭 확인해 주세요. 발바닥은 반려동물 동반 가능 표시예요(1개 소형견만, 회색은 크기 안내 없이 동반 가능)."}
+    return {"live": True, "total": len(out), "items": [t[2] for t in out[:150]], "region": label, "scope_note": scope_note, "note": "운영 중인 캠핑장만이에요. 예약·운영 여부는 누리집에서 꼭 확인해 주세요. 강아지 그림은 반려동물 동반 가능 표시예요(작은 한 마리는 소형견만, 회색은 크기 안내 없이 동반 가능)."}
 
 
 # ---------------- 반려동물 · 웰니스 ----------------
@@ -359,7 +359,7 @@ def pet(sido: str | None, sgg: str | None) -> dict:
             ("참고", _clean(d.get("etcAcmpyInfo"))[:200]),
         ]
         it["detail"] += [[k, str(v)] for k, v in extra if v]
-    return {"live": True, "total": len(out), "items": items, "region": label, "scope_note": scope_note, "note": "발바닥 개수는 함께 갈 수 있는 크기예요: 1개 소형견만 · 2개 중·소형견 · 3개 모든 크기. 회색은 안내견만이거나 조건이 따로 있는 곳이에요. 동반 가능 여부와 조건은 방문 전에 시설에 꼭 확인해 주세요."}
+    return {"live": True, "total": len(out), "items": items, "region": label, "scope_note": scope_note, "note": "강아지 그림은 함께 갈 수 있는 크기예요: 작은 한 마리는 소형견만, 중간 한 마리는 중·소형견, 세 마리는 모든 크기. 회색은 안내견만이거나 조건이 따로 있는 곳이에요. 동반 가능 여부와 조건은 방문 전에 시설에 꼭 확인해 주세요."}
 
 
 def _wellness(area: str) -> list[dict]:

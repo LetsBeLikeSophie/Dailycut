@@ -5,6 +5,7 @@ import '../region.dart';
 import '../theme.dart';
 import 'benefit_feed.dart';
 import 'components.dart';
+import 'dog_icon.dart';
 
 /// 장소 탭의 한 구분(도서관 열람실 빈자리 · 캠핑장 · 반려동물 동반 · 웰니스 · 걷기길 중 하나). 구분 전환은 바깥(SegmentedHost)이 함(2026-10-16).
 /// 서버가 줄여서 준 항목({name, sub, tag, span, detail, url, link_label})을 청약·대출 목록과 같은 모양으로 보여주고,
@@ -107,8 +108,8 @@ class _PlaceFeedState extends State<PlaceFeed> {
   }
 }
 
-/// 반려동물 동반 배지(2026-10-16): 함께 갈 수 있는 크기를 발바닥 개수로 — 1개 소형견만 · 2개 중·소형견 · 3개 모든 크기(나들이 초록).
-/// 안내견만·조건 있음·크기 안내 없는 동반 가능은 회색 발바닥 하나, 동반 불가는 금지 표시. 글은 아래에 작게.
+/// 반려동물 동반 배지(2026-10-16): 함께 갈 수 있는 크기를 **선으로 그린 강아지**로 — 소형견 · 중·소형견 · 모든 크기(세 마리 나란히)(나들이 초록).
+/// 안내견만·조건 있음·크기 안내 없는 동반 가능은 회색 강아지 한 마리, 동반 불가는 금지 표시. 이름은 아래에 작게. (그림은 widgets/dog_icon.dart)
 class _PetBadge extends StatelessWidget {
   const _PetBadge({required this.level, required this.label});
 
@@ -118,24 +119,18 @@ class _PetBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final accent = sectionThemes[Section.place]!.color;
-    final (sizes, color) = switch (level) {
-      'small' => (const [14.0], accent),
-      'mid' => (const [14.0, 14.0], accent),
-      'all' => (const [14.0, 14.0, 14.0], accent),
-      'no' => (const <double>[], AppColors.inkSoft),
-      _ => (const [14.0], AppColors.inkSoft), // guide · other · ok
+    final icon = switch (level) {
+      'small' => DogIcon(size: DogSize.small, color: accent, height: 22),
+      'mid' => DogIcon(size: DogSize.medium, color: accent, height: 22),
+      'all' => DogIcon(size: DogSize.all, color: accent, height: 22),
+      'no' => const Icon(Icons.block, size: 18, color: AppColors.inkSoft),
+      _ => const DogIcon(size: DogSize.medium, color: AppColors.inkSoft, height: 22), // guide · other · ok
     };
     return Column(
       crossAxisAlignment: CrossAxisAlignment.end,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (level == 'no') Icon(Icons.block, size: 15, color: color),
-            for (final z in sizes) Icon(Icons.pets, size: z, color: color),
-          ],
-        ),
+        icon,
         const SizedBox(height: 2),
         Text(label, style: const TextStyle(fontSize: 11, color: AppColors.inkSoft)),
       ],
