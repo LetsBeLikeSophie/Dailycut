@@ -1,5 +1,9 @@
 import 'package:flutter/widgets.dart';
 
-/// 웹이 아닌 곳(안드로이드·iOS·테스트)에서는 애드핏 웹 광고를 못 쓰므로 아무것도 그리지 않음.
-/// (앱 출시 때는 애드몹 같은 앱용 광고로 이 자리를 대체)
+/// 웹도 모바일도 아닌 곳(테스트·데스크톱)에서는 광고를 그리지 않음.
 Widget buildAdView(String unit, int width, int height) => const SizedBox.shrink();
+
+/// 모바일 앱이 아니면 광고 한 덩어리를 직접 만들지 않음(null → ad_slot.dart가 기본 칸을 씀).
+Widget? buildAdBlock(String unit, int width, int height) => null;
+
+Future<void> initAds() async {}

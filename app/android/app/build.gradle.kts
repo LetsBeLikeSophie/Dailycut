@@ -27,6 +27,8 @@ android {
         // flag during build.
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        // 애드몹 앱 ID: gradle.properties(ADMOB_APP_ID)가 없으면 구글 공식 테스트 앱 ID(개발용 — 광고 수익 없음)
+        manifestPlaceholders["admobAppId"] = (project.findProperty("ADMOB_APP_ID") as String?) ?: "ca-app-pub-3940256099942544~3347511713"
     }
 
     buildTypes {

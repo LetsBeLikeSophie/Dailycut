@@ -8,6 +8,7 @@ import 'screens/section_screens.dart';
 import 'analytics.dart';
 import 'local_prefs.dart';
 import 'my_basket.dart';
+import 'widgets/ad_slot.dart';
 import 'widgets/support_profile.dart';
 import 'region.dart';
 import 'theme.dart';
@@ -18,6 +19,7 @@ Future<void> main() async {
   await LocalPrefs.init();
   MyBasket.instance.loadSync();
   SupportProfile.instance.loadSync();
+  initAdsIfEnabled(); // 앱이면 애드몹 초기화(기다리지 않음)
   runApp(const DailyCutApp());
 }
 

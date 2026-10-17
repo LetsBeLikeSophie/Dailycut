@@ -18,3 +18,8 @@ Widget buildAdView(String unit, int width, int height) {
     },
   );
 }
+
+/// 웹은 위의 iframe 방식(ad_slot.dart의 기본 칸)을 씀.
+Widget? buildAdBlock(String unit, int width, int height) => null;
+
+Future<void> initAds() async {}
