@@ -447,7 +447,7 @@ claude.ai/artifact/17gytwYuXMFkF4vx8tWv65 (사용 중 · 일부만 · 미사용 
   측정소 선택: 시군구를 골랐으면 그 시군구 측정소 목록에서 값이 있는 첫 곳, 시도만 골랐으면 시도청에 가장 가까운 시군구의 측정소부터(서울→중구, 부산→연산동). 화면 설명·출처 문구도 "○○ 측정소 · 측정 시각 · 가공 없이 표시"로 바꿈. **이 값에 평균·재등급·반올림 같은 가공을 다시 넣지 말 것.** 빨래·세차 판정의 입력으로 쓰는 건 그대로(우리 자체 지수).
 - **안드로이드 APK 빌드 (2026-10-17)**: `cd app && flutter build apk --release --dart-define=API_BASE_URL=https://itssophie.dev/dailycut-api` → `app/build/app/outputs/flutter-apk/app-release.apk`(약 55MB, 모든 CPU 포함; 복사본은 `dist/`, git 제외). 패키지 `com.dailycut.dailycut`, 앱 이름 `데일리컷`, 버전은 `pubspec.yaml version`.
   **릴리스 매니페스트에는 `INTERNET` 권한이 기본으로 없어서** `AndroidManifest.xml`에 직접 넣음(없으면 폰에서 데이터를 못 받음) + 위치(`ACCESS_COARSE_LOCATION`) + 웹 링크용 `<queries> https VIEW`. 웹 전용 코드 주의: 앱에서는 `Uri.base`가 파일 경로라 상대 링크가 깨짐(`sources_info.dart`는 `kIsWeb` 분기).
-  지금 APK는 **디버그 키로 서명**(`build.gradle.kts`의 release 서명) — 기기 설치·테스트용. **스토어 출시 전에 할 일**: 업로드 키스토어 만들기(분실하면 업데이트 불가, 비밀번호는 git 밖에), `key.properties`+서명 설정, 앱 아이콘·스플래시(지금은 플러터 기본 아이콘), AAB(`flutter build appbundle`)로 올리기, 개인정보처리방침 URL(`itssophie.dev/dailycut/privacy.html`)·데이터 보안 양식, 광고는 웹 애드핏이 아니라 앱용(애드몹 등)으로 교체(`ad_view_stub.dart`).
+  지금 APK는 **디버그 키로 서명**(`build.gradle.kts`의 release 서명) — 기기 설치·테스트용. **스토어 출시 전에 할 일**: 업로드 키스토어 만들기(분실하면 업데이트 불가, 비밀번호는 git 밖에), `key.properties`+서명 설정, 앱 아이콘·스플래시(지금은 플러터 기본 아이콘), AAB(`flutter build appbundle`)로 올리기, 개인정보처리방침 URL(`itssophie.dev/dailycut/privacy.html`)·데이터 보안 양식, 광고는 앱용 애드몹으로 이미 교체됨.
 - **APK 내려받기 링크 (2026-10-17)**: `https://itssophie.dev/dailycut/download.html`(설치 안내+버튼, `app/web/download.html`, `noindex`) → 파일 `https://itssophie.dev/dailycut/dailycut.apk`(서버 `/var/www/dailycut-app/dailycut.apk`, 웹 배포 `tar`는 파일을 덮어쓰기만 해서 지워지지 않음).
   **새 APK를 올리는 법**: 빌드 후 `scp`로 `/tmp`에 올리고 `sudo cp /tmp/dailycut.apk /var/www/dailycut-app/dailycut.apk`, 그리고 `download.html`의 버전·크기·SHA-256(`sha256sum`)을 갱신해 같이 올릴 것. nginx에 apk MIME이 없어 `application/octet-stream`으로 나가지만 내려받기는 정상(필요하면 `types { application/vnd.android.package-archive apk; }`).
 - **위치 안내 흐름 개편 (2026-10-17, 폰 테스트 피드백)**: 예전엔 앱을 켜자마자 시스템 권한 창이 불쑥 떴고, 저장된 지역이 없으면(GPS로 찾은 지역은 저장 안 했음) **켤 때마다 위치를 다시 읽었음**. 지금은 `lib/location_flow.dart`:
@@ -459,14 +459,12 @@ claude.ai/artifact/17gytwYuXMFkF4vx8tWv65 (사용 중 · 일부만 · 미사용 
   **작은 그래프**: 줄마다 `series` = 최근 14일 안에 기록된 가격 점 최대 8개(`price_history`), 3개 미만이면 그래프 없음. 정육은 `livestock` 작업이 매 실행 때 지난 14일 값을 채움(이미 있는 날은 건너뜀, 휴일은 다시 시도; `store.price_days`). **회색 `－` = 변동 ±0.5% 이내(보합) 또는 비교값 없음**, 빨강 ▲ 상승·파랑 ▼ 하락. 이 설명은 장보기 시세 제목 옆 ⓘ "읽는 법".
   **옛 앱 주의**: 분류 이름을 바꿨기 때문에 1.0.0 APK는 "곡물" 품목이 안 보임 → 1.0.1(`pubspec version: 1.0.1+2`)로 올려 다시 배포(`download.html`).
 - **"보합" 표시를 쉬운 말로 (2026-10-17, 폰 테스트 피드백)**: 진한 회색 그래프 + `－ 0.4%`가 마이너스처럼 읽혀 헷갈린다는 의견 → `changeLabel()`은 변동 ±0.5% 이내(`flat`)면 숫자 대신 **"비슷해요"**, 작은 그래프 색은 `sparkColor()`로 **옅은 회색**(오르면 빨강·내리면 파랑은 그대로). 장바구니 히어로는 "지난주와 비슷해요 (+0.2%)"(부호 있는 값은 괄호로). "보합" 같은 한자어는 화면에 쓰지 않음. 장보기 시세 ⓘ "읽는 법"도 같은 말로 고침.
-- **앱 광고: 구글 애드몹 연결 (2026-10-18)**: `google_mobile_ads`(^9.1) 추가. 웹은 카카오 애드핏(iframe), **앱은 애드몹**으로 갈라짐 — `AdSlot`이 `kIsWeb`로 분기, 앱용은 `widgets/ad/ad_view_mobile.dart`의 `_AdmobBanner`(320x100 `AdSize.largeBanner`, **광고가 실제로 불러와졌을 때만** "광고" 라벨 포함 칸이 보임·실패하면 칸 없음), 앱 시작 때 `initAdsIfEnabled()`로 한 번 초기화. 자리는 웹과 같은 4곳(생활·나들이 구분들·문화·혜택 목록 아래).
+- **앱 광고: 구글 애드몹 연결 (2026-10-18)**: `google_mobile_ads`(^9.1) 추가. `AdSlot`은 앱에서만 그려짐(웹은 아무것도 안 그림) — `widgets/ad/ad_view_mobile.dart`의 `_AdmobBanner`(320x100 `AdSize.largeBanner`, **광고가 실제로 불러와졌을 때만** "광고" 라벨 포함 칸이 보임·실패하면 칸 없음), 앱 시작 때 `initAdsIfEnabled()`로 한 번 초기화. 자리는 웹과 같은 4곳(생활·나들이 구분들·문화·혜택 목록 아래).
   **빌드 방법**: 광고 단위 ID는 `--dart-define=ADMOB_BANNER_ID=ca-app-pub-…/…`(비면 앱에서 광고 칸이 안 그려짐), 앱 ID는 `android/gradle.properties`의 `ADMOB_APP_ID`(없으면 구글 공식 **테스트 앱 ID** `ca-app-pub-3940256099942544~3347511713`, 매니페스트 `${admobAppId}` 자리표시자). 지금 올린 APK 1.1.0은 구글 공식 테스트 배너(`…/6300978111`, "Test Ad")로 빌드 — 실제 ID가 오면 둘 다 바꿔 다시 빌드.
   **실제 광고 전에 할 일**: ①애드몹 계정·앱 등록(앱 ID)·배너 광고 단위 만들기 ②실제 ID로 교체(테스트 ID로 실서비스하면 안 됨, 개발 중 실제 광고 ID로 내 광고를 누르면 계정 정지 위험) ③Play Console "데이터 보안" 양식에 광고 ID 수집 선언(SDK가 `AD_ID`·`ACCESS_ADSERVICES_*` 권한을 매니페스트에 합침) ④EEA·영국 사용자에게 배포한다면 UMP 동의(애드몹 콘솔 "개인정보 보호 및 메시지") — 한국만 배포하면 생략 가능 ⑤iOS는 앱 ID·광고 단위가 따로(Info.plist) ⑥출시 전 "광고가 있는 앱" 표시.
-  개인정보처리방침 3항을 웹(애드핏)+앱(애드몹)으로 고침(광고 식별자·맞춤설정 끄는 법 링크).
-- **광고(카카오 애드핏, 웹) 준비됨 (2026-10-12)**: `widgets/ad_slot.dart`의 `AdSlot` + `web/ad.html`(애드핏 스크립트 페이지, 같은 도메인 iframe).
-  광고 단위 ID가 없으면 칸이 아예 안 그려짐. 켜는 법: 애드핏에서 사이트(itssophie.dev/dailycut) 등록·승인 → 광고 단위(320x100 등) 생성 →
-  `flutter build web … --dart-define=ADFIT_UNIT=DAN-xxxx --dart-define=ADFIT_SIZE=320x100`. 칸 위치: 생활(장보기 시세 아래)·문화(행사/영화 구역 아래)·머니(금리 아래).
-  켜지면 출처 시트에 "광고(애드핏이 기기 정보를 쓸 수 있음)" 안내가 자동으로 붙음. 앱스토어 출시 땐 애드몹으로 `ad_view_stub.dart` 자리를 대체.
+  개인정보처리방침 3항을 앱(애드몹)으로 고침(광고 식별자·맞춤설정 끄는 법 링크).
+- **카카오 애드핏 탈락 → 광고는 애드몹 하나로 (2026-10-18)**: 애드핏 심사에서 떨어져 웹 광고 코드(`ad_view_web.dart`·`web/ad.html`·`ADFIT_UNIT`)를 모두 걷어냄. 지금은 **앱(안드로이드·iOS)에서만 애드몹**, 웹사이트는 광고 없음
+  (`kAdsEnabled => !kIsWeb && ADMOB_BANNER_ID 있음`). 웹에도 광고가 필요하면 구글 애드센스를 따로 신청해야 함(애드몹은 앱 전용). 위쪽 노트의 "애드핏 신청서" 설명은 옛 기록. 개인정보처리방침 3항·출처 시트도 "웹 광고 없음, 앱은 애드몹"으로 맞춤.
 
 ## 톤/작업 스타일
 

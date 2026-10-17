@@ -3,15 +3,13 @@ import 'package:google_mobile_ads/google_mobile_ads.dart';
 
 import '../../theme.dart';
 
-/// 안드로이드·iOS 앱: 구글 애드몹 배너(2026-10-18). 웹의 카카오 애드핏과 달리 앱은 애드몹을 씀.
+/// 안드로이드·iOS 앱: 구글 애드몹 배너(2026-10-18).
 /// 앱 시작 때 한 번 초기화하고, 광고가 실제로 불러와졌을 때만 칸(라벨 "광고" 포함)을 보임 — 못 받으면 빈 칸이 남지 않음.
 Future<void> initAds() async {
   try {
     await MobileAds.instance.initialize();
   } catch (_) {}
 }
-
-Widget buildAdView(String unit, int width, int height) => const SizedBox.shrink();
 
 Widget? buildAdBlock(String unit, int width, int height) => _AdmobBanner(unit: unit, width: width, height: height);
 

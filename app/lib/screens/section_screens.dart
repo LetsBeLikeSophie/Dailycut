@@ -102,7 +102,7 @@ Widget marketScreen(ApiClient api, Region region, BuildContext shellContext) => 
               guide: (data['guide'] as Map<String, dynamic>?) ?? const {},
               asOf: data['as_of'] as String?,
             ),
-            const AdSlot(), // 광고(ADFIT_UNIT을 빌드에 줬을 때만 보임)
+            const AdSlot(), // 광고(앱에서 ADMOB_BANNER_ID를 빌드에 줬을 때만 보임)
           ];
         } else {
           // 예시 데이터(서버에 키가 없을 때): 예전 화면

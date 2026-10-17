@@ -75,9 +75,7 @@ Future<void> showSourcesSheet(BuildContext context, {String? current}) {
               Text('광고', style: AppTheme.subheading),
               const SizedBox(height: 6),
               const Text(
-                kIsWeb
-                    ? '화면에 "광고"라고 표시된 배너는 카카오 애드핏이 제공해요. 광고 사업자가 광고 제공을 위해 기기 정보나 쿠키를 사용할 수 있고, 이는 위 익명 통계와 별개예요.'
-                    : '화면에 "광고"라고 표시된 배너는 구글 애드몹이 제공해요. 광고 제공을 위해 광고 식별자 같은 기기 정보를 쓸 수 있고(폰 설정에서 광고 맞춤설정을 끌 수 있어요), 이는 위 익명 통계와 별개예요.',
+                '화면에 "광고"라고 표시된 배너는 구글 애드몹이 제공해요. 광고 제공을 위해 광고 식별자 같은 기기 정보를 쓸 수 있고(폰 설정에서 광고 맞춤설정을 끌 수 있어요), 이는 위 익명 통계와 별개예요.',
                 style: TextStyle(fontSize: 13, color: AppColors.inkSoft, height: 1.6),
               ),
             ],
