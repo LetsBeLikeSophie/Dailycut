@@ -58,7 +58,7 @@ class _ShoppingCatalogState extends State<ShoppingCatalog> {
       // 읽는 법은 제목 옆 ⓘ에(오른쪽 작은 그래프의 기간·색의 뜻)
       info: const InfoIconButton(title: '읽는 법', lines: [
         '오른쪽 작은 그래프는 최근 2주 동안의 가격 흐름이에요(하루 한 점, 최대 8점). 아직 기록이 3일 치 미만인 품목은 그래프가 없어요.',
-        '빨강 ▲는 지난주보다 올랐고, 파랑 ▼는 내렸어요. 회색 －는 지난주와 거의 같다는 뜻이에요(변동 0.5% 이내).',
+        '빨강 ▲는 지난주보다 올랐고, 파랑 ▼는 내렸어요. "비슷해요"(옅은 회색)는 지난주와 거의 같다는 뜻이에요(오르내림이 0.5% 안쪽).',
         '채소·과일·수산·곡물은 한국농수산식품유통공사(aT) 소매가격, 정육은 축산물품질평가원 소비자가격(100g당)이에요.',
       ]),
       trailing: asOf == null ? '지난주 대비' : '${asOf.month}/${asOf.day} 기준 · 지난주 대비',
@@ -151,7 +151,7 @@ class _ShoppingCatalogState extends State<ShoppingCatalog> {
       name: name,
       badge: it['in_season'] == true ? '제철' : null,
       sub: it['sub'] as String?,
-      middle: series == null ? null : MiniSpark(series: series, color: changeColor(change)),
+      middle: series == null ? null : MiniSpark(series: series, color: sparkColor(change)),
       value: '${formatNumber(it['price'] as num)}원',
       valueSub: pct == null ? null : changeLabel(change, pct: pct),
       valueSubColor: changeColor(change),

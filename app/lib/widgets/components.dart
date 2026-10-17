@@ -58,12 +58,17 @@ Color changeColor(String change) => switch (change) {
   _ => AppColors.inkSoft,
 };
 
+/// 작은 그래프 색: 오르면 빨강·내리면 파랑, **비슷하면 옅은 회색**(2026-10-17: 진한 회색 + "－ 0.4%"가 마이너스처럼 읽혀 헷갈렸음).
+Color sparkColor(String change) => switch (change) {
+  'up' => AppColors.up,
+  'down' => AppColors.down,
+  _ => const Color(0xFFC9C9C9),
+};
+
+/// 변동 표시. 0.5% 이내(change == 'flat')면 부호 없는 숫자 대신 **"비슷해요"**(2026-10-17: "－ 0.4%"가 마이너스로 보임).
 String changeLabel(String change, {num? pct}) {
-  final arrow = switch (change) {
-    'up' => '▲',
-    'down' => '▼',
-    _ => '－',
-  };
+  if (change == 'flat') return '비슷해요';
+  final arrow = change == 'up' ? '▲' : '▼';
   if (pct == null) return arrow;
   return '$arrow ${pct.abs() == pct.abs().roundToDouble() ? pct.abs().round() : pct.abs()}%';
 }
@@ -1205,7 +1210,7 @@ ListLine priceRow(Map<String, dynamic> it) {
     sub: it['sub'] as String?,
     middle: series == null
         ? null
-        : MiniSpark(series: series, color: changeColor(change)),
+        : MiniSpark(series: series, color: sparkColor(change)),
     value: it['value'].toString(),
     valueSub: changeLabel(change, pct: it['pct'] as num?),
     valueSubColor: changeColor(change),

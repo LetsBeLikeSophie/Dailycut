@@ -79,7 +79,7 @@ class _MyBasketTodayState extends State<MyBasketToday> {
     return ListLine(
       name: it['name'] as String,
       sub: it['sub'] as String?,
-      middle: series == null ? null : MiniSpark(series: series, color: changeColor(change)),
+      middle: series == null ? null : MiniSpark(series: series, color: sparkColor(change)),
       value: '${formatNumber(it['price'] as num)}원',
       valueSub: pct == null ? null : changeLabel(change, pct: pct),
       valueSubColor: changeColor(change),
