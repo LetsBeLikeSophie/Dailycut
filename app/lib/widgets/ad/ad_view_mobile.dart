@@ -24,7 +24,7 @@ class _AdmobBanner extends StatefulWidget {
   State<_AdmobBanner> createState() => _AdmobBannerState();
 }
 
-class _AdmobBannerState extends State<_AdmobBanner> {
+class _AdmobBannerState extends State<_AdmobBanner> with AutomaticKeepAliveClientMixin {
   BannerAd? _ad;
   bool _loaded = false;
 
@@ -53,10 +53,18 @@ class _AdmobBannerState extends State<_AdmobBanner> {
     super.dispose();
   }
 
+  /// 목록을 위아래로 밀어도 광고를 지우지 않음(2026-10-18: 안 그러면 스크롤할 때마다 광고를 새로 요청함 — 애드몹은 잦은 새로고침을 싫어함)
+  @override
+  bool get wantKeepAlive => true;
+
   @override
   Widget build(BuildContext context) {
+    super.build(context);
     final ad = _ad;
     if (!_loaded || ad == null) return const SizedBox.shrink();
+    // 다른 탭이 앞에 있을 땐(IndexedStack이 TickerMode를 꺼 줌) 네이티브 광고 뷰를 그리지 않고 같은 크기의 빈 칸만 둠 —
+    // 광고는 플러터 화면 위에 따로 얹히는 네이티브 뷰라 탭을 바꿀 때 비쳐 보일 수 있었음(폰 테스트 피드백).
+    final active = TickerMode.valuesOf(context).enabled;
     return Padding(
       padding: const EdgeInsets.only(top: 32),
       child: Column(
@@ -64,7 +72,7 @@ class _AdmobBannerState extends State<_AdmobBanner> {
         children: [
           const Text('광고', style: TextStyle(fontSize: 11, color: AppColors.inkSoft)),
           const SizedBox(height: 6),
-          Center(child: SizedBox(width: ad.size.width.toDouble(), height: ad.size.height.toDouble(), child: AdWidget(ad: ad))),
+          Center(child: SizedBox(width: ad.size.width.toDouble(), height: ad.size.height.toDouble(), child: active ? AdWidget(ad: ad) : null)),
         ],
       ),
     );
