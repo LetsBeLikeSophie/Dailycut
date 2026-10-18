@@ -470,3 +470,6 @@ claude.ai/artifact/17gytwYuXMFkF4vx8tWv65 (사용 중 · 일부만 · 미사용 
 
 이슈팝과 같은 방식 유지 — 감으로 값 정하지 말고 실제로 돌려서 확인, 코드에
 "왜 이렇게 했는지" 날짜와 함께 남기기.
+- **APK 1.1.0은 켜자마자 죽었음 → 1.1.1로 수정 (2026-10-18)**: 사용자가 "앱 실행이 안 돼"라고 알려줘서 에뮬레이터(`Pixel_3a_API_34`, `adb` = `%LOCALAPPDATA%\Android\Sdk\platform-tools`)에 설치해 재현함 — `FATAL EXCEPTION … Failed to create an instance of androidx.work.impl.WorkDatabase`.
+  원인: 애드몹 SDK가 끌고 온 WorkManager의 Room DB 클래스(`WorkDatabase_Impl`)를 **릴리스 빌드의 R8(코드 축소)이 지워서** 앱 시작 단계에서 죽음(디버그 빌드·웹에선 안 보임). 해결: `android/app/proguard-rules.pro`(Room/WorkManager 보존) + `build.gradle.kts` release에 `proguardFiles(...)`. 1.1.1(+6)로 다시 빌드해 에뮬레이터에서 정상 실행·애드몹 SDK 초기화·광고 요청까지 확인하고 `download.html`에 배포.
+  **교훈: 네이티브 SDK(광고·푸시 등)를 추가한 뒤엔 릴리스 APK를 에뮬레이터/실기기에서 한 번 켜 보고 올릴 것** — `flutter analyze`·웹 빌드로는 안 잡힘. 테스트 광고 칸이 실제로 보이는지는 에뮬레이터에서 못 봤음(요청은 나감; 광고 칸은 생활 탭 장보기 시세 목록 아래 등).

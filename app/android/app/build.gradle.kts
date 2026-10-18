@@ -36,6 +36,8 @@ android {
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")
+            // 코드 축소(R8)가 광고 SDK 쪽 WorkManager/Room 클래스를 지워 앱이 안 켜지던 문제 때문에 보존 규칙을 둠(2026-10-18)
+            proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
 }
