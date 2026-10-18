@@ -29,7 +29,7 @@
             android:layout_weight="1"
             android:ellipsize="end"
             android:maxLines="1"
-            android:text="청약"
+            android:text="주거"
             android:textColor="@color/widget_soft"
             android:textSize="11sp"
             android:textStyle="bold" />

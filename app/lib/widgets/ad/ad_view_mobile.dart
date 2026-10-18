@@ -66,7 +66,7 @@ class _AdmobBannerState extends State<_AdmobBanner> with AutomaticKeepAliveClien
     // 광고는 플러터 화면 위에 따로 얹히는 네이티브 뷰라 탭을 바꿀 때 비쳐 보일 수 있었음(폰 테스트 피드백).
     final active = TickerMode.valuesOf(context).enabled;
     return Padding(
-      padding: const EdgeInsets.only(top: 32),
+      padding: const EdgeInsets.only(top: 32, bottom: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

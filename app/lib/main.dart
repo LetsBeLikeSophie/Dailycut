@@ -76,9 +76,17 @@ class _RootShellState extends State<RootShell> {
     });
   }
 
+  /// 위젯이 보낸 탭 키. "money:rent"처럼 ":구역"이 붙으면 그 탭의 그 구역으로(혜택: apply 청약·rent 공공임대·loan 대출·gov 정부 지원).
   void _openTabKey(String key) {
-    final i = _tabKeys.indexOf(key);
-    if (i >= 0) _select(i);
+    final parts = key.split(':');
+    final i = _tabKeys.indexOf(parts[0]);
+    if (i < 0) return;
+    if (parts.length > 1 && parts[0] == 'money') {
+      const labels = {'apply': '청약', 'rent': '공공임대', 'loan': '대출', 'gov': '정부 지원'};
+      final label = labels[parts[1]];
+      if (label != null) SegmentedHost.request('benefit_seg', label);
+    }
+    _select(i);
   }
 
   @override

@@ -168,8 +168,9 @@ class WidgetSyncWorker(context: Context, params: WorkerParameters) : Worker(cont
 abstract class BaseWidget : AppWidgetProvider() {
     abstract val layout: Int
     abstract fun fill(context: Context, v: RemoteViews, j: JSONObject?, stale: Boolean, at: Long, heightDp: Int)
-    /** 누르면 열 탭(투데이 today·생활 life·문화 culture·나들이 place·혜택 money). */
+    /** 누르면 열 탭(투데이 today·생활 life·문화 culture·나들이 place·혜택 money). "money:rent"처럼 ":구역"을 붙이면 그 구역으로(apply 청약·rent 공공임대·loan 대출·gov 정부 지원). */
     open val tab: String = "today"
+    open fun tabFor(j: JSONObject?): String = tab
 
     // 위젯을 처음 올렸을 때: 반복 작업을 걸고, 연결되는 대로 한 번 받음(받기 전엔 "불러오는 중"이 보임)
     override fun onEnabled(context: Context) {
@@ -211,11 +212,11 @@ abstract class BaseWidget : AppWidgetProvider() {
             val h = manager.getAppWidgetOptions(id).getInt(AppWidgetManager.OPTION_APPWIDGET_MIN_HEIGHT, 200)
             val v = RemoteViews(context.packageName, w.layout)
             w.fill(context, v, snap.json, snap.stale, snap.at, h)
-            v.setOnClickPendingIntent(R.id.widget_root, tabIntent(context, w.tab))
-            // "오늘 한눈에"는 줄마다 해당 탭으로
+            v.setOnClickPendingIntent(R.id.widget_root, tabIntent(context, w.tabFor(snap.json)))
+            // "오늘 한눈에"는 줄마다 해당 탭(주거 줄은 공공임대/청약 구역)으로
             if (cls == WeatherWidget::class.java) {
                 v.setOnClickPendingIntent(R.id.basket_row, tabIntent(context, "life"))
-                v.setOnClickPendingIntent(R.id.housing_row, tabIntent(context, "money"))
+                v.setOnClickPendingIntent(R.id.housing_row, tabIntent(context, housingTab(snap.json)))
                 v.setOnClickPendingIntent(R.id.culture_row, tabIntent(context, "culture"))
             }
             manager.updateAppWidget(id, v)
@@ -262,6 +263,15 @@ private fun dust(label: String, grade: String?, value: Int?): CharSequence {
     sb.setSpan(ForegroundColorSpan(gradeColor(grade)), start, sb.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
     sb.setSpan(StyleSpan(Typeface.BOLD), start, sb.length, Spanned.SPAN_EXCLUSIVE_EXCLUSIVE)
     return sb
+}
+
+private fun openCount(o: JSONObject?): Int = o?.optInt("open") ?: 0
+
+/** 주거 위젯을 누르면 열 구역: 공공임대가 접수 중이면 공공임대, 아니면 청약이 접수 중일 때 청약, 둘 다 없으면 공공임대(더 자주 채워짐). */
+private fun housingTab(j: JSONObject?): String {
+    val rent = j?.optJSONObject("rent")
+    val apply = j?.optJSONObject("housing")
+    return if (openCount(rent) == 0 && openCount(apply) > 0) "money:apply" else "money:rent"
 }
 
 private fun dateLabel(): String =
@@ -314,8 +324,7 @@ class WeatherWidget : BaseWidget() {
             if (basket == null) "가격을 불러오는 중" else basketDelta(context, if (basket.isNull("pct")) null else basket.optDouble("pct"), if (single) "${basket.optString("label")} " else ""),
         )
 
-        val housing = j?.optJSONObject("housing")
-        v.setTextViewText(R.id.housing_text, housingLine(context, housing))
+        v.setTextViewText(R.id.housing_text, housingLine(context, j?.optJSONObject("rent"), j?.optJSONObject("housing")))
         val culture = j?.optJSONObject("culture")
         v.setTextViewText(
             R.id.culture_text,
@@ -325,17 +334,16 @@ class WeatherWidget : BaseWidget() {
         for (id in intArrayOf(R.id.housing_line, R.id.housing_row, R.id.culture_line, R.id.culture_row)) v.setViewVisibility(id, vis)
     }
 
-    private fun housingLine(context: Context, h: JSONObject?): CharSequence {
-        if (h == null) return "청약 소식을 불러오는 중"
-        val first = h.optJSONObject("first")
-        val open = h.optInt("open")
-        // 고른 시군구에 없어서 시도 전체로 채운 경우엔 어느 범위인지 앞에 밝힘("서울 전체 · …")
-        val scope = if (h.optBoolean("fallback")) "${h.optString("region")} 전체 · " else ""
-        return when {
-            open > 0 -> highlighted("${scope}접수 중 ", "${open}건", context.getColor(R.color.hl_money), first?.let { " · ${it.optString("name")}" } ?: "")
-            first != null -> "${scope}곧 접수 · ${first.optString("name")}"
-            else -> "${scope}지금 접수 중인 청약이 없어요"
-        }
+    /** 주거 줄: 공공임대 접수 중 건수를 앞에, 청약 건수를 뒤에("공공임대 7건 · 청약 0건"). 고른 시군구에 없어서 시도 전체로 채운 경우엔 범위를 앞에 밝힘. */
+    private fun housingLine(context: Context, rent: JSONObject?, apply: JSONObject?): CharSequence {
+        if (rent == null && apply == null) return "주거 소식을 불러오는 중"
+        val scopeSrc = rent ?: apply
+        val scope = if (scopeSrc?.optBoolean("fallback") == true) "${scopeSrc.optString("region")} 전체 · " else ""
+        val rentOpen = openCount(rent)
+        val applyOpen = openCount(apply)
+        if (rent == null) return highlighted("${scope}청약 접수 중 ", "${applyOpen}건", context.getColor(R.color.hl_money))
+        if (rentOpen == 0 && applyOpen == 0) return "${scope}접수 중인 공고가 없어요"
+        return highlighted("${scope}공공임대 ", "${rentOpen}건", context.getColor(R.color.hl_money), " · 청약 ${applyOpen}건")
     }
 }
 
@@ -373,31 +381,37 @@ class BasketWidget : BaseWidget() {
     }
 }
 
-/** 청약 단독(4x2): 접수 중 건수 + 마감이 가장 가까운 공고. */
+/** 주거 단독(4x2, 클래스명은 처음 청약 위젯 때 그대로): 공공임대 접수 중 건수 + 마감이 가장 가까운 공고 + 청약 건수. */
 class HousingWidget : BaseWidget() {
     override val layout = R.layout.widget_single_housing
-    override val tab = "money"
+    override val tab = "money:rent"
+    override fun tabFor(j: JSONObject?): String = housingTab(j)
 
     override fun fill(context: Context, v: RemoteViews, j: JSONObject?, stale: Boolean, at: Long, heightDp: Int) {
-        val h = j?.optJSONObject("housing")
-        if (h == null) {
-            v.setTextViewText(R.id.h_label, "청약")
+        val rent = j?.optJSONObject("rent")
+        val apply = j?.optJSONObject("housing")
+        if (rent == null && apply == null) {
+            v.setTextViewText(R.id.h_label, "주거")
             v.setTextViewText(R.id.h_count, "--")
-            v.setTextViewText(R.id.h_name, "청약 소식을 불러오는 중이에요")
+            v.setTextViewText(R.id.h_name, "공고를 불러오는 중이에요")
             v.setTextViewText(R.id.h_sub, "인터넷이 연결되면 새로 받아요")
             return
         }
-        val label = j.optJSONObject("weather")?.optString("label").orEmpty().ifEmpty { "서울" }
-        val region = h.optString("region").ifEmpty { label }
+        val label = j?.optJSONObject("weather")?.optString("label").orEmpty().ifEmpty { "서울" }
+        val main = rent ?: apply!!
+        val region = main.optString("region").ifEmpty { label }
+        val kind = if (rent != null) "공공임대" else "청약"
         // 고른 시군구에 접수 중인 공고가 없으면 시도 전체를 보여 주는데, 그 사실을 라벨에 밝힘
-        v.setTextViewText(R.id.h_label, if (h.optBoolean("fallback")) "청약 · ${label}엔 없어 $region 전체" else "청약 · $region")
-        val open = h.optInt("open")
-        val first = h.optJSONObject("first")
+        v.setTextViewText(R.id.h_label, if (main.optBoolean("fallback")) "$kind · ${label}엔 없어 $region 전체" else "$kind · $region")
+        val open = openCount(main)
+        val first = main.optJSONObject("first")
         v.setTextViewText(
             R.id.h_count,
             if (open > 0) highlighted("접수 중 ", "${open}건", context.getColor(R.color.hl_money)) else if (first != null) "곧 접수" else "접수 없음",
         )
-        v.setTextViewText(R.id.h_name, first?.optString("name") ?: "지금 접수 중인 청약이 없어요")
-        v.setTextViewText(R.id.h_sub, first?.let { "${it.optString("tag")} · ${it.optString("sub")}" } ?: "")
+        v.setTextViewText(R.id.h_name, first?.optString("name") ?: "지금 접수 중인 공고가 없어요")
+        val applyNote = if (rent != null && apply != null) "청약 접수 중 ${openCount(apply)}건" else ""
+        val tag = first?.optString("tag").orEmpty()
+        v.setTextViewText(R.id.h_sub, listOf(tag, applyNote).filter { it.isNotEmpty() }.joinToString(" · "))
     }
 }

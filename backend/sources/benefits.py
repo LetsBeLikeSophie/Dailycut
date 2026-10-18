@@ -285,6 +285,7 @@ def housing(kind: str, sido: str | None, sgg: str | None, limit: int = 60) -> di
         group, tag, span = _state(it.get("start", ""), it.get("end", ""), today)
         hay = " ".join([it.get("addr") or "", it.get("sgg") or "", it["name"]])
         near = any(t in hay for t in terms)
+        commercial = kind == "rent" and any(w in f'{it["name"]} {it.get("kind") or ""}' for w in ("상가", "입점", "용지"))  # 상가·입점자·토지(용지) 공급은 주거가 아님
         if kind == "apply":
             sub = " · ".join(x for x in (it["kind"], it["addr"].split(" ", 2)[1] if it["addr"].count(" ") >= 1 else it["region"], f"{it['households']}세대" if it.get("households") else "") if x)
             detail = _detail_rows([
@@ -307,8 +308,9 @@ def housing(kind: str, sido: str | None, sgg: str | None, limit: int = 60) -> di
         rows.append((0 if near else 1, group, (it.get("end") if group == 0 else it.get("start")) or "9999", {
             "id": it["id"], "name": it["name"], "sub": sub, "tag": tag, "span": span, "detail": detail, "url": it.get("url") or "", "link_label": link_label,
             "open": group == 0,  # 접수 중(오늘 마감 포함). 위젯이 "접수 중 N건"을 셀 때 씀(태그 글자로 세면 "오늘 마감"이 빠짐)
+            "commercial": commercial,  # 임대상가 입점자 모집 등 주택이 아닌 공고(위젯의 주거 건수에서 뺌, 목록에선 주택 뒤로)
         }))
-    rows.sort(key=lambda r: (r[1], r[0], r[2]))
+    rows.sort(key=lambda r: (r[1], r[3]["commercial"], r[0], r[2]))
     scope_note = None
     label = region["name"]
     if sgg:  # 그 시군구 공고가 있으면 그것만, 없으면 시도 전체(안내 글 포함)

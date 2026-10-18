@@ -5,6 +5,7 @@ import '../analytics.dart';
 import '../api_client.dart';
 import '../region.dart';
 import '../theme.dart';
+import 'ad_slot.dart';
 import 'components.dart';
 import 'map_links.dart';
 
@@ -120,17 +121,23 @@ class _BenefitFeedState extends State<BenefitFeed> {
               const EmptyNote('지금 접수할 수 있는 공고가 없어요.', vertical: 40),
             ExpandableList(
               key: ValueKey('${widget.kind.name}/${_usage ?? ''}'),
+              // 광고는 공고 맨 위 3개 다음에 한 번(2026-10-19). 광고도 목록 한 칸이라 보이는 개수(limit)에 1을 더함.
+              limit: kAdsEnabled && items.length > 3 ? kListLimit + 1 : kListLimit,
               children: [
-                for (final it in items)
+                for (var i = 0; i < items.length; i++) ...[
                   ListLine(
-                    name: it['name'] as String,
-                    sub: it['sub'] as String?,
-                    value: (it['tag'] as String?)?.isEmpty ?? true ? null : it['tag'] as String,
-                    valueSub: (it['span'] as String?)?.isEmpty ?? true ? null : it['span'] as String,
-                    onTap: () => showItemSheet(context, it, 'benefit-${widget.kind.name}'),
+                    name: items[i]['name'] as String,
+                    sub: items[i]['sub'] as String?,
+                    value: (items[i]['tag'] as String?)?.isEmpty ?? true ? null : items[i]['tag'] as String,
+                    valueSub: (items[i]['span'] as String?)?.isEmpty ?? true ? null : items[i]['span'] as String,
+                    onTap: () => showItemSheet(context, items[i], 'benefit-${widget.kind.name}'),
                   ),
+                  if (kAdsEnabled && i == 2) const AdSlot(),
+                ],
               ],
             ),
+            // 공고가 3개 이하면 목록 끝에
+            if (kAdsEnabled && items.length <= 3) const AdSlot(),
           ],
         );
       },

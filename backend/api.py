@@ -640,7 +640,7 @@ def _widget(sido: str | None, sgg: str | None, items: list[str], item: str | Non
             "pm10": air.get("pm10"), "pm10_value": air.get("pm10_value"), "pm25": air.get("pm25"), "pm25_value": air.get("pm25_value"),
             "outfit": w.get("outfit"),
         },
-        "basket": None, "housing": None, "culture": None,
+        "basket": None, "housing": None, "rent": None, "culture": None,
     }
     try:  # 장바구니: 앱 생활 탭 맨 위 히어로와 같은 계산(담은 품목 합계 ÷ 지난주 합계)
         m = market_route(sido=sido, sgg=sgg)
@@ -677,6 +677,19 @@ def _widget(sido: str | None, sgg: str | None, items: list[str], item: str | Non
                 "first": {"name": first["name"], "tag": first["tag"], "sub": first.get("sub")} if first else None,
                 # 어느 지역 기준인지 + 고른 시군구에 없어서 시도 전체로 채웠는지(위젯에 그대로 알려 줌)
                 "region": h.get("region"), "fallback": bool(h.get("scope_note")),
+            }
+    except Exception:
+        pass
+    try:  # 공공임대(마이홈·LH): 청약보다 접수 중인 공고가 훨씬 자주 있어서 "주거" 위젯이 앞에 보임(2026-10-19)
+        rr = benefits_src.housing("rent", sido, sgg)
+        if rr.get("live"):
+            rrows = [r for r in (rr.get("items") or []) if not r.get("commercial")]  # 임대상가 입점자 모집은 주거가 아니라서 뺌
+            ropen = [r for r in rrows if r.get("open")]
+            rfirst = (ropen or rrows or [None])[0]
+            out["rent"] = {
+                "open": len(ropen), "upcoming": len(rrows) - len(ropen),
+                "first": {"name": rfirst["name"], "tag": rfirst["tag"], "sub": rfirst.get("sub")} if rfirst else None,
+                "region": rr.get("region"), "fallback": bool(rr.get("scope_note")),
             }
     except Exception:
         pass

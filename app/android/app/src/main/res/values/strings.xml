@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="widget_today_label">데일리컷 · 오늘 한눈에</string>
-    <string name="widget_today_desc">날씨·미세먼지와 장바구니 지수, 청약, 이번 주 행사를 한눈에</string>
+    <string name="widget_today_desc">날씨·미세먼지와 장바구니 지수, 주거(공공임대·청약), 이번 주 행사를 한눈에</string>
     <string name="widget_weather_label">데일리컷 · 날씨</string>
     <string name="widget_weather_desc">오늘 날씨와 미세먼지, 옷차림</string>
     <string name="widget_basket_label">데일리컷 · 장바구니</string>
     <string name="widget_basket_desc">이번 주 장바구니 가격이 지난주보다 얼마나 달라졌는지</string>
-    <string name="widget_housing_label">데일리컷 · 청약</string>
-    <string name="widget_housing_desc">지금 접수 중인 청약 공고와 마감 임박 소식</string>
+    <string name="widget_housing_label">데일리컷 · 주거</string>
+    <string name="widget_housing_desc">접수 중인 공공임대와 청약 공고, 마감 임박 소식</string>
 </resources>

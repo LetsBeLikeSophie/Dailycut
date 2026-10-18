@@ -168,7 +168,7 @@
             android:layout_width="52dp"
             android:layout_height="wrap_content"
             android:maxLines="1"
-            android:text="청약"
+            android:text="주거"
             android:textColor="@color/widget_soft"
             android:textSize="11sp"
             android:textStyle="bold" />
@@ -180,7 +180,7 @@
             android:layout_weight="1"
             android:ellipsize="end"
             android:maxLines="1"
-            android:text="접수 중 3건 · 당산역 더클래스 한강"
+            android:text="공공임대 7건 · 청약 0건"
             android:textColor="@color/widget_ink"
             android:textSize="13sp" />
     </LinearLayout>

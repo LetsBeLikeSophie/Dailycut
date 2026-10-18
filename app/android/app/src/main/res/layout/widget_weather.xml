@@ -168,7 +168,7 @@
             android:layout_width="52dp"
             android:layout_height="wrap_content"
             android:maxLines="1"
-            android:text="청약"
+            android:text="주거"
             android:textColor="@color/widget_soft"
             android:textSize="11sp"
             android:textStyle="bold" />

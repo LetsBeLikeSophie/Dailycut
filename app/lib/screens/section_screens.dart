@@ -97,12 +97,14 @@ Widget marketScreen(ApiClient api, Region region, BuildContext shellContext) => 
             source: _sourceLabel(data['source'] as String?, true),
           );
           listing = [
+            // 광고(2026-10-19): 위젯에서 들어온 사람이 먼저 보는 장바구니 지수·차트 바로 다음, 장보기 시세 앞 — 내용을 가리지 않는 자연스러운 경계
+            // (앱에서 ADMOB_BANNER_ID를 빌드에 줬을 때만 보임)
+            const AdSlot(),
             ShoppingCatalog(
               catalog: catalogRaw.cast<Map<String, dynamic>>(),
               guide: (data['guide'] as Map<String, dynamic>?) ?? const {},
               asOf: data['as_of'] as String?,
             ),
-            const AdSlot(), // 광고(앱에서 ADMOB_BANNER_ID를 빌드에 줬을 때만 보임)
           ];
         } else {
           // 예시 데이터(서버에 키가 없을 때): 예전 화면
@@ -407,13 +409,14 @@ Widget benefitsScreen(ApiClient api, Region region, BuildContext shellContext) =
                   topExtra: toggle,
                   body: const [],
                 ),
+                // 광고(2026-10-19): 청약·공공임대·대출은 공고 맨 위 3개를 먼저 보여 준 다음에(BenefitFeed 안), 정부 지원은 목록 맨 아래
                 switch (index) {
                   1 => BenefitFeed(key: ValueKey('apply${region.code}${region.sgg}'), api: api, region: region, kind: BenefitKind.apply),
                   2 => BenefitFeed(key: ValueKey('rent${region.code}${region.sgg}'), api: api, region: region, kind: BenefitKind.rent),
                   3 => BenefitFeed(key: ValueKey('loan${region.code}'), api: api, region: region, kind: BenefitKind.loan),
                   _ => GovSupportSection(api: api),
                 },
-                const AdSlot(),
+                if (index == 0) const AdSlot(),
               ],
             );
           },
@@ -467,6 +470,17 @@ Widget aiScreen(ApiClient api) => SectionScreen(
 class SegmentedHost extends StatefulWidget {
   const SegmentedHost({super.key, required this.labels, required this.prefKey, required this.builder, this.trackName = 'culture_kind'});
 
+  /// 바깥(홈 화면 위젯)에서 특정 구역으로 열어 달라는 요청. 아직 안 만들어진 화면은 저장값(prefKey)으로 그 구역에서 시작하고,
+  /// 이미 떠 있는 화면은 [_ticks]를 듣고 바로 바꿈.
+  static void request(String prefKey, String label) {
+    LocalPrefs.setString(prefKey, label);
+    _pending[prefKey] = label;
+    _ticks.value++;
+  }
+
+  static final Map<String, String> _pending = {};
+  static final ValueNotifier<int> _ticks = ValueNotifier(0);
+
   final List<String> labels;
   final String prefKey;
   final String trackName; // 통계 이벤트 이름(허용 목록에 있는 것)
@@ -483,6 +497,24 @@ class _SegmentedHostState extends State<SegmentedHost> {
     final i = v == null ? -1 : widget.labels.indexOf(v);
     return i >= 0 ? i : 0;
   }();
+
+  @override
+  void initState() {
+    super.initState();
+    SegmentedHost._ticks.addListener(_onRequest);
+  }
+
+  @override
+  void dispose() {
+    SegmentedHost._ticks.removeListener(_onRequest);
+    super.dispose();
+  }
+
+  void _onRequest() {
+    final label = SegmentedHost._pending.remove(widget.prefKey);
+    final i = label == null ? -1 : widget.labels.indexOf(label);
+    if (i >= 0 && mounted) _select(i);
+  }
 
   void _select(int i) {
     if (i == _index) return;
