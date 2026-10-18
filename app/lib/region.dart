@@ -8,6 +8,7 @@ import 'location_flow.dart';
 import 'location.dart';
 import 'theme.dart';
 import 'widgets/components.dart';
+import 'widget_bridge.dart';
 
 /// 앱 전체의 지역 단위: 시도(17곳) + 선택적으로 시군구. 시군구를 안 고르면 "시도 전체"로 동작함.
 /// 날씨·미세먼지·전통시장·문화가 모두 이 한 지역을 기준으로 조회됨(데이터마다 더 거친 단위만
@@ -112,6 +113,7 @@ class RegionStore extends ChangeNotifier {
     } else {
       await LocalPrefs.setString(_prefSgg, r.sgg!);
     }
+    WidgetBridge.refresh(); // 홈 화면 위젯도 새 지역으로(저장이 끝난 뒤에 불러야 위젯이 새 값을 읽음)
   }
 
   /// 화면 맨 위 줄에 붙일 지역 문구(예: "서울 중구"). 다른 탭엔 없는 "· 기본" 꼬리는 뺌(2026-10-17).

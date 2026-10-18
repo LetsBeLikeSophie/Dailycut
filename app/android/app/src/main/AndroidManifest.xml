@@ -29,6 +29,17 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <!-- 홈 화면 날씨·미세먼지 위젯 -->
+        <receiver
+            android:name=".WeatherWidget"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/weather_widget_info" />
+        </receiver>
         <!-- 구글 애드몹 앱 ID. 기본값은 구글 공식 테스트 ID(android/app/build.gradle.kts의 manifestPlaceholders) —
              실제 ID는 android/gradle.properties의 ADMOB_APP_ID에 넣으면 바뀜 -->
         <meta-data

@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 홈 화면 위젯 색(앱 테마와 같은 먹색·회색, 다크 모드는 values-night) -->
+    <color name="widget_bg">#FFFFFF</color>
+    <color name="widget_ink">#1A1A1A</color>
+    <color name="widget_soft">#6F6F6F</color>
+    <color name="widget_line">#E6E6E6</color>
+</resources>
