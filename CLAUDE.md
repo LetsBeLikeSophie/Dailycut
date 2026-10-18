@@ -485,3 +485,6 @@ claude.ai/artifact/17gytwYuXMFkF4vx8tWv65 (사용 중 · 일부만 · 미사용 
   → 이제 서버가 `housing.region`·`housing.fallback`을 주고 위젯이 "서울 전체 · 접수 중 2건"/"청약 · 강남구엔 없어 서울 전체"로 범위를 밝힘. 또 "접수 중 N건"을 태그 글자("접수 중…")로 세서 **"오늘 마감" 공고가 빠졌음** → 공고 항목에 `open`(접수 중 여부, 오늘 마감 포함)을 추가해 그걸로 셈(`benefits.py`).
   위젯은 **앱에 저장된 지역**(시도·시군구)을 따라감 — 폰의 GPS를 따라가지 않음(위치는 앱의 "현재 위치로 찾기"를 눌렀을 때만 읽어 저장). 위치가 바뀌었다고 위젯이 저절로 옮겨 가진 않음.
   혜택 vs 청약: 위젯엔 기한이 있는 **청약**이 더 맞음(D-day·마감 임박이 눌러 볼 이유). 정부 지원은 건수가 많고 기한이 거의 없으며 "내 조건"(기기에만 저장)이 있어야 의미가 있어서, 위젯에 넣으려면 조건을 위젯이 읽어 서버에 보내야 함 → 개인정보 정책(조건은 저장·로그 안 함) 재검토 후.
+- **앱 아이콘 적용 (2026-10-19, APK 1.3.2)**: 사용자가 만든 아이콘(`app/assets/icon/app_icon*.png`·`app_icon.svg`, 설정 `app/flutter_launcher_icons.yaml`)을 `flutter pub add dev:flutter_launcher_icons` → `dart run flutter_launcher_icons`로 적용 —
+  안드로이드(적응형: 배경·전경 따로, 매니페스트 `android:icon="@mipmap/launcher_icon"`)·iOS(AppIcon 전체 크기)·웹(`web/favicon.png`·`web/icons/*`·`manifest.json` 테마색 `#E08A3E`)이 한 번에 새로 만들어짐. 아이콘을 바꾸면 이 명령을 다시 돌릴 것.
+  **웹 쪽 새 아이콘(파비콘·PWA 아이콘)은 웹을 다시 빌드·배포해야 사이트에 반영됨**(이번엔 APK만 배포).
