@@ -613,6 +613,7 @@ class WidgetReq(BaseModel):
     sido: str | None = None
     sgg: str | None = None
     items: list[str] = []
+    item: str | None = None  # 위젯에 따로 보일 대표 품목 하나(앱에서 고름). 있으면 장바구니 합계 대신 이 품목 가격
 
 
 @app.get("/widget")
@@ -623,10 +624,10 @@ def widget_get(sido: str | None = None, sgg: str | None = None):
 @app.post("/widget")
 def widget_post(b: WidgetReq):
     """내 장바구니 품목은 본문으로만 받음(GET 쿼리는 nginx 접속 로그에 남아서 — 좌표(/region)와 같은 이유). 저장·로그 안 함."""
-    return _widget(b.sido, b.sgg, b.items[:40])
+    return _widget(b.sido, b.sgg, b.items[:40], b.item)
 
 
-def _widget(sido: str | None, sgg: str | None, items: list[str]) -> dict:
+def _widget(sido: str | None, sgg: str | None, items: list[str], item: str | None = None) -> dict:
     """홈 화면 위젯(2026-10-18) 한 번에 받는 가벼운 요약 — 날씨·장바구니·청약·이번 주 행사.
     위젯이 큰 응답(/market 130KB 등)을 여러 번 받지 않게 서버가 이미 캐시된 값으로 줄여서 줌. 없는 항목은 None.
     items = 내 장바구니 품목(기기에서 보냄). 비면 대표 8품목."""
@@ -646,7 +647,14 @@ def _widget(sido: str | None, sgg: str | None, items: list[str]) -> dict:
         ci = m.get("chart_items") or {}
         mine = [n for n in items if n in ci]
         names = mine or [n for n in ((m.get("basket") or {}).get("items") or []) if n in ci]
-        if names:
+        if item and item in ci:  # 대표 품목 하나: 가격·단위·지난주 대비
+            it = ci[item]
+            wk = it.get("week_ago")
+            out["basket"] = {
+                "single": True, "label": item, "total": round(it["price"]), "unit": it.get("unit"),
+                "pct": round((it["price"] / wk - 1) * 100, 1) if wk else None, "count": 1,
+            }
+        elif names:
             with_week = [n for n in names if ci[n].get("week_ago")]
             now_sum = sum(ci[n]["price"] for n in with_week)
             week_sum = sum(ci[n]["week_ago"] for n in with_week)
@@ -662,11 +670,13 @@ def _widget(sido: str | None, sgg: str | None, items: list[str]) -> dict:
         h = benefits_src.housing("apply", sido, sgg)
         if h.get("live"):
             rows = h.get("items") or []
-            opening = [r for r in rows if str(r.get("tag", "")).startswith("접수 중")]
+            opening = [r for r in rows if r.get("open")]  # 접수 중(오늘 마감 포함)
             first = (opening or rows or [None])[0]
             out["housing"] = {
                 "open": len(opening), "upcoming": len(rows) - len(opening),
                 "first": {"name": first["name"], "tag": first["tag"], "sub": first.get("sub")} if first else None,
+                # 어느 지역 기준인지 + 고른 시군구에 없어서 시도 전체로 채웠는지(위젯에 그대로 알려 줌)
+                "region": h.get("region"), "fallback": bool(h.get("scope_note")),
             }
     except Exception:
         pass

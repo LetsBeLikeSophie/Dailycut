@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../analytics.dart';
 import '../theme.dart';
 import 'components.dart';
+import 'widget_item_button.dart';
 
 /// 축산물 시세 한 줄: 이름·100g당 가격·지난주 대비(다른 시세 목록과 같은 모양). 누르면 평년 대비·가격 범위가 있는 상세.
 Widget livestockLine(BuildContext context, Map<String, dynamic> it) {
@@ -81,6 +82,7 @@ class _LivestockSheet extends StatelessWidget {
                 const TextSpan(text: '  100g', style: TextStyle(fontSize: 13, color: AppColors.inkSoft)),
               ]),
             ),
+            WidgetItemButton(name: item['label'] as String),
             const SizedBox(height: 22),
             Container(height: 1, color: AppColors.ink),
             compare('지난주 대비', d['week'] as num?, d['week_pct'] as num?),

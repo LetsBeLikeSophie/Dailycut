@@ -306,6 +306,7 @@ def housing(kind: str, sido: str | None, sgg: str | None, limit: int = 60) -> di
         # 접수 중(0)은 마감 가까운 순, 접수 예정(1)은 시작 가까운 순 — "곧 마감" 공고가 위로 오게
         rows.append((0 if near else 1, group, (it.get("end") if group == 0 else it.get("start")) or "9999", {
             "id": it["id"], "name": it["name"], "sub": sub, "tag": tag, "span": span, "detail": detail, "url": it.get("url") or "", "link_label": link_label,
+            "open": group == 0,  # 접수 중(오늘 마감 포함). 위젯이 "접수 중 N건"을 셀 때 씀(태그 글자로 세면 "오늘 마감"이 빠짐)
         }))
     rows.sort(key=lambda r: (r[1], r[0], r[2]))
     scope_note = None

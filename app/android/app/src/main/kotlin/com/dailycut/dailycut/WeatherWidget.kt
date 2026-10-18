@@ -60,7 +60,7 @@ object WidgetData {
     /** 지금 앱에 저장된 지역·장바구니로 만든 키 — 받아 둔 값이 이 키와 같을 때만 보여 줌(지역을 바꾼 뒤 옛 지역 날씨가 나오지 않게). */
     private fun currentKey(context: Context): String {
         val f = flutterPrefs(context)
-        return "${f.getString("flutter.region_code", null) ?: "11"}|${f.getString("flutter.region_sgg", null) ?: ""}|${basketItems(f).joinToString(",")}"
+        return "${f.getString("flutter.region_code", null) ?: "11"}|${f.getString("flutter.region_sgg", null) ?: ""}|${basketItems(f).joinToString(",")}|${f.getString("flutter.widget_item", null) ?: ""}"
     }
 
     /** 네트워크 없이 받아 둔 값만. 지역이 다르면 비어 있음, 새로 받은 지 오래됐으면 stale. */
@@ -78,7 +78,7 @@ object WidgetData {
         val sido = f.getString("flutter.region_code", null) ?: "11"
         val sgg = f.getString("flutter.region_sgg", null)
         val key = currentKey(context)
-        val body = fetch(sido, sgg, basketItems(f)) ?: return false
+        val body = fetch(sido, sgg, basketItems(f), f.getString("flutter.widget_item", null)) ?: return false
         if (parse(body) == null) return false
         context.getSharedPreferences(OWN, Context.MODE_PRIVATE).edit()
             .putString("last", body).putString("last_key", key).putLong("last_at", System.currentTimeMillis()).apply()
@@ -97,14 +97,14 @@ object WidgetData {
         emptyList()
     }
 
-    private fun fetch(sido: String, sgg: String?, items: List<String>): String? = try {
+    private fun fetch(sido: String, sgg: String?, items: List<String>, item: String?): String? = try {
         val c = URL("$API/widget").openConnection() as HttpURLConnection
         c.requestMethod = "POST"
         c.doOutput = true
         c.connectTimeout = 8_000
         c.readTimeout = 45_000
         c.setRequestProperty("Content-Type", "application/json; charset=utf-8")
-        val payload = JSONObject().put("sido", sido).put("sgg", sgg ?: JSONObject.NULL).put("items", JSONArray(items))
+        val payload = JSONObject().put("sido", sido).put("sgg", sgg ?: JSONObject.NULL).put("items", JSONArray(items)).put("item", item ?: JSONObject.NULL)
         c.outputStream.use { it.write(payload.toString().toByteArray(Charsets.UTF_8)) }
         try {
             if (c.responseCode == 200) c.inputStream.bufferedReader().use { it.readText() } else null
@@ -271,11 +271,11 @@ private fun hhmm(at: Long): String =
     SimpleDateFormat("HH:mm", Locale.KOREA).apply { timeZone = TimeZone.getTimeZone("Asia/Seoul") }.format(Date(at))
 
 /** 장바구니 변동 문장: "지난주보다 5.4% 내렸어요" / "지난주와 비슷해요" */
-private fun basketDelta(context: Context, pct: Double?): CharSequence {
-    if (pct == null) return "지난주 가격과 비교 중이에요"
-    if (kotlin.math.abs(pct) < 0.5) return highlighted("지난주와 ", "비슷해요", context.getColor(R.color.hl_market))
+private fun basketDelta(context: Context, pct: Double?, prefix: String = ""): CharSequence {
+    if (pct == null) return "${prefix}지난주 가격과 비교 중이에요"
+    if (kotlin.math.abs(pct) < 0.5) return highlighted("${prefix}지난주와 ", "비슷해요", context.getColor(R.color.hl_market))
     val phrase = "${String.format(Locale.KOREA, "%.1f", kotlin.math.abs(pct))}% ${if (pct < 0) "내렸어요" else "올랐어요"}"
-    return highlighted("지난주보다 ", phrase, context.getColor(R.color.hl_market))
+    return highlighted("${prefix}지난주보다 ", phrase, context.getColor(R.color.hl_market))
 }
 
 private fun fillWeather(context: Context, v: RemoteViews, j: JSONObject?, stale: Boolean, at: Long, withDate: Boolean) {
@@ -308,7 +308,11 @@ class WeatherWidget : BaseWidget() {
         fillWeather(context, v, j, stale, at, withDate = true)
         val showMore = heightDp >= 150
         val basket = j?.optJSONObject("basket")
-        v.setTextViewText(R.id.basket_text, if (basket == null) "가격을 불러오는 중" else basketDelta(context, if (basket.isNull("pct")) null else basket.optDouble("pct")))
+        val single = basket?.optBoolean("single") == true
+        v.setTextViewText(
+            R.id.basket_text,
+            if (basket == null) "가격을 불러오는 중" else basketDelta(context, if (basket.isNull("pct")) null else basket.optDouble("pct"), if (single) "${basket.optString("label")} " else ""),
+        )
 
         val housing = j?.optJSONObject("housing")
         v.setTextViewText(R.id.housing_text, housingLine(context, housing))
@@ -325,10 +329,12 @@ class WeatherWidget : BaseWidget() {
         if (h == null) return "청약 소식을 불러오는 중"
         val first = h.optJSONObject("first")
         val open = h.optInt("open")
+        // 고른 시군구에 없어서 시도 전체로 채운 경우엔 어느 범위인지 앞에 밝힘("서울 전체 · …")
+        val scope = if (h.optBoolean("fallback")) "${h.optString("region")} 전체 · " else ""
         return when {
-            open > 0 -> highlighted("접수 중 ", "${open}건", context.getColor(R.color.hl_money), first?.let { " · ${it.optString("name")}" } ?: "")
-            first != null -> "곧 접수 · ${first.optString("name")}"
-            else -> "지금 접수 중인 청약이 없어요"
+            open > 0 -> highlighted("${scope}접수 중 ", "${open}건", context.getColor(R.color.hl_money), first?.let { " · ${it.optString("name")}" } ?: "")
+            first != null -> "${scope}곧 접수 · ${first.optString("name")}"
+            else -> "${scope}지금 접수 중인 청약이 없어요"
         }
     }
 }
@@ -358,10 +364,12 @@ class BasketWidget : BaseWidget() {
             v.setTextViewText(R.id.b_note, "인터넷이 연결되면 새로 받아요")
             return
         }
+        val single = b.optBoolean("single")
         v.setTextViewText(R.id.b_label, b.optString("label"))
         v.setTextViewText(R.id.b_total, NumberFormat.getNumberInstance(Locale.KOREA).format(b.optLong("total")) + "원")
         v.setTextViewText(R.id.b_delta, basketDelta(context, if (b.isNull("pct")) null else b.optDouble("pct")))
-        v.setTextViewText(R.id.b_note, if (stale && at > 0) "${hhmm(at)} 기준" else "${b.optInt("count")}품목 합계")
+        // 대표 품목 하나면 단위(예: 1포기), 아니면 품목 수
+        v.setTextViewText(R.id.b_note, if (stale && at > 0) "${hhmm(at)} 기준" else if (single) b.optString("unit").removePrefix("원/").let { if (it.isEmpty()) "소매가" else "$it 기준" } else "${b.optInt("count")}품목 합계")
     }
 }
 
@@ -380,7 +388,9 @@ class HousingWidget : BaseWidget() {
             return
         }
         val label = j.optJSONObject("weather")?.optString("label").orEmpty().ifEmpty { "서울" }
-        v.setTextViewText(R.id.h_label, "청약 · $label")
+        val region = h.optString("region").ifEmpty { label }
+        // 고른 시군구에 접수 중인 공고가 없으면 시도 전체를 보여 주는데, 그 사실을 라벨에 밝힘
+        v.setTextViewText(R.id.h_label, if (h.optBoolean("fallback")) "청약 · ${label}엔 없어 $region 전체" else "청약 · $region")
         val open = h.optInt("open")
         val first = h.optJSONObject("first")
         v.setTextViewText(

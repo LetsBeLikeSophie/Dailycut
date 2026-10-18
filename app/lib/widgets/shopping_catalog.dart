@@ -6,6 +6,7 @@ import '../my_basket.dart';
 import '../theme.dart';
 import 'components.dart';
 import 'livestock_sheet.dart';
+import 'widget_item_button.dart';
 
 /// 생활 탭의 "장보기 시세": 카테고리(채소·과일·수산·축산·곡물)를 고르면 그 안의 품목이
 /// "이름 · 제철 표시 · 작은 추이 · 가격과 지난주 대비" 한 줄로 나오고, 누르면 고르는 법·보관법·
@@ -489,6 +490,7 @@ class _ProduceSheet extends StatelessWidget {
                 ],
               ),
             ),
+            WidgetItemButton(name: item['name'] as String),
             if (guide != null) ...[
               const SizedBox(height: 22),
               Text('제철 · ${seasonText(months)}', style: AppTheme.subheading),
