@@ -609,6 +609,79 @@ def today(sido: str | None = None, sgg: str | None = None):
     }
 
 
+class WidgetReq(BaseModel):
+    sido: str | None = None
+    sgg: str | None = None
+    items: list[str] = []
+
+
+@app.get("/widget")
+def widget_get(sido: str | None = None, sgg: str | None = None):
+    return _widget(sido, sgg, [])
+
+
+@app.post("/widget")
+def widget_post(b: WidgetReq):
+    """내 장바구니 품목은 본문으로만 받음(GET 쿼리는 nginx 접속 로그에 남아서 — 좌표(/region)와 같은 이유). 저장·로그 안 함."""
+    return _widget(b.sido, b.sgg, b.items[:40])
+
+
+def _widget(sido: str | None, sgg: str | None, items: list[str]) -> dict:
+    """홈 화면 위젯(2026-10-18) 한 번에 받는 가벼운 요약 — 날씨·장바구니·청약·이번 주 행사.
+    위젯이 큰 응답(/market 130KB 등)을 여러 번 받지 않게 서버가 이미 캐시된 값으로 줄여서 줌. 없는 항목은 None.
+    items = 내 장바구니 품목(기기에서 보냄). 비면 대표 8품목."""
+    w = weather(sido=sido, sgg=sgg)
+    t, air = w.get("today", {}), w.get("air_quality", {})
+    out: dict = {
+        "weather": {
+            "label": (w.get("location") or {}).get("label") or "서울",
+            "temp": t.get("temp"), "condition": t.get("condition"), "high": t.get("high"), "low": t.get("low"), "feels": t.get("feels_like"),
+            "pm10": air.get("pm10"), "pm10_value": air.get("pm10_value"), "pm25": air.get("pm25"), "pm25_value": air.get("pm25_value"),
+            "outfit": w.get("outfit"),
+        },
+        "basket": None, "housing": None, "culture": None,
+    }
+    try:  # 장바구니: 앱 생활 탭 맨 위 히어로와 같은 계산(담은 품목 합계 ÷ 지난주 합계)
+        m = market_route(sido=sido, sgg=sgg)
+        ci = m.get("chart_items") or {}
+        mine = [n for n in items if n in ci]
+        names = mine or [n for n in ((m.get("basket") or {}).get("items") or []) if n in ci]
+        if names:
+            with_week = [n for n in names if ci[n].get("week_ago")]
+            now_sum = sum(ci[n]["price"] for n in with_week)
+            week_sum = sum(ci[n]["week_ago"] for n in with_week)
+            out["basket"] = {
+                "label": "내 장바구니" if mine else "대표 장바구니",
+                "total": round(sum(ci[n]["price"] for n in names)),
+                "pct": round((now_sum / week_sum - 1) * 100, 1) if week_sum else None,
+                "count": len(names),
+            }
+    except Exception:
+        pass
+    try:  # 청약: 접수 중인 공고 수와 마감이 가장 가까운 것(목록은 이미 마감 임박 순)
+        h = benefits_src.housing("apply", sido, sgg)
+        if h.get("live"):
+            rows = h.get("items") or []
+            opening = [r for r in rows if str(r.get("tag", "")).startswith("접수 중")]
+            first = (opening or rows or [None])[0]
+            out["housing"] = {
+                "open": len(opening), "upcoming": len(rows) - len(opening),
+                "first": {"name": first["name"], "tag": first["tag"], "sub": first.get("sub")} if first else None,
+            }
+    except Exception:
+        pass
+    try:  # 이번 주(월~일) 행사 수 — 캐시에 있을 때만(없으면 수집으로 느려져서 위젯 갱신이 길어짐)
+        region = geo.region(sido)
+        live = culture_src.peek(region["code"], sgg)
+        if live and live.get("events"):
+            mon = _kst.today() - timedelta(days=_kst.today().weekday())
+            sun = mon + timedelta(days=6)
+            out["culture"] = {"week": sum(1 for e in live["events"] if e["start"] <= sun.isoformat() and e["end"] >= mon.isoformat())}
+    except Exception:
+        pass
+    return out
+
+
 def _weekend_range(today: date) -> tuple[date, date]:
     """이번 주말: 일요일이면 오늘 하루, 아니면 이번 주 토~일."""
     if today.weekday() == 6:

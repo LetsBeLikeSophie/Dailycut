@@ -42,6 +42,11 @@ android {
     }
 }
 
+dependencies {
+    // 홈 화면 위젯의 갱신·재시도 일정(광고 SDK가 이미 끌고 오는 같은 라이브러리 — 위젯 코드가 직접 쓰므로 명시)
+    implementation("androidx.work:work-runtime:2.10.0")
+}
+
 kotlin {
     compilerOptions {
         jvmTarget = org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17

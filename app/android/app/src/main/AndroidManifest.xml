@@ -29,16 +29,50 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
-        <!-- 홈 화면 날씨·미세먼지 위젯 -->
+        <!-- 홈 화면 위젯 4종(WeatherWidget.kt): 오늘 한눈에 · 날씨 · 장바구니 · 청약 -->
         <receiver
             android:name=".WeatherWidget"
-            android:exported="false">
+            android:exported="false"
+            android:label="@string/widget_today_label">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
             </intent-filter>
             <meta-data
                 android:name="android.appwidget.provider"
                 android:resource="@xml/weather_widget_info" />
+        </receiver>
+        <receiver
+            android:name=".WeatherOnlyWidget"
+            android:exported="false"
+            android:label="@string/widget_weather_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/single_weather_info" />
+        </receiver>
+        <receiver
+            android:name=".BasketWidget"
+            android:exported="false"
+            android:label="@string/widget_basket_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/single_basket_info" />
+        </receiver>
+        <receiver
+            android:name=".HousingWidget"
+            android:exported="false"
+            android:label="@string/widget_housing_label">
+            <intent-filter>
+                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.appwidget.provider"
+                android:resource="@xml/single_housing_info" />
         </receiver>
         <!-- 구글 애드몹 앱 ID. 기본값은 구글 공식 테스트 ID(android/app/build.gradle.kts의 manifestPlaceholders) —
              실제 ID는 android/gradle.properties의 ADMOB_APP_ID에 넣으면 바뀜 -->

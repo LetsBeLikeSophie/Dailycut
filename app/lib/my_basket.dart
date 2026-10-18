@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 
 import 'analytics.dart';
 import 'local_prefs.dart';
+import 'widget_bridge.dart';
 
 /// 내 장바구니: 생활 탭 맨 위 차트에 올릴 품목. 기본값 없음(비어 있음) — 사용자가 장보기 시세에서
 /// 밀어서 담은 것만 들어감. 로그인이 없어서 기기에만 저장함(shared_preferences).
@@ -36,6 +37,7 @@ class MyBasket extends ChangeNotifier {
   Future<void> _save() async {
     notifyListeners();
     await LocalPrefs.setList(_key, _names);
+    WidgetBridge.refresh(); // 홈 화면 장바구니 위젯도 바뀐 품목 기준으로(저장이 끝난 뒤)
   }
 
   /// 담았으면 true, 뺐으면 false

@@ -1,12 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- 홈 화면 날씨·미세먼지 위젯. 30분마다(안드로이드가 허용하는 최소 간격) 다시 받음 -->
+<!-- 홈 화면 "오늘 한눈에" 위젯(4x3): 날씨·미세먼지 + 장바구니 지수·청약·이번 주 행사. 30분마다(안드로이드가 허용하는 최소 간격) 다시 받음 -->
 <appwidget-provider xmlns:android="http://schemas.android.com/apk/res/android"
     android:minWidth="250dp"
     android:minHeight="110dp"
+    android:minResizeWidth="180dp"
+    android:minResizeHeight="110dp"
     android:targetCellWidth="4"
-    android:targetCellHeight="2"
+    android:targetCellHeight="3"
     android:updatePeriodMillis="1800000"
+    android:previewLayout="@layout/widget_preview_weather"
     android:initialLayout="@layout/widget_weather"
     android:resizeMode="horizontal|vertical"
     android:widgetCategory="home_screen"
-    android:description="@string/widget_weather_desc" />
+    android:description="@string/widget_today_desc" />

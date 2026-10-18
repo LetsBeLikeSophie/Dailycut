@@ -8,6 +8,7 @@ import 'screens/section_screens.dart';
 import 'analytics.dart';
 import 'local_prefs.dart';
 import 'my_basket.dart';
+import 'widget_bridge.dart';
 import 'widgets/ad_slot.dart';
 import 'widgets/support_profile.dart';
 import 'region.dart';
@@ -67,6 +68,17 @@ class _RootShellState extends State<RootShell> {
     Analytics.instance.track('tab_view', 'today');
     kFirstScreenReady.addListener(_warmOtherTabs);
     swipeToTab = _swipeTab;
+    // 홈 화면 위젯을 눌러 들어왔으면 그 탭으로(켜져 있던 앱이면 openTab 신호, 새로 켠 앱이면 첫 프레임 뒤에 initialTab)
+    WidgetBridge.listen(_openTabKey);
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final tab = await WidgetBridge.initialTab();
+      if (tab != null && mounted) _openTabKey(tab);
+    });
+  }
+
+  void _openTabKey(String key) {
+    final i = _tabKeys.indexOf(key);
+    if (i >= 0) _select(i);
   }
 
   @override

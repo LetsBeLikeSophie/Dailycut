@@ -1,8 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- 홈 화면 위젯 색(앱 테마와 같은 먹색·회색, 다크 모드는 values-night) -->
+    <!-- 홈 화면 위젯 색(앱 theme.dart와 같은 먹색·회색·섹션 색, 다크 모드는 values-night) -->
     <color name="widget_bg">#FFFFFF</color>
-    <color name="widget_ink">#1A1A1A</color>
-    <color name="widget_soft">#6F6F6F</color>
-    <color name="widget_line">#E6E6E6</color>
+    <color name="widget_ink">#191919</color>
+    <color name="widget_soft">#8B8B8B</color>
+    <color name="widget_line">#EBEBEB</color>
+    <!-- 섹션 색(점)과 형광펜 색 -->
+    <color name="sec_weather">#E08A3E</color>
+    <color name="sec_market">#E0A81E</color>
+    <color name="sec_money">#2F42B0</color>
+    <color name="sec_culture">#D0452E</color>
+    <color name="hl_market">#FCE9A8</color>
+    <color name="hl_money">#D9DFFA</color>
+    <color name="hl_culture">#FAD6CC</color>
+    <color name="hl_weather">#F7D9BA</color>
 </resources>
