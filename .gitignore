@@ -31,3 +31,6 @@ backend/.env
 scratch_fonts/
 scratch_cond.pkl
 dist/
+
+# 스토어 제출용 빌드 산출물(62MB, 키로 서명됨) — 저장소엔 올리지 않음
+store/*.aab
