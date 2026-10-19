@@ -1,8 +1,18 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
+
+// 2026-10-19: 출시용 업로드 키. 출시 빌드(tools/build_release.sh)만 UPLOAD_SIGN=true로 이 키를 쓰고,
+// 테스트로 나눠 주는 APK는 예전처럼 디버그 키(이미 깔린 앱을 덮어 설치할 수 있게). key.properties·키스토어는 git 밖.
+val keyProps = Properties().apply {
+    val f = rootProject.file("key.properties")
+    if (f.exists()) f.inputStream().use { load(it) }
+}
+val useUploadKey = System.getenv("ORG_GRADLE_PROJECT_UPLOAD_SIGN") == "true" && keyProps.getProperty("storeFile") != null
 
 android {
     namespace = "com.dailycut.dailycut"
@@ -31,11 +41,20 @@ android {
         manifestPlaceholders["admobAppId"] = (project.findProperty("ADMOB_APP_ID") as String?) ?: "ca-app-pub-3940256099942544~3347511713"
     }
 
+    signingConfigs {
+        if (useUploadKey) {
+            create("upload") {
+                storeFile = file(keyProps.getProperty("storeFile"))
+                storePassword = keyProps.getProperty("storePassword")
+                keyAlias = keyProps.getProperty("keyAlias")
+                keyPassword = keyProps.getProperty("keyPassword")
+            }
+        }
+    }
+
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // Signing with the debug keys for now, so `flutter run --release` works.
-            signingConfig = signingConfigs.getByName("debug")
+            signingConfig = signingConfigs.getByName(if (useUploadKey) "upload" else "debug")
             // 코드 축소(R8)가 광고 SDK 쪽 WorkManager/Room 클래스를 지워 앱이 안 켜지던 문제 때문에 보존 규칙을 둠(2026-10-18)
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }

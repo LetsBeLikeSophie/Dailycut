@@ -7,6 +7,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
+export ORG_GRADLE_PROJECT_UPLOAD_SIGN=true  # 업로드 키로 서명(android/key.properties)
 export ORG_GRADLE_PROJECT_ADMOB_APP_ID="ca-app-pub-6270133261936882~2732521763"
 BANNER_ID="ca-app-pub-6270133261936882/2812412814"
 TARGET="${1:-appbundle}"
