@@ -15,7 +15,7 @@ from collections import OrderedDict
 import os
 import sqlite3
 import threading
-from datetime import datetime
+from datetime import datetime, timedelta
 from pathlib import Path
 
 DB_PATH = Path(os.environ.get("DAILYCUT_DB") or Path(__file__).with_name("dailycut.db"))
@@ -142,6 +142,38 @@ def record_prices(source: str, rows: list[dict]) -> int:
         finally:
             c.close()
     return len(rows)
+
+
+def prune(keep_cache_days: int, keep_usage_days: int, dead_item_days: int, protect: set[str]) -> dict:
+    """오래된 데이터 정리(2026-10-19 데이터 보관 기준 — sources/maintenance.py가 하루 한 번 부름).
+    - cache: 요청 때 계산해 둔 칸(이름에 ':' 또는 '/'가 있는 것, 예: 날짜가 키인 행사 캐시)이 keep_cache_days보다 오래 갱신 안 됐으면 삭제.
+      작업이 직접 관리하는 칸(protect = 작업 이름들)은 마지막 성공값(last-good)이라 건드리지 않음.
+    - usage_events: keep_usage_days보다 오래된 날짜 삭제(익명 통계라 개인정보는 아니지만 무한정 쌓지 않음).
+    - price_history: **지우지 않음**(인사이트용 자산) — 다만 마지막 기록이 dead_item_days보다 오래된 품목(2010년 조사값처럼 더 이상 안 들어오는 것)만 삭제.
+    삭제가 있었으면 VACUUM으로 파일 크기도 줄임."""
+    now = datetime.now()
+    cut_cache = (now - timedelta(days=keep_cache_days)).isoformat(timespec="seconds")
+    cut_usage = (now.date() - timedelta(days=keep_usage_days)).isoformat()
+    cut_dead = (now.date() - timedelta(days=dead_item_days)).isoformat()
+    with _lock:
+        c = _conn()
+        try:
+            rows = c.execute("SELECT name FROM cache WHERE fetched_at < ? AND (name LIKE '%:%' OR name LIKE '%/%')", (cut_cache,)).fetchall()
+            names = [r["name"] for r in rows if r["name"] not in protect]
+            c.executemany("DELETE FROM cache WHERE name=?", [(n,) for n in names])
+            n_usage = c.execute("DELETE FROM usage_events WHERE day < ?", (cut_usage,)).rowcount
+            n_dead = c.execute(
+                "DELETE FROM price_history WHERE (source, item) IN "
+                "(SELECT source, item FROM price_history GROUP BY source, item HAVING MAX(day) < ?)",
+                (cut_dead,),
+            ).rowcount
+            c.commit()
+            if names or n_usage or n_dead:
+                c.isolation_level = None  # VACUUM은 트랜잭션 밖에서
+                c.execute("VACUUM")
+        finally:
+            c.close()
+    return {"cache": len(names), "usage_events": n_usage, "price_history": n_dead}
 
 
 def price_days(source: str) -> set[str]:

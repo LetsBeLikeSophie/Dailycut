@@ -19,4 +19,4 @@
 
 # 2026-10-13: 광고(상업 이용) 약관 때문에 금융위 지수·상품(money), 금감원 금리(finance), KOBIS(boxoffice)는 등록하지 않음.
 # 파일(money.py·finance.py·boxoffice.py)은 남겨 뒀고, 허락을 받으면 아래 import에 다시 넣으면 작업이 등록됨.
-from sources import benefits, culture, gov_support, livestock, market, markets, outing, places, weather  # noqa: F401  (market 등은 import하면 작업이 등록됨)
+from sources import benefits, culture, gov_support, livestock, maintenance, market, markets, outing, places, weather  # noqa: F401  (market 등은 import하면 작업이 등록됨)

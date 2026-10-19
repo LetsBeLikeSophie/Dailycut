@@ -1,9 +1,14 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
     <!-- 공공데이터 서버(itssophie.dev/dailycut-api)와 통신 — 릴리스 빌드에는 기본으로 없어서 꼭 필요 -->
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- 내 주변 날씨·문화 정보용(대략적인 위치만 요청) -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <!-- 2026-10-19: 위젯용 WorkManager가 끌고 오는 포그라운드 서비스 권한·서비스는 쓰지 않으므로 합쳐진 매니페스트에서 뺌
+         (남겨 두면 플레이 콘솔이 포그라운드 서비스 선언을 요구할 수 있음) -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" tools:node="remove" />
     <application
+        android:allowBackup="false"
         android:label="데일리컷"
         android:name="${applicationName}"
         android:icon="@mipmap/launcher_icon">
@@ -29,6 +34,7 @@
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
         </activity>
+        <service android:name="androidx.work.impl.foreground.SystemForegroundService" tools:node="remove" />
         <!-- 홈 화면 위젯 4종(WeatherWidget.kt): 오늘 한눈에 · 날씨 · 장바구니 · 청약 -->
         <receiver
             android:name=".WeatherWidget"
