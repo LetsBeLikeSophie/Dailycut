@@ -5,8 +5,18 @@ import '../../theme.dart';
 
 /// 안드로이드·iOS 앱: 구글 애드몹 배너(2026-10-18).
 /// 앱 시작 때 한 번 초기화하고, 광고가 실제로 불러와졌을 때만 칸(라벨 "광고" 포함)을 보임 — 못 받으면 빈 칸이 남지 않음.
+///
+/// 테스트 기기(2026-10-19): 실제 광고 ID로 빌드해도 내 폰에서는 "테스트 광고"가 나오게(내 광고를 눌러 계정이 정지되는 일을 막음).
+/// 빌드할 때 `--dart-define=ADMOB_TEST_DEVICES=기기ID1,기기ID2`로 줌(쉼표로 여러 개). 기기 ID는 실제 광고 ID로 처음 광고를 요청했을 때
+/// `adb logcat | findstr "setTestDeviceIds"` 로 나오는 32자리 값(또는 애드몹 콘솔 설정의 테스트 기기). 출시용 빌드에는 넣지 말 것.
+const _testDevices = String.fromEnvironment('ADMOB_TEST_DEVICES');
+
 Future<void> initAds() async {
   try {
+    final ids = [for (final d in _testDevices.split(',')) if (d.trim().isNotEmpty) d.trim()];
+    if (ids.isNotEmpty) {
+      await MobileAds.instance.updateRequestConfiguration(RequestConfiguration(testDeviceIds: ids));
+    }
     await MobileAds.instance.initialize();
   } catch (_) {}
 }
