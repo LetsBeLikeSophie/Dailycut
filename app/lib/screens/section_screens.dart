@@ -18,6 +18,7 @@ import '../widgets/culture_calendar.dart';
 import '../widgets/gov_support.dart';
 import '../widgets/market_list.dart';
 import '../widgets/shopping_catalog.dart';
+import '../widgets/sources_info.dart';
 
 /// 생활/문화/혜택/AI 네 섹션 화면 — 모두 "future 하나 받아서 위에서
 /// 아래로 보여주기" 구조가 같아서 하나의 뼈대 위젯으로 묶고, 섹션마다
@@ -417,6 +418,13 @@ Widget benefitsScreen(ApiClient api, Region region, BuildContext shellContext) =
                   _ => GovSupportSection(api: api),
                 },
                 if (index == 0) const AdSlot(),
+                // 2026-10-21: 플레이 "혼동을 야기하는 주장" 검토(정부 정보의 원본 출처 링크 누락) 대응 — 구역마다 공식 사이트 링크를 눈에 보이게 둠
+                OfficialSourceLinks(links: switch (index) {
+                  1 => const [('청약홈(applyhome.co.kr)', 'https://www.applyhome.co.kr'), ('공공데이터포털(data.go.kr)', 'https://www.data.go.kr')],
+                  2 => const [('마이홈포털(myhome.go.kr)', 'https://www.myhome.go.kr'), ('LH청약플러스(apply.lh.or.kr)', 'https://apply.lh.or.kr')],
+                  3 => const [('서민금융진흥원(kinfa.or.kr)', 'https://www.kinfa.or.kr'), ('공공데이터포털(data.go.kr)', 'https://www.data.go.kr')],
+                  _ => const [('정부24(gov.kr)', 'https://www.gov.kr'), ('공공데이터포털(data.go.kr)', 'https://www.data.go.kr')],
+                }),
               ],
             );
           },

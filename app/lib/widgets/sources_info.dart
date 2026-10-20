@@ -8,23 +8,75 @@ import 'ad_slot.dart';
 
 /// 앱이 쓰는 공공데이터·외부 데이터 출처(이용 조건 표기 포함). 화면마다 출처를 길게 적는 대신
 /// 작은 ⓘ → 이 시트에서 한 번에 보여줌. 새 데이터를 붙이면 여기에 한 줄 추가.
-const kAllSources = <(String, String)>[
-  ('기상청', '단기예보·중기예보·초단기실황 (공공누리 1유형: 출처표시)'),
-  ('한국환경공단 에어코리아', '실시간 대기오염 측정값 — 측정소 한 곳의 값과 등급을 가공 없이 표시 (공공누리 3유형: 출처표시·변경금지)'),
-  ('한국천문연구원', '특일(공휴일)·24절기·일출몰 정보'),
-  ('한국농수산식품유통공사(aT)', '농축수산물 소매가격(상품 등급 평균)'),
-  ('행정안전부 공공서비스(혜택) 정보', '정부24·보조금24의 지원 서비스 정보와 지원조건'),
-  ('한국부동산원 청약홈', 'APT·무순위·오피스텔·공공지원 민간임대 분양공고'),
-  ('국토교통부 마이홈포털 · 한국토지주택공사', '공공임대 입주자 모집공고'),
-  ('서민금융진흥원', '대출상품 한눈에(서민금융 상품 정보)'),
-  ('식품의약품안전처 식품영양성분DB', '장보기 품목의 열량·영양(생것, 100g 기준)'),
-  ('축산물품질평가원', '축산물유통정보 — 소·돼지 부위별 소비자가격(평년 대비)'),
-  ('한국관광공사 TourAPI', '축제·행사 정보, 시장 사진'),
-  ('한국관광공사 관광지 집중률 방문자 추이 예측', '관광지별 예상 방문 집중도(오늘부터 약 30일 뒤까지)'),
-  ('한국문화정보원 문화포털', '전시·공연 정보(사진은 쓰지 않음)'),
-  ('소상공인시장진흥공단', '전통시장 현황'),
-  ('Wikimedia Commons', '채소·과일 사진 (작가·라이선스는 사진 아래에 표시)'),
+///
+/// 2026-10-21: 구글 플레이 "혼동을 야기하는 주장" 검토에서 "정부 정보의 원본 출처 링크 누락"으로 거부돼, 기관마다 공식 사이트 주소를 붙이고
+/// (세 번째 값, 눌러서 열림) 시트 맨 위에 "정부·공공기관과 관계없는 민간 서비스" 안내를 둠. 새 데이터를 붙일 땐 공식 사이트 주소도 같이 적을 것.
+const kAllSources = <(String, String, String)>[
+  ('기상청', '단기예보·중기예보·초단기실황 (공공누리 1유형: 출처표시)', 'https://www.weather.go.kr'),
+  ('한국환경공단 에어코리아', '실시간 대기오염 측정값 — 측정소 한 곳의 값과 등급을 가공 없이 표시 (공공누리 3유형: 출처표시·변경금지)', 'https://www.airkorea.or.kr'),
+  ('한국천문연구원', '특일(공휴일)·24절기·일출몰 정보', 'https://www.kasi.re.kr'),
+  ('한국농수산식품유통공사(aT)', '농축수산물 소매가격(상품 등급 평균)', 'https://www.at.or.kr'),
+  ('행정안전부 공공서비스(혜택) 정보', '정부24·보조금24의 지원 서비스 정보와 지원조건', 'https://www.gov.kr'),
+  ('한국부동산원 청약홈', 'APT·무순위·오피스텔·공공지원 민간임대 분양공고', 'https://www.applyhome.co.kr'),
+  ('국토교통부 마이홈포털 · 한국토지주택공사', '공공임대 입주자 모집공고', 'https://www.myhome.go.kr'),
+  ('서민금융진흥원', '대출상품 한눈에(서민금융 상품 정보)', 'https://www.kinfa.or.kr'),
+  ('식품의약품안전처 식품영양성분DB', '장보기 품목의 열량·영양(생것, 100g 기준)', 'https://www.mfds.go.kr'),
+  ('축산물품질평가원', '축산물유통정보 — 소·돼지 부위별 소비자가격(평년 대비)', 'https://www.ekape.or.kr'),
+  ('한국관광공사 TourAPI', '축제·행사 정보, 시장 사진', 'https://korean.visitkorea.or.kr'),
+  ('한국관광공사 관광지 집중률 방문자 추이 예측', '관광지별 예상 방문 집중도(오늘부터 약 30일 뒤까지)', 'https://knto.or.kr'),
+  ('한국문화정보원 문화포털', '전시·공연 정보(사진은 쓰지 않음)', 'https://www.culture.go.kr'),
+  ('소상공인시장진흥공단', '전통시장 현황', 'https://www.semas.or.kr'),
+  ('Wikimedia Commons', '채소·과일 사진 (작가·라이선스는 사진 아래에 표시)', 'https://commons.wikimedia.org'),
+  ('공공데이터포털', '위 데이터를 내려받는 정부 공식 포털(개방된 공공데이터의 원본 목록)', 'https://www.data.go.kr'),
 ];
+
+/// 눌러서 외부(브라우저)로 여는 밑줄 링크 한 줄.
+class SourceLink extends StatelessWidget {
+  const SourceLink(this.label, this.url, {super.key, this.size = 13});
+
+  final String label;
+  final String url;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) => GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () {
+          Analytics.instance.track('life_open', 'source-link');
+          launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Text(label, style: TextStyle(fontSize: size, color: AppColors.ink, decoration: TextDecoration.underline, height: 1.4)),
+        ),
+      );
+}
+
+/// 정부 정보를 보여 주는 구역 맨 아래에 두는 "원본 확인" 링크 모음 + 민간 서비스 안내.
+class OfficialSourceLinks extends StatelessWidget {
+  const OfficialSourceLinks({super.key, required this.links});
+
+  /// (이름, 공식 사이트 주소)
+  final List<(String, String)> links;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+        padding: const EdgeInsets.only(top: 24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('원본은 공식 사이트에서 확인하세요', style: TextStyle(fontSize: 11, color: AppColors.inkSoft, height: 1.6)),
+            const SizedBox(height: 2),
+            Wrap(
+              spacing: 16,
+              children: [for (final (name, url) in links) SourceLink(name, url)],
+            ),
+            const SizedBox(height: 4),
+            const Text('데일리컷은 정부·공공기관과 관계없는 민간 서비스예요.', style: TextStyle(fontSize: 11, color: AppColors.inkSoft, height: 1.6)),
+          ],
+        ),
+      );
+}
 
 /// [current]가 있으면 "이 화면" 출처를 맨 위에, 그 아래 앱 전체 출처 목록.
 Future<void> showSourcesSheet(BuildContext context, {String? current}) {
@@ -42,6 +94,11 @@ Future<void> showSourcesSheet(BuildContext context, {String? current}) {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('데이터 출처', style: AppTheme.displaySerif(size: 24, fontWeight: FontWeight.w700)),
+            const SizedBox(height: 8),
+            const Text(
+              '데일리컷은 정부·공공기관과 관계없는 민간 서비스예요. 정부·공공기관이 제공하거나 보증하는 앱이 아니고, 공개된 공공데이터를 모아 보여 드려요. 원본은 아래 각 기관의 공식 사이트에서 확인할 수 있어요.',
+              style: TextStyle(fontSize: 13, color: AppColors.ink, height: 1.6),
+            ),
             if (current != null) ...[
               const SizedBox(height: 16),
               Text('이 화면', style: AppTheme.subheading),
@@ -53,7 +110,7 @@ Future<void> showSourcesSheet(BuildContext context, {String? current}) {
             const SizedBox(height: 22),
             Text('데일리컷이 쓰는 데이터', style: AppTheme.subheading),
             const SizedBox(height: 8),
-            for (final (name, desc) in kAllSources)
+            for (final (name, desc, url) in kAllSources)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 6),
                 child: Column(
@@ -62,6 +119,7 @@ Future<void> showSourcesSheet(BuildContext context, {String? current}) {
                     Text(name, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
                     const SizedBox(height: 2),
                     Text(desc, style: const TextStyle(fontSize: 13, color: AppColors.inkSoft, height: 1.5)),
+                    SourceLink('${Uri.parse(url).host.replaceFirst('www.', '')} ›', url, size: 13),
                   ],
                 ),
               ),
