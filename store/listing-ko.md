@@ -9,7 +9,7 @@
 
 데일리컷은 정부·공공기관이 공개한 데이터를 매일 모아, 오늘 필요한 것만 한눈에 보여 주는 생활 앱이에요.
 로그인 없이 바로 쓰고, 내 동네(시도·시군구)에 맞춰 보여 줘요.
-※ 데일리컷은 정부·공공기관과 관계없는 민간 서비스예요. 원본 출처 링크는 아래 "알려 드려요"에 있어요.
+※ 데일리컷은 정부·공공기관과 관계없는 민간 서비스예요. 모든 데이터의 출처와 공식 사이트 링크는 아래 "데이터 출처"에 있어요.
 
 ■ 투데이
 오늘 날씨와 미세먼지, 옷차림 추천, 시간대별·주간 예보를 한 화면에. 빨래·세차하기 좋은 날 같은 생활지수도 근거와 함께 보여 줘요.
@@ -37,18 +37,25 @@
 ■ 알려 드려요
 - 데일리컷은 정부·공공기관과 관계없는 민간 서비스예요. 정부·공공기관이 제공하거나 보증하는 앱이 아니에요.
 - 정부 혜택·청약·대출 정보는 참고용이에요. 신청 자격과 일정은 반드시 해당 기관의 공고에서 확인해 주세요.
-- 원본 정보는 아래 정부·공공기관 공식 사이트에서 확인할 수 있어요.
-  · 정부24(정부 지원·혜택): https://www.gov.kr
-  · 청약홈(청약): https://www.applyhome.co.kr
-  · 마이홈포털(공공임대): https://www.myhome.go.kr
-  · 서민금융진흥원(대출): https://www.kinfa.or.kr
-  · 기상청(날씨): https://www.weather.go.kr
-  · 에어코리아(미세먼지): https://www.airkorea.or.kr
-  · 식품의약품안전처(영양): https://www.mfds.go.kr
-  · 한국관광공사(관광·행사): https://korean.visitkorea.or.kr
-  · 문화포털(전시·공연): https://www.culture.go.kr
-  · 공공데이터포털(데이터 원본 목록): https://www.data.go.kr
 - 광고가 포함돼 있어요.
+
+■ 데이터 출처 (앱이 보여 주는 모든 정보의 원본 · 공식 사이트)
+- 날씨·생활지수·지진: 기상청 https://www.weather.go.kr
+- 미세먼지: 한국환경공단 에어코리아 https://www.airkorea.or.kr
+- 공휴일·절기·일출몰: 한국천문연구원 https://www.kasi.re.kr
+- 농수산물 소매가격: 한국농수산식품유통공사(aT) https://www.at.or.kr
+- 소·돼지 부위별 가격: 축산물품질평가원 https://www.ekape.or.kr
+- 식품 영양성분: 식품의약품안전처 https://www.mfds.go.kr
+- 정부 지원·혜택: 행정안전부 정부24 https://www.gov.kr
+- 청약 공고: 한국부동산원 청약홈 https://www.applyhome.co.kr
+- 공공임대 공고: 국토교통부 마이홈포털 https://www.myhome.go.kr / 한국토지주택공사 LH청약플러스 https://apply.lh.or.kr
+- 서민 대출 상품: 서민금융진흥원 https://www.kinfa.or.kr
+- 축제·행사, 관광지 혼잡 예측, 캠핑, 반려동물 동반 여행, 웰니스, 걷기길: 한국관광공사 https://korean.visitkorea.or.kr (고캠핑 https://gocamping.or.kr / 두루누비 https://www.durunubi.kr)
+- 전시·공연: 한국문화정보원 문화포털 https://www.culture.go.kr
+- 전통시장: 소상공인시장진흥공단 https://www.semas.or.kr
+- 공공도서관 열람실: 지역정보개발원 https://www.klid.or.kr
+- 위 데이터를 내려받는 정부 포털: 공공데이터포털 https://www.data.go.kr
+- 채소·과일 사진: 위키미디어 커먼즈 https://commons.wikimedia.org (정부 데이터가 아니며, 작가·라이선스는 앱에 표시)
 
 문의: dailycut@itssophie.dev
 개인정보처리방침: https://itssophie.dev/dailycut/privacy.html
