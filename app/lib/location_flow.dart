@@ -52,6 +52,10 @@ Future<void> offerLocationOnFirstRun(BuildContext context) async {
                 child: Center(child: Text('직접 고를게요', style: TextStyle(fontSize: 13, color: AppColors.inkSoft, decoration: TextDecoration.underline))),
               ),
             ),
+            // 2026-10-24: 익명 통계를 처음부터 투명하게 알림(팝업을 더 늘리지 않고 이 시트 맨 아래 한 줄로). 끄는 곳은 맨 위 ⓘ의 출처 시트.
+            const Center(
+              child: Text('화면 사용 횟수만 익명으로 집계해요. 맨 위 ⓘ에서 끌 수 있어요.', textAlign: TextAlign.center, style: TextStyle(fontSize: 11, color: AppColors.inkSoft, height: 1.5)),
+            ),
           ],
         ),
       ),
