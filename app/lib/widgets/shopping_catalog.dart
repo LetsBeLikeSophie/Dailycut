@@ -88,7 +88,7 @@ class _ShoppingCatalogState extends State<ShoppingCatalog> {
           padding: const EdgeInsets.only(top: 10, bottom: 6),
           child: Row(
             children: [
-              _FilterToggle(
+              CheckToggle(
                 label: '제철만',
                 count: seasonCount,
                 on: _onlySeason,
@@ -98,7 +98,7 @@ class _ShoppingCatalogState extends State<ShoppingCatalog> {
                 }),
               ),
               const SizedBox(width: 18),
-              _FilterToggle(
+              CheckToggle(
                 label: '담은 것만',
                 count: mineCount,
                 on: _onlyMine,
@@ -222,40 +222,6 @@ class _BasketButton extends StatelessWidget {
             size: 22,
             color: inBasket ? color : AppColors.inkSoft,
           ),
-        ),
-      ),
-    );
-  }
-}
-
-/// 체크 모양 걸러 보기 스위치: ☐ 제철만 7
-class _FilterToggle extends StatelessWidget {
-  const _FilterToggle({required this.label, required this.count, required this.on, required this.onTap, this.icon, this.iconColor});
-
-  final String label;
-  final int count;
-  final bool on;
-  final VoidCallback onTap;
-  final IconData? icon;
-  final Color? iconColor;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(on ? Icons.check_box : Icons.check_box_outline_blank, size: 20, color: AppColors.ink),
-            const SizedBox(width: 6),
-            if (icon != null) ...[Icon(icon, size: 15, color: iconColor), const SizedBox(width: 3)],
-            Text(label, style: TextStyle(fontSize: 13, fontWeight: on ? FontWeight.w700 : FontWeight.w400)),
-            const SizedBox(width: 5),
-            Text('$count', style: const TextStyle(fontSize: 11, color: AppColors.inkSoft)),
-          ],
         ),
       ),
     );

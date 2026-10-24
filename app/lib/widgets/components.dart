@@ -1588,6 +1588,41 @@ class SheetFrame extends StatelessWidget {
 
 /// 앱 공용 알약 칩(고르기/걸러 보기용). 선택되면 검정 바탕. 2026-10-16: 화면마다 따로 만들던 칩(_Pill·_Chip·_MiniPill)을 이것 하나로 합침.
 ///  - dotColor: 앞에 붙는 색 점(달력의 종류 칩) / large: 16글자·넉넉한 칩(지역 고르기) / emphasized: 선택 안 됐어도 테두리·글씨 진하게
+/// 체크 모양 켜기/끄기 한 줄(2026-10-24, 장보기 시세의 `_FilterToggle`을 공용으로 뺌): ☐ 제철만 7.
+/// 출처 시트의 "익명 통계 보내기"는 Material 기본 스위치(회색 트랙)가 앱 모양과 안 맞아서 이걸로 바꿈.
+/// 알약 칩(PillChip)은 "여러 개 중 고르기", 이건 "하나를 켜고 끄기"에 씀.
+class CheckToggle extends StatelessWidget {
+  const CheckToggle({super.key, required this.label, required this.on, required this.onTap, this.count, this.icon, this.iconColor});
+
+  final String label;
+  final bool on;
+  final VoidCallback onTap;
+  final int? count; // 있으면 라벨 뒤에 작은 숫자
+  final IconData? icon;
+  final Color? iconColor;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(on ? Icons.check_box : Icons.check_box_outline_blank, size: 20, color: AppColors.ink),
+            const SizedBox(width: 6),
+            if (icon != null) ...[Icon(icon, size: 15, color: iconColor), const SizedBox(width: 3)],
+            Text(label, style: TextStyle(fontSize: 13, fontWeight: on ? FontWeight.w700 : FontWeight.w400)),
+            if (count != null) ...[const SizedBox(width: 5), Text('$count', style: const TextStyle(fontSize: 11, color: AppColors.inkSoft))],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 class PillChip extends StatelessWidget {
   const PillChip({super.key, required this.label, required this.selected, required this.onTap, this.vertical = 8, this.dotColor, this.large = false, this.emphasized = false});
 

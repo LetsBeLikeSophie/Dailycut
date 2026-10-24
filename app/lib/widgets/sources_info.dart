@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../analytics.dart';
 import '../theme.dart';
 import 'ad_slot.dart';
+import 'components.dart' show CheckToggle;
 
 /// 앱이 쓰는 공공데이터·외부 데이터 출처(이용 조건 표기 포함). 화면마다 출처를 길게 적는 대신
 /// 작은 ⓘ → 이 시트에서 한 번에 보여줌. 새 데이터를 붙이면 여기에 한 줄 추가.
@@ -34,11 +35,12 @@ const kAllSources = <(String, String, String)>[
 
 /// 눌러서 외부(브라우저)로 여는 밑줄 링크 한 줄.
 class SourceLink extends StatelessWidget {
-  const SourceLink(this.label, this.url, {super.key, this.size = 13});
+  const SourceLink(this.label, this.url, {super.key, this.size = 13, this.bold = false});
 
   final String label;
   final String url;
   final double size;
+  final bool bold;
 
   @override
   Widget build(BuildContext context) => GestureDetector(
@@ -49,7 +51,7 @@ class SourceLink extends StatelessWidget {
         },
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 4),
-          child: Text(label, style: TextStyle(fontSize: size, color: AppColors.ink, decoration: TextDecoration.underline, height: 1.4)),
+          child: Text(label, style: TextStyle(fontSize: size, color: AppColors.ink, fontWeight: bold ? FontWeight.w700 : FontWeight.w400, decoration: TextDecoration.underline, height: 1.4)),
         ),
       );
 }
@@ -116,10 +118,9 @@ Future<void> showSourcesSheet(BuildContext context, {String? current}) {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(name, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
-                    const SizedBox(height: 2),
+                    // 2026-10-24: 기관 이름 자체가 공식 사이트 링크(주소 글자를 한 줄 더 보여 주지 않음 — 항목당 두 줄 차지해서)
+                    SourceLink(name, url, bold: true),
                     Text(desc, style: const TextStyle(fontSize: 13, color: AppColors.inkSoft, height: 1.5)),
-                    SourceLink('${Uri.parse(url).host.replaceFirst('www.', '')} ›', url, size: 13),
                   ],
                 ),
               ),
@@ -192,14 +193,12 @@ class _AnalyticsSwitchState extends State<_AnalyticsSwitch> {
 
   @override
   Widget build(BuildContext context) {
-    return SwitchListTile(
-      contentPadding: EdgeInsets.zero,
-      title: const Text('익명 통계 보내기', style: TextStyle(fontSize: 13)),
-      value: _on,
-      activeThumbColor: AppColors.ink,
-      onChanged: (v) {
-        setState(() => _on = v);
-        Analytics.instance.setEnabled(v);
+    return CheckToggle(
+      label: '익명 통계 보내기',
+      on: _on,
+      onTap: () {
+        setState(() => _on = !_on);
+        Analytics.instance.setEnabled(_on);
       },
     );
   }
