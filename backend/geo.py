@@ -188,7 +188,7 @@ def nearest_sido(lat: float, lon: float) -> str:
     return min(REGIONS, key=lambda r: haversine_km((lat, lon), (r[3], r[4])))[0]
 
 
-# ---------------- 시군구 지역 마스터 (data/regions.json, tools_build_regions.py로 생성) ----------------
+# ---------------- 시군구 지역 마스터 (data/regions.json, tools/build_regions.py로 생성) ----------------
 import json as _json
 from functools import lru_cache as _lru
 from pathlib import Path as _Path

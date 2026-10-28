@@ -12,6 +12,9 @@ import json
 import sys
 from pathlib import Path
 
+import sys
+from pathlib import Path as _P
+sys.path.insert(0, str(_P(__file__).resolve().parent.parent))  # backend/ (config·geo·sources)
 import geo
 
 src = Path(sys.argv[1])
@@ -43,7 +46,7 @@ for r in rows:
         }
     )
 
-dst = Path(__file__).with_name("data") / "traditional_markets.json"
+dst = Path(__file__).resolve().parent.parent / "data" / "traditional_markets.json"
 dst.parent.mkdir(exist_ok=True)
 dst.write_text(json.dumps({"source": "소상공인시장진흥공단 전통시장현황(2026-08-04 기준)", "markets": out}, ensure_ascii=False), encoding="utf-8")
 from collections import Counter

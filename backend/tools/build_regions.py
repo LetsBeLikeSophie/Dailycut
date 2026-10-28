@@ -12,6 +12,9 @@ import json
 from collections import defaultdict
 from pathlib import Path
 
+import sys
+from pathlib import Path as _P
+sys.path.insert(0, str(_P(__file__).resolve().parent.parent))  # backend/ (config·geo·sources)
 import config
 import geo
 from sources import _http
@@ -56,6 +59,6 @@ for code, name, _air, _la, _lo, _p in geo.REGIONS:
         )
     sidos.append({"code": code, "name": name, "sigungu": sgs})
 
-dst = Path(__file__).with_name("data") / "regions.json"
+dst = Path(__file__).resolve().parent.parent / "data" / "regions.json"
 dst.write_text(json.dumps({"source": "에어코리아 측정소 주소·좌표로 생성", "sidos": sidos}, ensure_ascii=False), encoding="utf-8")
 print(sum(len(s["sigungu"]) for s in sidos), "개 시군구 →", dst)

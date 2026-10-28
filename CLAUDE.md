@@ -1,536 +1,100 @@
-# 프로젝트 컨텍스트 (Claude Code용)
+# 데일리컷 — 프로젝트 컨텍스트 (Claude Code용)
+
+> 2026-10-28 정리: 예전에 한 파일에 쌓이던 기록(536줄)은 `docs/` 주제별 파일로 옮겼음(내용 그대로). 이 파일은 **매 세션 읽히므로 요약만** 두고, 자세한 건 아래 "문서 지도"의 파일을 열어 볼 것.
 
 ## 이게 뭔지
 
-**데일리컷** — 공공 데이터(시세·문화·금리)를 매일 모아 카드로 보여주는 큐레이션
-앱. 직접 글을 쓰지 않고, 공공 API를 받아 카드로 만들고 AI가 짧은 해설을 붙여요.
-이슈팝(뉴스 트렌드 클러스터링 앱, `C:\Users\lllso\Downloads\news-trend-app_1_new`)
-을 만들다가 나온 아이디어인데, 콘텐츠 성격·소싱 방식·업데이트 주기가 너무 달라서
-완전히 별도 앱으로 분리했어요. 이슈팝 코드는 하나도 재사용 안 함 — 새로 설계.
+**데일리컷** — 공공데이터(날씨·시세·행사·나들이·정부 혜택)를 매일 모아 보여 주는 생활 큐레이션 앱. 직접 쓴 글이 아니라 공공 API를 받아 보여 줌. 이슈팝에서 나온 아이디어지만 코드는 재사용 안 한 별도 앱.
+Flutter(웹 + 안드로이드) + FastAPI(SQLite). 이름은 "데일리컷"으로 확정(2026-09-29, 기획 문서에 남은 "moum"은 무시).
+- 기획 문서: https://claude.ai/artifact/U8h2Ukqj5FfBkLaPGVgtBZ · 디자인 캔버스: https://claude.ai/artifact/3oFPf9sqBPZKhk5J43bvz5
+- 사이트 https://itssophie.dev/dailycut/ · API https://itssophie.dev/dailycut-api/ · 저장소 `github.com/LetsBeLikeSophie/Dailycut`(SSH, `master`)
+- **현재(2026-10-28)**: 실데이터 연동 끝, 웹 배포 중, 안드로이드는 **Play 비공개 테스트 단계**(1.3.5 승인·게시 10/27, 1.3.6 번들 준비). 상세는 "출시 상태" 절.
 
-- 기획 문서: https://claude.ai/artifact/U8h2Ukqj5FfBkLaPGVgtBZ
-- 디자인 캔버스: https://claude.ai/artifact/3oFPf9sqBPZKhk5J43bvz5 ("확정안 v6" 페이지가 최신)
+## 폴더 지도
 
-**이름**: "데일리컷"으로 확정(2026-09-29). 기획 문서 안에는 아직 시안용 가제목
-"moum"으로 남아있는 곳이 있을 수 있음 — 무시하고 데일리컷으로 통일.
+```
+app/            Flutter 앱(웹+안드로이드+iOS)
+  lib/            main·boot·region·api_client·analytics … / screens/(탭 화면) / widgets/(공용 부품·기능별 위젯)
+  assets/         fonts(한글 서브셋)·icon(원본)·produce(농산물 사진 62장)·shapes(탭 도형)
+  android/        매니페스트·위젯(Kotlin)·서명 설정(key.properties는 git 밖)
+  web/            index.html·about/privacy/download.html·아이콘(생성물)
+  tools/          build_release.sh(스토어 번들)·make_fonts.py(글꼴 서브셋)
+  test/           단위·골든 테스트
+backend/        FastAPI
+  api.py          라우트 / jobs.py·store.py·config.py·geo.py
+  sources/        소스별 수집기(weather·market·culture·places·benefits·gov_support·livestock·outing …)
+  tools/          일회성 데이터 생성 스크립트 9+1개(build_*·guide_*·photo_candidates·build_nutrition)
+  data/           편집·생성 데이터(regions·produce_guide·nutrition·traditional_markets …)
+store/          Play 등록 자료(listing-ko.md = 설명 원본, 아이콘·대표 이미지·스크린샷). *.aab는 git 제외 — store/README.md
+docs/           주제별 상세 기록(아래 문서 지도)
+dist/           (git 제외) 테스트 APK 보관
+scratch_fonts/  (git 제외) 글꼴 서브셋을 만들 때 쓰는 원본 variable 폰트
+.claude/        launch.json (dailycut-web은 실행 위치가 app/가 아니면 "No pubspec.yaml"로 실패 — 필요하면 app/에서 `flutter run -d chrome --web-port 8620`)
+```
 
-## 구조
+## 자주 쓰는 명령 (Windows Git Bash, 작업 위치 주의)
 
-- `backend/` — FastAPI (`api.py`). `uvicorn api:app --reload --port 8010`으로 실행.
-  지금은 전부 스텁 데이터 — 각 엔드포인트 위 TODO 주석에 실제 연동할 공공 API
-  적어둠(KAMIS/축산물유통정보/KOSIS/KOBIS/KOPIS/TourAPI/ECOS 등).
-- `app/` — Flutter. `flutter run -d chrome` 또는 `.claude/launch.json`의
-  `dailycut-web` 설정으로 실행(Browser pane에서 `preview_start name: dailycut-web`).
-  - `lib/theme.dart` — 디자인 v6 토큰(색·섹션 테마·폰트). 색 바꾸려면 여기만 고치면 됨.
-  - `lib/widgets/components.dart` — 기획 문서 "컴포넌트" 표의 부품들
-    (SectionHeader, HeroCard, StatTile, RankRow, WeatherHero, SeasonalHero,
-    ChartCard). 화면은 이 조합으로만 만듦. ChartCard의 라인 차트는 새 패키지
-    없이 CustomPainter로 직접 그림. HeroCard/ChartCard는 `showHeader: false`로
-    SectionScreen 안에서 쓸 때 섹션 헤더 중복을 끔(투데이에서만 true 유지).
-  - `lib/screens/` — 투데이/생활/문화/머니/AI 다섯 화면("생활"의 Dart
-    파일·함수명은 과거 이름 그대로 market/marketScreen — 화면에 보이는
-    한글 라벨만 "생활"로 바꿈, enum 이름은 안 바꿈).
-  - `lib/api_client.dart` — 백엔드 클라이언트. 기본 `http://127.0.0.1:8010`,
-    `--dart-define=API_BASE_URL=...`로 오버라이드(이슈팝과 같은 패턴).
+| 하는 일 | 명령 |
+|---|---|
+| 백엔드 실행 | `cd backend && uvicorn api:app --reload --port 8010` (키 없이도 돎, 키는 `backend/.env` — git 밖) |
+| 백엔드 점검 | `python backend/test_jobs.py` · `python backend/test_prune.py` |
+| 앱 점검 | `cd app && flutter analyze && flutter test` |
+| 웹 빌드 | `cd app && MSYS_NO_PATHCONV=1 flutter build web --release --base-href /dailycut/ --dart-define=API_BASE_URL=https://itssophie.dev/dailycut-api` (`MSYS_NO_PATHCONV=1` 필수) |
+| 웹 배포 | `tar czf - -C build/web . \| ssh -i <키> ubuntu@168.110.25.49 "sudo tar xzf - -C /var/www/dailycut-app/"` (덮어쓰기라 `dailycut.apk`는 유지) |
+| 백엔드 배포 | 바뀐 파일을 `scp`로 `/home/ubuntu/dailycut-backend/`에 올리고 `sudo systemctl restart dailycut-api`. **`.env`는 사용자 확인 후에만** |
+| 테스트 APK | `flutter build apk --release --dart-define=API_BASE_URL=… --dart-define=ADMOB_BANNER_ID=ca-app-pub-3940256099942544/6300978111` → `dist/` → 서버 `/var/www/dailycut-app/dailycut.apk`, 그리고 **`app/web/download.html`의 버전·크기·SHA-256을 먼저 고친 뒤 웹 빌드** |
+| 스토어 번들 | `bash app/tools/build_release.sh appbundle test` (비공개 테스트용, 광고 단위만 구글 테스트 ID) / `… appbundle`(프로덕션, 실제 ID). 버전 코드는 올릴 때마다 `pubspec.yaml`의 `+N`을 올릴 것 |
+| 아이콘 | `app/assets/icon/*`를 바꾸면 **반드시** `cd app && dart run flutter_launcher_icons` (안 돌려서 옛 아이콘이 나간 적 있음) |
+| 글꼴 | `app/tools/make_fonts.py`(원본은 `scratch_fonts/`), 파일 이름의 `-rN`을 올리고 `index.html` preload도 같이 |
 
-## 배포 (2026-09-30)
+SSH 키·서버 정보는 사용자 전역 CLAUDE.md에 있음. 서버·nginx·DB 백업·성능 상세는 `docs/ops-server.md`.
 
-이슈팝과 같은 서버(Oracle Cloud, 168.110.25.49)에 얹음 — GitHub repo(코드)와
-배포 서버는 별개: 이 저장소는 `github.com/LetsBeLikeSophie/Dailycut`에 SSH로
-푸시, 서버 배포는 아래처럼 별도로 함(포트폴리오의 다른 프로젝트 — Cortex 등 —
-와 같은 패턴, `itssophie.dev` 서브패스 방식).
+## 꼭 지킬 것
 
-- **웹**: https://itssophie.dev/dailycut/ — 정적 파일을 `/var/www/dailycut-app/`에
-  올림. `flutter build web --release --base-href /dailycut/
-  --dart-define=API_BASE_URL=https://itssophie.dev/dailycut-api`로 빌드(Git
-  Bash에서는 `MSYS_NO_PATHCONV=1`을 꼭 붙여야 함 — 안 붙이면 `/dailycut/`가
-  `C:/Program Files/Git/dailycut/`로 잘못 치환돼서 빌드가 실패함).
-- **API**: https://itssophie.dev/dailycut-api/ — `/home/ubuntu/dailycut-backend/`
-  에서 systemd 서비스 `dailycut-api`(포트 8011, 127.0.0.1 바인딩, nginx가
-  `/dailycut-api/` → `http://127.0.0.1:8011/`로 프록시)로 상시 실행. 코드
-  갱신 시: `scp backend/api.py`로 덮어쓰고 `sudo systemctl restart
-  dailycut-api`.
-- **nginx**: `/etc/nginx/sites-available/itssophie.dev`에 `/dailycut/`,
-  `/dailycut-api/` location 블록 추가함(Cortex 항목 바로 아래). 수정 전 항상
-  백업(`sudo cp ... .bak-$(date +%Y%m%d%H%M%S)`) 후 `sudo nginx -t`로 검증하고
-  `sudo systemctl reload nginx`.
-- **포트폴리오 카드**: `C:\Projects\dailycut`와는 별개 저장소인
-  `C:\Projects\portfolio`(github.com/LetsBeLikeSophie/portfolio, 기본 브랜치
-  `main`)의 `index.html`에 Dailycut 카드를 추가함(Cortex처럼 "🚧 개발 중"
-  태그 — 아직 전부 스텁 데이터라서 "Live"라고 하기엔 이름). 카드 갱신 시 그
-  저장소에서 커밋+푸시하고, `/var/www/portfolio/index.html`로도 따로 scp해야
-  실제 사이트에 반영됨(포트폴리오 자체 README의 "배포" 항목 참고).
+**디자인**(`docs/design-rules.md`): 상자 없이 여백·가는 선 / 큰 도형은 화면 맨 위 하나 / 섹션 색은 도형·형광펜·차트 끝점에만 / 세리프는 한 문장 제목과 큰 숫자에만 / 목록은 `ListLine`·`RankRow` / 글자 크기 **11·13·16·24·60**만.
+UI 약속: 여러 개 중 고르기 = `PillChip`, 하나 켜고 끄기 = `CheckToggle`(Material Switch 금지), 부가 설명은 ⓘ(`InfoIconButton`·`SheetFrame.infoLines`), 상세 시트 틀은 `SheetFrame`, 새 가로 제스처는 `SwipeDetector`.
+저장값은 `LocalPrefs.stringSync/listSync`로 첫 프레임부터(비동기 읽고 setState 금지), 같은 요청은 `ApiClient._memoGet`으로 합침.
 
-## 화면 디자인 규칙 (2026-10-10, 카드 → 규칙 기반 전면 개편)
+**데이터·법**(`docs/licensing.md`, `docs/data-sources.md`):
+- 광고(상업 이용) 때문에 **뺀 소스는 허락 없이 되살리지 말 것**: 금융위 지수·상품, 금감원 금융상품, KOBIS, 문화포털 사진. 사진은 위키미디어 CC·관광공사 Type1만.
+- 에어코리아(3유형)는 **가공 금지** — 측정소 한 곳의 원값·등급을 그대로.
+- 위치 좌표는 저장·로그 금지(`/region`은 POST 본문). 통계는 익명 카운터만, 서버에 개인·기기 ID 안 둠. 생년월일·"내 조건"은 기기에만.
+- **새 공공데이터 소스를 붙이면 세 곳을 같이 고칠 것**: ①`store/listing-ko.md`(+Play Console 설명) ②앱 출처 시트 `widgets/sources_info.dart`(`kAllSources`, 공식 사이트 주소 포함) ③`app/web/about.html`. (플레이가 "설명에 모든 출처를 나열하라"며 세 번 거부함)
+- 지역 규칙: 나들이는 시군구에 없으면 상위 지역으로 채우지 않음, 혜택 청약·공공임대는 시도 전체로 채움. UTC 서버라 날짜는 `sources/_kst.py`.
 
-카드 상자 방식(헤더 블록/테두리)은 폐기. 생활 탭 시안(`A 큰 도형 + 문장 제목`을
-다듬은 한 화면)을 앱 전체에 적용함. 여섯 가지 규칙(`widgets/components.dart` 상단
-주석에도 있음):
-1. 상자 없음 — 여백과 가는 선(`AppColors.hair`)으로만 구분, 목록 맨 위만 진한 선.
-2. 그래픽은 화면 맨 위 큰 도형(`PageHero`의 `_Blob`, 섹션 색 PNG를 200px로 오른쪽
-   위에 잘라서 깔고 아주 느리게 흔듦) 하나뿐.
-3. 섹션 색은 도형·제목 형광펜(`HighlightText`)·차트 끝점에만. 오르내림은 의미색
-   (`AppColors.up/down`).
-4. 세리프는 한 문장 제목과 큰 숫자(`BigNumber`)에만. 나머지 전부 산세리프.
-5. 목록은 `ListLine`(이름·작은 추이 `MiniSpark`·값/변동) 한 가지 + `RankRow`,
-   `SeasonRow`(제철 12개 점, 간트차트 대체). 묶음은 `ListSection`.
-6. 글자 크기 11/13/16/24/60 다섯 단계.
-각 탭 화면은 `PageHero`(+ 선택적 뒷면 `back`: 누르면 뒤집힘) + `ListSection` 조합.
-문화는 TOP3, 머니는 다른 통화가 뒷면. 제철 간트차트가 안 어울린다는 문제는 점
-12개로 해결함. 시안 아티팩트: claude.ai/artifact/EknNS7NKWunXRfVFg9rSym
+## 출시 상태 (Play) — 상세는 `docs/play-console.md`·`docs/android-release.md`
 
-## 실데이터 연동 구조 (2026-10-10)
+- 패키지 `com.dailycut.dailycut`, 배포 국가 **대한민국만**, 개인 계정 → 프로덕션 신청 전 **테스터 12명 이상이 14일 참여**(참여한 날부터 셈). 비공개 트랙 "Alpha", 테스터 이메일 목록 44명 + 의견 채널 dailycut@itssophie.dev.
+- **1.3.5(코드 13)**: 실제 애드몹 ID, 10/27 승인·게시. **1.3.6(코드 14) 번들(`store/dailycut-release-1.3.6.aab`)은 테스트 광고 ID로 만들어 둠** — 업로드는 사용자가 직접(크롬 확장은 10MB·파일 선택창 제한으로 번들 첨부 불가).
+- **순서**: 1.3.6 업로드·승인 → **그 뒤에** 테스터에게 참여 링크 전달(승인 전에 보내면 실제 광고가 깔림) → 14일 → 프로덕션 신청(번들은 `real`, 코드 15 이상).
+- 정책: "혼동을 야기하는 주장"으로 **세 번 거부 후 통과**(정부 정보 출처 링크 누락 → 출처 불충분 ×2). 정부 앱 선언은 "아니요"가 맞음. 설명문 원본은 `store/listing-ko.md`.
+- 제출("검토를 위해 변경사항 제출")·번들 업로드·테스터 링크 전달은 **사용자가 직접**. 제 쪽은 입력·저장·확인까지.
+- 광고는 **앱에서만 애드몹**(웹 없음). 실제 광고 ID로 빌드한 걸 나눠 주지 말 것(테스트하다 누르면 무효 클릭 → 계정 제한).
 
-공공데이터포털 승인분 21건이 나와서 백엔드에 수집 구조를 붙임. 키는 `backend/.env`
-(git 추적 안 함, `.env.example`에 이름만)에 있고, 서버에선 환경변수로 넣음.
-- `config.py` .env 읽기(환경변수 우선). `get_key/has_keys`로 "있는지"만 확인, 값은
-  어떤 응답·로그에도 안 냄(requests 오류 메시지도 키가 든 URL을 빼고 던짐 — `sources/_http.py`).
-- `store.py` SQLite(`dailycut.db`, git 제외): `cache`(소스별 마지막 성공 응답), `price_history`
-  (품목·날짜별 가격 — 이번 달 추이의 원천), `job_status`.
-- `jobs.py` 소스 1개 = `Job`. 서버 시작 시 백그라운드 스레드가 주기 실행해서 결과를 캐시에
-  저장. 키가 없으면 건너뛰고 스텁이 그대로 나감. 실패해도 마지막 성공값(last-good) 유지.
-  API 요청마다 외부 API를 부르지 않음(하루 한도가 100~1만 회).
-- `api.py`의 `@live_merge(이름)`이 스텁 응답 위에 수집 필드를 덮어쓰고 `live_keys`에 덮어쓴
-  필드 이름을 넣음 → 앱이 스텁 구간을 "예시 데이터"로 표시(`ListSection(stub: ...)`,
-  출처 문구). `GET /status`에서 작업별 live/waiting/stub 확인.
-- 소스(`backend/sources/`): `weather`(기상청 단기·중기예보+에어코리아+특일, 서울 고정),
-  `market`(농수산식품유통공사 최근일자 소매가, 배추 등 6품목 — **일별 과거값이 비어서 매 실행
-  때 조사일·1일 전·1주 전 값을 price_history에 쌓음, 이번 달 점이 서버 켠 날부터 늘어남**),
-  `culture`(TourAPI 축제 + 문화정보 전시·공연, 서울), `money`(금융위 코스피·코스닥·금·유가,
-  영업일 종가·공공누리 4유형 상업이용금지 주의).
-- 아직 스텁: 박스오피스(KOBIS), 환율·기준금리(ECOS), 예·적금(금융상품 한눈에), 음악(Spotify·
-  YouTube), 축산물·생필품·전통시장, 제철(편집 데이터), AI 섹션. 전력수급(KPX)은 키 등록 오류
-  (resultCode 30) — 승인 반영 지연일 수 있어 다시 시도해볼 것. 축산물품질평가원은 경로 404.
-- 서버 배포: 코드는 scp로 올리되 `.env`는 따로(권한 600) — 키 파일을 서버로 보내는 건 사용자
-  확인 후에.
-- 점검: `python backend/test_jobs.py`(키 없이 돌아감).
+## 다음 할 일 (우선순위 순)
 
-**지역 = 시도 17곳으로 통일(2026-10-11)**: 위경도 단위(처음 구현)는 폐기하고 앱 전체가 시도 코드
-(행정표준코드 앞 2자리, `backend/geo.py`의 `REGIONS` = 앱 `region.dart`의 `kRegions`)로 동작함.
-- 앱: `RegionStore`(region.dart)가 지역을 정함 — 저장된 선택(shared_preferences) → 없으면 위치 권한(허용 시
-  좌표를 `/region`에 딱 한 번 보내 시도를 얻고 이후엔 코드만 씀) → 거부/실패면 기본 서울. 화면 맨 위
-  "오늘 · 서울 ▾"를 누르면 시도 선택 시트(`showRegionPicker`), 고르면 투데이·생활·문화가 새로 받아옴.
-- 백엔드: `/today`·`/weather`·`/culture`·`/market`이 `?sido=11` 같은 코드를 받음(없으면 서울). `/regions`(목록),
-  `/region?lat&lon`(좌표→시도, 가까운 측정소 주소 우선 → 못 찾으면 가까운 시도청). 날씨는 시도청 소재지 격자,
-  중기예보는 가까운 예보 도시, 미세먼지는 시도 안 측정소 평균(등급), 자외선·꽃가루는 시도 단위 그대로,
-  축제는 주소 접두어로 시도 필터, 전시·공연은 한국문화정보원 전국 목록(2시간 캐시, 페이지 numOfrows=100)을
-  `area` 필드로 거름, 전통시장은 파일 데이터(`backend/data/traditional_markets.json`, `tools_build_markets.py`로
-  CSV에서 생성). 위치별 소스는 job이 아니라 요청 시 계산 + 시도별 TTL 캐시(`sources/_cache.py`).
-- **시도 단위로 안 되는 것(알려진 한계)**: 큰 도(경북·강원·전남 등)는 도내 날씨가 시도청 소재지 기준이라 실제와 다를
-  수 있음 / 강원 영동·영서, 경남 서부 등 예보 구역이 갈리는 곳 / 기상특보는 지점이 서울(108)뿐이라 서울·인천·경기에서만 /
-  생활 시세(aT 소매가)는 전국 평균(API에 지역 구분 없음) / 전통시장은 휴장일·좌표 없음(파일에 없음) /
-  판매점별 가격(한국소비자원 참가격)은 매장·상품 목록은 되지만 가격 조회가 어떤 날짜·상품으로도 0건이라 못 붙임.
+1. 1.3.6 업로드·승인 → 테스터 링크 전달(안내문에 "광고는 누르지 마세요"·"14일 참여 유지") → 12명 참여 확인.
+2. 프로덕션용 번들(`real`, 코드 15) → 프로덕션 신청. 애드몹 결제·세금 정보, 앱 게시 후 애드몹↔Play 연결, `app-ads.txt`는 이미 올림.
+3. 건강 공공데이터 추가 검토(`docs/todo-ideas.md`) — 현재 거부 이력을 넘긴 뒤. "건강 앱" 선언·출처 나열 부담이 커짐에 주의.
+4. 코드 정리: `widgets/components.dart`(약 1,800줄) 분리, 하드코딩 색, 핵심 계산 테스트 보강(`docs/ops-server.md` 점검 보고).
+5. DB 백업 외부 보관, 소스별 최대 허용 나이(갱신이 오래 실패해도 옛 값을 보여 줌).
 
-**시군구 지역 마스터(2026-10-11)**: 지역은 시도 + 선택적 시군구(230곳, `backend/data/regions.json`, 에어코리아 측정소 주소·좌표에서
-`tools_build_regions.py`로 생성; 측정소 없는 군은 빠짐). 앱 `region.dart`가 시도→시군구 선택·검색·"시도 전체"를 지원하고
-`/today·/weather·/culture·/market`이 `sido`+`sgg`를 받음. 날씨는 시군구 중심 좌표 격자, 미세먼지는 그 시군구 측정소 평균(시도 전체 실시간을
-시도별로 25분 캐시), 자외선·꽃가루·특보는 시도 단위(화면 근거 문구에 "시도 단위" 표시), 문화·전통시장은 시군구 우선 + 같은 시도 나머지로 채움.
+## 작업 방식
 
-**생활 탭(2026-10-11)**: 맨 위 "장바구니 지수"(BASKET 8품목 지난주 대비 평균, 지난주=100) + 품목 칩으로 보는 이번 달 추이(`BasketBody`),
-아래 "장보기 시세"(`ShoppingCatalog`): aT 최근일자 API 전 품목(채소·과일·수산·축산·곡물)을 카테고리 칩 + 제철만 보기로, 누르면 상세(사진·
-제철 12개월·고르는 법·보관법). 제철·고르는 법은 편집 데이터 `backend/data/produce_guide.json`(31품목, 일반 상식·노지 기준 대략),
-사진은 위키미디어 공용(CC0/CC BY/CC BY-SA)에서 `tools_build_produce_images.py` + `tools_cache_produce_images.py`로 받아 16:10 JPEG로
-`app/assets/produce/`에 넣음(출처·라이선스를 화면에 표시, 라이선스는 `data/produce_images.json`). 가격 이력은 매 실행 때 조사일·1일 전·1주 전
-값을 DB에 쌓는 중(KAMIS 키 신청해 둠 → 오면 `AT`처럼 `KAMIS_CERT_KEY/ID`로 과거 일별 이력 채울 것). 포털 aT 일별 API는 전 기간 0건이라 못 씀.
-전통시장(`MarketList`): 시설 필터·정렬(시설 많은 순/가나다/시군구)·상세(주소·시설·네이버/카카오 지도 링크, 한국관광공사 키워드 검색으로
-사진은 Type1(출처표시) 있을 때만, `/market/detail` + `/proxy/image` 허용 호스트 프록시).
+- 감으로 정하지 말고 **실제로 돌려서 확인**하고, 코드에는 "왜 이렇게 했는지"를 날짜와 함께 남김. 큰 변화는 `docs/`의 해당 파일 맨 아래에 날짜와 함께 한 덩어리로 추가(이 파일엔 요약만).
+- 사용자 계정(Play Console·서버)에 닿는 일은 하기 전에 알리고, 되돌리기 어려운 건 확인받기. 제 쪽에서 연 크롬 탭은 끝나면 닫고, 사용자가 다른 탭을 보고 있으면 백그라운드라 화면이 안 그려질 수 있음.
+- 커밋 메시지 끝에 `Co-Authored-By` 줄, 푸시는 요청받았을 때(지금은 "다 해도 좋다"는 허락이 있었음 — 그래도 큰 변경은 알리고).
 
-**문화 탭(2026-10-11)**: 맨 위는 "이번 주말 N개 행사"(실데이터일 때, 박스오피스는 KOBIS 키 전까지 예시라 아래로), 그 아래 행사 달력
-(`CultureCalendar`: 이번 달·다음 달, 날짜별 점·선택일 목록, 시군구 행사 "우리 동네" 뱃지), 목록, 행사 상세(`/culture/detail`: 문화정보원 detail2
-· 관광공사 detailCommon2/Intro2). 전국 행사 목록(관광공사 + 문화정보원 10여 쪽)은 `culture_warm` job이 100분마다 미리 캐시.
+## 문서 지도 (`docs/`)
 
-**머니 탭**: 예·적금·대출 순위(금감원 금융상품한눈에) 한 줄 = 상품명·금융회사·업권·금리, 누르면 금리표·우대조건·가입 방법·금융상품한눈에 링크(`finance_sheet.dart`).
-뒤집는 첫 카드의 시장 지표는 뒷면에만(아래 반복 목록 제거), 앞뒷면 높이는 IndexedStack으로 통일.
-
-**날씨 개편**: 시간대별 오늘 0시~모레 0시 1시간 간격 가로 스크롤(`HourlyStrip`, "지금" 강조·지난 시각은 예보값 흐리게), 주간은 오늘 포함 7일
-(기상청이 단기·중기 사이 하루를 안 줘서 그날은 "예보 없음"), 생활지수는 줄마다 근거·출처(빨래/세차·옷차림은 "데일리컷 기준, 공식 아님").
-
-**개발용 표시(2026-10-10)**: 실데이터가 아닌 영역은 앱에서 분홍 배경 + 빨간 왼쪽 선(`StubMark`,
-`components.dart`의 `kShowStubMarks`로 한 번에 끔)으로 보임. 판단은 서버 응답의 `live_keys`
-(`/today`는 `live_sections`). 소스를 새로 붙이면 이 표시는 자동으로 사라짐.
-
-**API 사용 현황 점검**: 승인된 API 중 뭘 쓰고 안 쓰는지는 아티팩트
-claude.ai/artifact/17gytwYuXMFkF4vx8tWv65 (사용 중 · 일부만 · 미사용 · 막힘 · 키 없음)에 적어둠 —
-수집기를 추가/수정할 때마다 이 목록도 같이 갱신할 것(사용자가 계속 확인해달라고 함). 미사용 중
-쓸 만한 것: 기상특보(특보 있을 때만 표시), 대기정체지수, 소비자원 생필품가격(생필품 자리),
-축산물유통정보(계란·돼지, 경로 확인 필요), 전력수급(키 오류 재시도), aT 일별가격(과거 이력).
-
-## 지금 상태 (2026-09-29)
-
-뼈대만 있음 — 백엔드는 전부 스텁 데이터, 실제 공공 API 연동 안 됨. Flutter는
-5탭 네비게이션 + 컴포넌트 기반 화면까지 만들어서 로컬에서 실제로 돌려서
-확인함(백엔드 stub → 화면 렌더링까지 엔드투엔드 확인 완료).
-
-**시세 섹션 범위 넓힘(2026-09-29 피드백)**: 처음엔 품목 가격 순위만 보여주는
-좁은 지표였는데, "장 볼 때 필요한 생활 물가" 전체로 넓힘 — 제철 과일·채소를
-캡션 한 줄에서 카드 목록으로 승격, 축산물 시세/생필품 물가지수/우리 동네
-전통시장 세 카테고리 추가함(모두 아직 스텁).
-
-**시세 화면 구조 2차 개편(2026-09-29)**: "가격 순위(전주 대비 -18%)보다 지금
-뭐가 제철인지가 장보기 결정에 더 도움된다"는 피드백 — SeasonalHero(제철 목록)
-를 화면 맨 위로 올리고, 단일 텍스트 대신 ChartCard(배추 14일 가격 추이)로
-바꿈. 같은 ChartCard를 머니 탭 환율 카드에도 재사용. `price_trend`는 아직
-`_mock_daily_series()`로 만든 결정론적 가짜 데이터 — 실제로는
-**price_history 테이블 + 매일 스냅샷 배치**가 있어야 진짜 추이/인사이트가
-나옴(사용자가 "쌓아서 인사이트 발견에 활용"하고 싶다고 명시함 — 이건 API
-연동보다 먼저 설계해둘 만한 부분).
-
-**기획 문서 "섹션 구성 확정" 반영(2026-09-29)**: 기획 문서에 "시세→생활" 확장이
-공식화되며 담을 내용 목록이 크게 늘어남(날씨/미세먼지, "예상 vs 실제" 투표,
-공휴일·이번 달 달라지는 것·연휴 병원약국, 김장·차례상 물가 등 — 생활; 도서관
-인기대출, 무료 전시, 흥행 속도 비교, 개봉 N주년, 연휴 극장가, 단풍×축제 등 —
-문화). 사용자 요청으로 **섹션별로 하나씩, 공통 데이터부터** 구현 중 — 첫
-타자로 날씨(WeatherHero: 오늘 기온/체감/최고최저, 옷차림 추천, 주말 전망,
-빨래·세차 좋은 날, 미세먼지)를 `/weather` 별도 엔드포인트로 구현함(문화 섹션의
-"맑은 곳 축제만" 등 다른 기능도 같은 데이터를 쓸 예정이라 market()에 안 얹음).
-**아직 안 만든 생활 항목**: 장보기 레시피, "예상 vs 실제" 투표, 공휴일/이번 달
-달라지는 것/연휴 병원약국, 차례상 물가. **문화 섹션은 아직 기획 문서 확장분
-반영 전**(박스오피스/공연/축제만 있음).
-
-또한 눈여겨볼 결정: 기획 문서에 **"이슈팝 연결"**이 추가됨 — 이슈팝의 생활
-관련 기사를 한 줄 요약+링크로 가져와 데이터 카드 아래 보조 한 칸으로 둠(본문은
-안 가져옴). 아직 구현 안 함 — 두 앱 백엔드가 처음으로 서로 통신하게 되는
-지점이라, 배포 아키텍처 정할 때 같이 설계해야 함.
-
-**음악(문화 섹션, 2026-09-29 추가)**: "순위 데이터 받을 곳 있나" 질문 — 멜론/
-지니/벅스/가온(써클차트) 전부 공식 오픈 API 없음(스크래핑은 이용약관 위반
-소지 있어 제외). 공식 API가 있는 **Spotify Web API**(Top 50 - South Korea
-플레이리스트)와 **YouTube Data API v3**(mostPopular, videoCategoryId=10)만
-근사치로 넣기로 함. Spotify는 국내 점유율이 멜론보다 낮아서 실제 국내 인기
-순위와 차이 날 수 있음 — UI 라벨에 "(Spotify 기준)"이라고 명시해서 "국내
-공식 차트"로 오해 안 하게 함(`cultureScreen`의 스포티파이 목록 참고).
-
-**구독료 비교 (아이디어, 2026-09-29 메모만)**: 넷플릭스·디즈니+·멜론·유튜브
-프리미엄 등 구독료를 한 곳에 모아 비교하면 좋겠다는 아이디어 — 통합 API는
-없어서 직접 모아 넣어야 함(기획 문서의 "차례상 물가"처럼 "발표 인용/자체
-계산" 카테고리와 같은 성격). 사용자가 대안으로 "LLM한테 각 서비스 요금제
-페이지를 읽어와 주기적으로 갱신시키면 어떨까"를 제안함 — 수동 하드코딩보다
-나을 수 있는 방향이라 여기 기록만 해둠(아직 스코프/우선순위 미정, 구현 전).
-머니 섹션에 "예·적금 금리 순위"와 같은 RankRow 형식으로 들어가면 자연스러울
-듯.
-
-**다음 할 일**:
-1. 생활 섹션 나머지 항목(장보기 레시피, 투표, 공휴일 등) 계속 구현.
-2. 문화 섹션에 기획 문서 확장분(도서관 인기대출, 무료 전시 등) 반영.
-3. 공공 API 키 발급 + 상업적 이용/출처 표기 조건 확인 (기획 문서 "확인된 이용
-   조건" 항목 참고). Spotify/YouTube는 별도로 개발자 계정·API 키 발급 필요.
-4. 각 backend 엔드포인트의 TODO를 실제 API 호출로 교체.
-5. price_history 테이블 설계 + 매일 스냅샷 배치(스케줄러) — 그래프/인사이트의
-   전제조건.
-6. 이슈팝 연결(생활 관련 기사 요약+링크) — 두 앱 간 첫 통신 지점, 아키텍처
-   설계 필요.
-7. 배포 인프라 결정 (이슈팝처럼 별도 Oracle Cloud 인스턴스 vs 다른 선택).
-8. 품목 상세/글 상세 화면 추가 (기획 문서 "다음 할 일" 항목).
-9. 구독료 비교 — 스코프/방식(수동 입력 vs LLM 주기적 수집) 정하고 시작할지
-   결정.
-
-## 2차 피드백 반영 (2026-10-11)
-
-- **차트**: `TrendChart`는 누르거나 좌우로 끌면 그 날짜 값이 나오고(선택점+세로선), 아래에
-  "최고 ○(n일) · 최저 ○(n일)" 요약. `xMax/ticks/xLabel`로 월별 축(물가 13개월)도 가능.
-- **머니**: 뒤집는 카드 폐기(실데이터일 때). `money.py`가 `chart_items`
-  (코스피·코스닥·금·물가: 값/단위/시계열)를 주고 `metric_chart.dart`의 `MetricBody`가
-  칩으로 고름. 물가는 KOSIS 25개월을 받아 최근 13개월의 전년 동월 대비 상승률 계열.
-- **생활 차트 기준**: 기본 "장바구니"는 서버 `BASKET` 8품목(많이 사는 대표 품목)의 지난주 대비
-  평균. `chart_items`는 이제 전 품목(조사일이 최신보다 10일 넘게 오래된 품목은 제외 — 2010년
-  조사값 같은 게 섞여 있었음). 품목 상세 시트의 "내 장바구니에 담기"(`my_basket.dart`,
-  shared_preferences)로 칩·지수를 내 품목 기준으로 바꿈(지수는 클라이언트에서 계산).
-- **고르는 법·보관법**: 줄글 → 짧은 항목 목록(`produce_guide.json`의 `pick_list`/`storage_list`,
-  `tools_guide_lists.py`로 생성, 줄글은 호환용으로 유지).
-- **문화**: 범위 토글 `[시군구][시도 전체]`를 히어로와 달력이 함께 씀(`ScopedColumn`). 달력 점 =
-  그날 열리는 행사 수(최대 3, 설명 문구 있음), 종류 칩(전체/축제/전시·공연), 날짜 누르면 그 날
-  행사만 아래 한 목록으로. 중복이던 "진행 중인 전시·공연"/"곧 열리는 축제" 목록은 실데이터일 때
-  제거. 사진은 `ZoomImage`(contain + 누르면 전체화면 확대).
-- **전통시장 필터**: "주차장 있음" → "주차장"만.
-- **날씨**: 아이콘(`weather_icon.dart`), 생활지수 아이콘 행 + 누르면 근거 시트(`life_index.dart`),
-  빨래 기준 완화(비 예보/강수 50%↑ 별로, 30%↑·습도 70%↑·미세먼지 나쁨 보통, 그 외 좋음).
-  기상특보는 서울·인천·경기만 제공, 그 외 "제공 안 함".
-- **사진 라이선스**: 위키미디어 커먼즈(CC0/PD/CC BY/CC BY-SA)만 사용, 시트에 원본·라이선스 링크와
-  "크기 줄이고 일부 잘라 사용" 표기. (법률 자문 아님 — CC BY-SA는 변경 표기 필요.)
-- **개인정보(좌표)**: `/region`은 POST 본문으로만 받음(2026-10-11) — GET 쿼리는 nginx 접속 로그에 좌표가 남아서 바꿨고, 기존 로그의 좌표도 지움. 좌표는 DB·로그에 저장 안 함(소수 2자리로 뭉개서 지역만 구함).
-- **DB**: SQLite `backend/dailycut.db`(git 제외). 배포본은 서버(`/home/ubuntu/dailycut-backend/`)의
-  별도 파일 — 로컬 PC 파일은 개발용 사본이고 서로 동기화 안 됨. 서버 백업: cron 매일 04:30(서버 UTC, 한국 13:30)에 `backup_db.py` → `/home/ubuntu/dailycut-backups/*.db.gz`, 14일 보관(같은 VM 안이라 VM 자체 유실엔 못 막음).
-- **TODO**: 전 품목 사진 DB(싱싱해 보이는 사진으로 큐레이션), KAMIS 키 오면 가격 이력 백필,
-  머니 확장(DART 공시·청약·실거래가·환율·기준금리 등).
-
-## 3차 피드백 반영 (2026-10-11)
-
-- **품목 가이드 v2** (`backend/data/produce_guide.json`, 생성: `tools_guide_v2.py`): 63개 aT 품목 + 딸기·단감·참외·복숭아·쇠고기·우유(69개).
-  항목 구조 = `season, good[], avoid[], storage[], note`(각 항목 `[라벨, 짧은 문구]`). 시트에서 ✓ "이렇게 고르세요"
-  / ⚠ "이런 건 피하세요" / 보관법으로 나눠 보여줌. 신규 36품목은 일반 상식 수준의 편집 정보(의학·법적 조언 아님).
-- **사진 62장** (`produce_images.json`, 에셋 `app/assets/produce/pNN.jpg`): 위키미디어 커먼즈 검색 → 컨택트 시트로 눈으로 골라
-  (`tools_photo_candidates.py` → picks → `tools_build_photos.py`). 못 구한 7품목(참깨·콩·팽이버섯·얼갈이배추·열무·명태·미나리)은
-  사진 없이 표시. 화면은 "사진 · 작가" 한 줄 + ⓘ(작가·라이선스 링크·원본·"크기 줄이고 일부 잘라 사용" 안내).
-- **개인화(기기 저장)**: 마지막으로 본 머니 지표·기간, 문화 종류 칩(`local_prefs.dart`), 숨길 생활지수(`LifeIndexSection`),
-  내 장바구니. 로그인 없음.
-- **익명 이용 통계** (`analytics.dart` → `POST /events` → `usage_events`): (날짜, 이벤트, 값)별 횟수만 저장. 사용자·기기 ID·좌표·
-  검색어 없음. 허용 이벤트 이름 화이트리스트(`api._USAGE_NAMES`) + 값은 짧은 문자만. 사용자가 끌 수 있음(출처 시트의 스위치).
-  리포트는 서버 DB에서 `SELECT name, prop, SUM(n) FROM usage_events GROUP BY 1,2`로 직접 조회. 개인정보처리방침 문구는
-  정식 출시 전에 법무 확인 필요.
-
-- **4차 정리 (2026-10-11)**: 가이드에 `tips`(팁) 분류 추가(`tools_guide_tips.py`; note·'팁' 항목을 옮김 — 가이드를 `tools_guide_v2.py`로
-  다시 만들면 이 스크립트를 이어서 돌릴 것). 장보기 시세 분류를 채소·과일·수산·곡물·두류·양념으로 재편(`market.py NAME_CATEGORY`:
-  수박·멜론→과일, 감자·고구마·버섯→채소, 쌀·콩·땅콩→곡물·두류, 마늘·고추·깨→양념), "제철만/담은 것만"은 분류 알약이 아니라
-  체크 필터로 분리. 긴 목록은 앱 공통 `kListLimit=6` + `ShowMoreButton`/`ExpandableList`(맨 처음 화면의 날짜·기간 목록 제외).
-  생활지수 설정은 제목 줄 톱니바퀴. 주간 날씨는 18시 발표분이 5일 뒤부터라 하루 비는 문제를 직전 발표분으로 채움(`_mid`).
-
-- **KOBIS 영화 (2026-10-12)**: `sources/boxoffice.py` — 일별·주간·주말 × 전체·한국·외국·독립예술 박스오피스(3시간마다 12번 호출),
-  지역별(요청 시 3시간 캐시)·영화 상세(7일 캐시, `/movie/detail?code=`)·최근 개봉(박스오피스에 든 것만; 영화목록 API의 개봉예정은
-  성인물이 섞여서 일부러 안 씀). 화면: `widgets/box_office.dart`. 포스터는 KOBIS에 없음 — KMDb(한국영상자료원) 키 신청 후 한국영화만
-  붙이는 안, TMDB는 상업 이용 시 별도 계약 필요. 키는 `.env`의 `KOBIS_KEY`(서버 .env에도 추가함).
-
-- **축산물 시세 (2026-10-12)**: `sources/livestock.py` — 축산물품질평가원 `/grade/consumerPriceDaily?standYmd=&judgeKind=4301|4304`
-  (소·돼지 부위별 100g당 소비자가격 + 평년 대비). 경로는 공공데이터포털의 API 상세(`POST /tcs/dss/selectApiDetailFunction.do`,
-  oprtinSeqNo 53662~53670)에서 찾음 — 월별 `consumerPriceMonth`, 순별 `consumerPriceTenDays`, 연도별 `consumerPriceYear`,
-  재고 `grade/LPStock`, 검수확인 `confirm/…`. **계란·닭은 소비자가격이 없음**(검수확인정보뿐). aT 소매가의 축산물은 2017~2022년에서 멈춤.
-  소비자원 참가격(생필품)은 상품목록(`getProductInfoSvc.do`)만 되고 가격 조회는 아직 0건.
-- **문화 탭 구역 전환**: 지역 줄 아래 `행사·전시 / 영화 / 음악(예시)` 분할 버튼(`SegmentToggle`, `SegmentedHost`, 마지막 선택 기억).
-
-- **정부 지원·혜택 (머니 탭 맨 아래, 2026-10-12)**: `sources/gov_support.py` + `widgets/gov_support.dart`. 행안부 「대한민국 공공서비스(혜택) 정보」
-  (data.go.kr/data/15113968, 개발계정 일 10,000건·자동승인) — 엔드포인트 `https://api.odcloud.kr/api/gov24/v3/serviceList`.
-  **활용신청 승인됨(2026-10-12)** — 총 10,965건(마감 지난 것 제외 약 10,491건, 응답 ~5.9MB). 한글 필드 이름(`F`)은 실응답으로 확인 완료. 12시간마다 전체를 받아
-  DB 캐시(`support_all`)에 저장하고, `/support`는 그걸 메모리(5분)에 두고 거름. 정렬: 우리 시군구 → 시도 → 중앙부처, 같은 단계에선 조회수 순.
-  서버 재시작 직후엔 첫 수집이 끝나기 전까지 섹션이 숨겨짐(빈 결과는 메모리에 안 기억함). 지역(시도·시군구)만으로 거르고 개인 조건은 받지 않음.
-  같은 승인 때 같이 받은 API(2026-10-12 호출 확인): 청약홈 분양정보(odcloud `getAPTLttotPblancDetail`, OK), 마이홈 공공임대 공고(`rsdtRcritNtcList`, OK),
-  복지로 지자체복지(`LcgvWelfarelist`, XML·OK, 4,821건). LH 공고·서민금융 대출상품은 env의 URL로 호출하면 "NO_OPENAPI_SERVICE_ERROR"(경로 확인 필요).
-  아직 화면에 붙이지 않음 — 청약 일정/공공주택 공고 섹션 후보.
-  비슷한 API: 중앙부처복지서비스(15090532, 100건), 지자체복지서비스(15108347, 1,000건), 온통청년 청년정책(15143273).
-
-- **정부 혜택 "내 조건" 필터 (2026-10-12)**: 행안부 API의 `/supportConditions`(서비스 전체에 연령·성별·소득구간·대상특성이 코드로 붙어 있음)를 같이 받아
-  `gov_support.py`가 서비스에 줄여서 붙여 둠(`c`). 코드 뜻은 서비스명 키워드와 대조해서 확정(모듈 docstring 참고; JA04xx 가구유형·사업체 조건은 뜻 미확인이라 안 씀).
-  `POST /support/search`(지역+나이·성별·소득 1~5·특성들)가 거르고 "나를 콕 집은 서비스"(좁은 연령대·내 특성 전용)를 위로 올림. 조건은 **본문으로만** 받고 저장·로그 안 함.
-  앱은 `widgets/support_profile.dart`(SupportProfile: 기기 로컬 저장, 시트 UI) — 조건은 서버 통계에 보내지 않고, 연령대·성별과 직업·학생 특성(농업인·근로자 등)의 횟수만
-  `support_profile`/`support_trait` 이벤트로 셈(소득·장애·질병·보훈은 안 보냄). 실제 자격 심사가 아니라 "가능성 있는 것만 추림"이라고 화면에 밝힘.
-- **정부 혜택 UI 정리·로딩 (2026-10-12)**: 새 기능이 기존 톤과 따로 놀아서 다시 맞춤 — 제목 줄 오른쪽에 `내 조건`(작은 텍스트 버튼, `ListSection.action`), 구분 칩은 기간 칩과 같은
-  `PillChip`(components.dart), 설명 글은 맨 아래 한 줄로만. 빈 화면이 길던 원인 둘을 고침: ①서버가 요청마다 1만 건을 지역 분류하던 걸 지역별로 캐시(`_pools`, 0.7초→수 ms)
-  ②앱이 구역을 누를 때서야 요청하던 걸 머니 탭이 열릴 때 미리 받아 두고(`GovSupportSection.prefetch`, 같은 조건은 10분 메모), 받는 동안엔 "불러오는 중" 표시·실패하면 다시 시도 안내.
-- **생년월일 입력 + 전통시장 다중 필터 (2026-10-13)**: "내 조건"의 나이 입력을 생년월일(연·월·일)로 바꿔 만 나이를 기기 안에서 계산(`ageFromBirth`, 생일이 지나면 자동 갱신).
-  생년월일은 기기(shared_preferences)에만 저장하고 서버·통계로 보내지 않음 — 서버엔 계산된 만 나이(숫자)만 POST 본문으로, 통계엔 10살 단위 연령대만. 서비스가 취득·보관하지 않으므로
-  개인정보 "수집"이 아니라 별도 동의 체크는 두지 않았음(법률 자문은 아님). **로그인·서버 저장·생년월일 전송을 붙이게 되면 처리방침·동의가 필요해짐.** 예전 버전의 저장 나이는 이어서 씀.
-  전통시장 시설 필터(`market_list.dart`)는 다중 선택(고른 시설을 모두 갖춘 시장만)이고 다시 누르면 해제, `전체`는 모두 해제. 테스트: `app/test/support_age_test.dart`.
-- **머니 탭 아래쪽 구역 전환 (2026-10-12)**: 차트·기름값 아래를 `SegmentedHost`로 `금리·대출 / 정부 혜택` 둘로 나눔(마지막 선택 기억, 문화 탭과 같은 방식).
-- **첫 로드 개선 (2026-10-12)**: 원인은 ①구글 폰트를 런타임에 통째로(굵기마다 4~6MB) 받던 것 ②새 방문자는 위치 권한 확인(최대 8초)이 끝나야 데이터 요청을 시작하던 것.
-  → ①한글 서브셋 폰트(KS X 1001 2,350자, `app/assets/fonts/`, 만든 법 `app/tools/make_fonts.py`)를 앱에 넣고 `google_fonts` 패키지 제거(합계 gzip 약 1.1MB),
-  ②`RegionStore.init`이 바로 기본 지역(서울)으로 보여주고 위치는 뒤에서 확인해 바꿈, ③`web/index.html`에 HTML 스플래시(첫 프레임에서 제거).
-  서버 nginx: `font/ttf·application/wasm·application/octet-stream` gzip 추가, `assets/assets/fonts/Noto*.ttf`는 30일 immutable 캐시 → **폰트를 바꾸면 파일 이름의 `-rN`을 올릴 것**.
-  남은 비용(첫 방문 한 번): canvaskit.wasm(gstatic CDN, 압축 약 2MB)·main.dart.js(gzip 0.85MB). 폰트에 없는 글자(희귀 한자 등)는 폴백 폰트.
-  ▾·↻ 같은 기호는 폰트에 없을 수 있어 아이콘으로 그림.
-
-- **광고(상업적 이용) 전 라이선스 점검 (2026-10-13, 포털·약관 원문 확인)** — 광고 수익은 "간접 영리"라 상업적 이용으로 봄. **(10-13에 아래 3곳을 모두 화면에서 뺌 — 허락을 받기 전엔 되살리지 말 것)**
-  ① 금융위 지수시세정보·일반상품시세정보(코스피·코스닥·금·기름값, 재테크 탭 맨 위·투데이 카드) — 공공누리 **4유형**(출처표시+**상업적 이용금지**+변경금지), 포털에 "상업적 목적 여부와 상관없이
-  제3자 무단 제공·재배포 엄격히 금지, 상업 이용은 원천 소유자 한국거래소 KRX Data Marketplace에서 유료 구매(이용 목적은 가공 저작물 생산 또는 방문·가입을 통한 간접 수익 창출)"이라고 명시. **광고 없이도 지금 노출 자체가 애매함.**
-  ② 영화진흥위원회 KOBIS(영화 구역) — 약관 제6조 "결과를 **실시간**으로 사용, 복제·저장·재전송 금지"(우리는 job으로 DB 캐시), 제8조 "사전 승낙 없이 영리/비영리 목적 복제·출판·방송 또는 제3자 제공 금지", 제3조 "다른 정보와 혼합하지 않고 독립 노출 + 출처 명시".
-  ③ 금융감독원 금융상품한눈에(예·적금·대출 금리) — 금감원 저작권 정책 "자료로 **수익을 얻거나 이에 상응하는 혜택**을 누리려면 사전 협의·허락 필요, 게재 시 출처 금감원 명시, 내용 무단 변경 금지"(문의 itfss@fss.or.kr, 02-3145-5376).
-  나머지는 포털 표기 기준 상업 이용 가능: 기상청(1유형)·소비자원 참가격(1유형)·KOSIS(1유형)·에어코리아(3유형: 출처+변경금지 — 수치를 바꾸지 말고 그대로)·천문연·전력거래소·aT·축산물품질평가원·관광공사·문화정보원·행안부 gov24(제한 없음).
-  이미지: 농산물 사진은 전부 CC BY/BY-SA/CC0/PD(⓪ ⓘ에 출처 표기), 관광공사 사진은 1유형만 사용. **문화포털(culture.go.kr) 썸네일은 저작권 필터가 없음** — 광고 켜기 전에 끄거나 확인 필요.
-  유료 API는 없음(전부 무료, 개발계정 한도: 에어코리아 일 500·전력거래소 일 100 등 — 이용자가 늘면 활용사례 등록해 운영계정 증량 신청 필요). AI 탭 등에 유료 LLM 호출 없음.
-
-- **라이선스 점검 표시 (2026-10-13)**: 사이트 주소 뒤에 `?license=1`을 붙이면(예: itssophie.dev/dailycut/?license=1) 광고 시 문제가 되는 구역에 테두리와 꼬리표가 보임(`LicenseFlag`, components.dart).
-  빨강=상업 이용·제3자 제공이 막힘(재테크 맨 위 지표 차트·기름값, 문화>영화 구역, 투데이 "오늘의 섹션"의 재테크 줄), 주황=허락·확인 필요(금리·대출 목록, 문화포털 사진). 평소엔 아무것도 안 보임. 구역을 지우거나 대체하면 해당 `LicenseFlag`도 같이 정리할 것.
-
-- **광고 대비로 데이터 제거 + 재테크→혜택 탭 (2026-10-13)**: 아래 "광고 전 라이선스 점검"에서 막힌 것들을 **전부 뺌** — 금융위 지수·상품(코스피·코스닥·금·기름값)·금감원 금리(예·적금·대출)·KOBIS 영화 구역·문화포털 사진.
-  탭 이름은 `혜택`(옛 머니/재테크, `Section.money` enum은 그대로): 맨 위 한 줄 제목 + 정부 지원·혜택(`GovSupportSection`)만. 문화 탭은 `행사·전시 / 음악`. 투데이 "오늘의 섹션"은
-  날씨·제철·**이번 주말 행사 N개**(관광공사·문화정보원)·**정부 혜택 N개**·AI(예시) — 백엔드 `/today`가 실데이터를 못 받은 카드는 아예 안 냄.
-  서버: `sources/__init__.py`에서 `money`·`finance`·`boxoffice` import를 뺐음(작업 미등록, `/money`·`/movie/detail` 삭제). 파일(`money.py`·`finance.py`·`boxoffice.py`)은 남겨 둠 —
-  허락을 받으면 import에 다시 넣고 화면(옛 `metric_chart.dart`·`box_office.dart`·`finance_sheet.dart`는 삭제했으니 git 기록에서 복원)을 되살릴 것. 문화포털 사진은 `culture.py`에서 `image: None`.
-  `?license=1` 점검 표시(`LicenseFlag`)는 위젯만 남겨 둠(쓰는 곳 없음). 출처 안내(ⓘ)에서도 빼고 에어코리아를 3유형으로 고침.
-- **혜택 탭 구역 전환 4개 (2026-10-13)**: `정부 지원 | 청약 | 공공임대 | 대출`(`SegmentedHost`, 마지막 선택 기억). 모두 포털 "이용허락범위 제한 없음"(상업 이용 가능, 포털 표기 확인).
-  `backend/sources/benefits.py` — 청약홈(`ApplyhomeInfoDetailSvc` 4종: APT·무순위·오피스텔/도시형·공공지원민간임대, 접수 안 끝난 것만), 마이홈 공공임대 공고(`HWSPR02/rsdtRcritNtcList`,
-  마이홈에 이미 있는 LH 공고번호는 중복 제외 후 `lhLeaseNoticeInfo1/lhLeaseNoticeInfo1`로 보탬 — LH는 주소 끝에 함수 이름을 한 번 더 붙여야 함), 서민금융진흥원 대출상품(XML 약 320건,
-  주소 `B553701/LoanProductSearchingInfo/LoanProductSearchingInfo/getLoanProductSearchingInfo`). 작업 `housing`(3시간)·`loans`(하루)가 줄여 저장하고, `/benefits/housing?kind=apply|rent&sido&sgg`·
-  `/benefits/loans?usage&sido`가 오늘 날짜로 "접수 중·N일 남음/N일 뒤 접수"와 지역(시도) 필터를 계산해 줌(대출은 전국 공통+내 시도 상품, 용도 칩 생계·주거·학자금·사업).
-  앱은 `widgets/benefit_feed.dart`(`BenefitFeed` 한 위젯으로 세 구역 + 상세 시트, 10분 메모). 서버 `.env`에 `APPLYHOME_BASE_URL`·`MYHOME_NOTICE_BASE_URL` 줄이 있어야 함(주소만, 비밀 아님).
-  복지로 중앙/지자체 복지서비스(`WELFARE_*`)와 온통청년은 정부24와 겹쳐서 아직 안 붙임.
-- **2026-10-13 추가 승인 19개(아직 화면엔 안 붙임, 포털 표기 "제한 없음")**: 기상청 지진정보, 산림청 산불위험예보, 식약처 식품영양성분DB, 국토부 아파트 매매·전월세·오피스텔 전월세 실거래가,
-  소상공인 상가정보, 행안부 일반·휴게음식점 인허가, 조폐공사 지역사랑상품권 가맹점, 관광공사 관광지 집중률 예측·지역별 방문자수·고캠핑·두루누비·반려동물·웰니스·관광사진,
-  문화정보원 문화기반시설, 지역정보개발원 공공도서관 열람실. 키·주소는 새 env(`503e3904-dailycut-api.env`)에 있음 — 서버 `.env`엔 아직 안 넣음(쓸 때 주소 줄만 추가).
-  관광지 집중률(`TatsCnctrRateService/tatsCnctrRatedList`, areaCd+signguCd 필요)은 **오늘부터 30일 뒤까지의 예측값**임(2026-10-13 확인) — "이번 주말 덜 붐비는 곳"에 쓸 수 있음.
-  후보 정리(사용자 의견): 월세 체감(오피스텔 전월세+KOSIS 물가)·캠핑 가기 좋은 날(고캠핑+중기예보+산불위험)·지역화폐 장보기(전통시장+상품권 가맹점)는 좋음, 덜 붐비는 주말은 검토, 동네 변화 리포트는 보류.
-- **이번 주말 한산한 곳 (문화 탭 > 행사·전시, 2026-10-13)**: `backend/sources/outing.py` + `widgets/outing_section.dart`. 관광공사 관광지 집중률 예측(`TatsCnctrRateService/tatsCnctrRatedList`, areaCd+signguCd 필수,
-  시군구 5자리 코드는 TourAPI `ldongCode2`로 받음, `numOfRows`를 크게 주면 한 시군구가 한 번에 옴 — 종로구 3,390건=113곳×30일, 1.1초). 일 호출 한도 1,000이라 **지역을 고른 요청이 올 때** 그 지역 시군구만
-  병렬로 받아 24시간 캐시(`_cache.cached`). 서울은 `outing_warm` 작업이 미리 데움. **처음 부르는 지역은 서버에서 20~35초**(서울 5.7초는 로컬) — 화면은 이 구역만 따로 불러 문화 탭 본문을 막지 않고, 못 받으면 숨김.
-  집중률은 사람 수가 아니라 그 관광지 기준 예상 집중도(0~100)로 보임 → 제목 옆 ⓘ에서 설명(출처 시트에 추가). 토·일(일요일이면 오늘)별로 낮은 순 + 그날 날씨(주간 날씨와 날짜로 맞춤).
-- **투데이 문화/혜택 카드 주의**: `/today`의 문화 카드는 `culture_src.peek()`(캐시에 있을 때만)로 만듦 — `get()`을 쓰면 캐시 만료 때 행사 수집으로 20~30초 걸려 투데이가 느려짐(10-13에 실제로 겪고 고침).
-- **혜택 "마감 임박" 정리**: 정부24는 신청기한이 명시된 게 10,491건 중 168건이라 "이번 주 마감" 구역은 늘 비어서 안 만듦(신청기한이 한 달 안인 항목에만 목록 줄에 "N일 남음"). 청약·공공임대는 접수 중인 공고를 마감 가까운 순으로 정렬.
-- **영양성분(식약처 `FoodNtrCpntDbInfo03/getFoodNtrCpntDbInq03`) 메모**: `FOOD_NM_KR`로만 찾으면 조리·가공식품(찐고구마, 마늘빵…)이 먼저 나옴. `FOOD_CAT1_NM=채소류`처럼 대분류로 거르면 `DB_GRP_NM=원재료성`("고구마, 줄기, …생것") 행이 나옴 — 에너지는 `AMT_NUM1`(kcal/100g). 품목별로 "생것" 행을 골라 정적 표(`data/nutrition.json`)로 만드는 방식이 맞음(아직 안 만듦).
-- **지역화폐 가맹점(조폐공사 `localFranchisesV3/franchiseV3`)**: 호출은 되지만 데이터가 2022-10-31 기준이고 폐업 가맹점이 섞여 있으며(`bzmn_stts_nm`), 전통시장 목록에 좌표가 없어 연결이 어려움 → 보류.
-- **문화 탭 "나들이" 구역 + 지진 + 영양 (2026-10-14)**: 문화 탭 구역 전환은 `행사·전시 | 나들이 | 음악`. 나들이(`backend/sources/places.py`, `widgets/place_feed.dart`)는 칩으로 `도서관 | 캠핑 | 반려동물 | 웰니스 | 걷기길`.
-  `/places?kind&sido&sgg`가 항목을 청약·대출과 같은 모양({name,sub,tag,span,detail,url})으로 줌(상세 시트는 `showItemSheet` 공용). 사진은 저작권 구분 확인 전이라 안 씀.
-  · 도서관(지역정보개발원 `B551982/plr_v2` info_v2 + rlt_rdrm_info_v2): **도서관 번호(PLR001…)가 지자체마다 겹쳐서** 지자체코드(stdgCd)+이름으로 열람실을 짝지음, 갱신 4시간 넘은 열람실은 남은 좌석에 안 셈, 운영 시간 밖이면 "운영 종료".
-  · 캠핑(고캠핑 `GoCamping/basedList` 전체 ≈3,100곳, 운영 중만) + 이번 주말 날씨 한 줄씩(밤 5° 이하/강수 50%↑면 사실 안내만). 반려동물(`KorPetTourService2/areaBasedList2`, 종류 5개)·웰니스(`WellnessTursmService/areaBasedList`, langDivCd=KOR 필수)·걷기길(두루누비 `courseList`, sigun 글자로 지역 거름).
-  · 큰 목록은 `places_warm` 작업이 12시간마다 서울 기준으로 미리 받아 두고, 다른 지역·캠핑은 처음 부를 때 수 초~수십 초 걸림(그 뒤 24시간 캐시).
-  · 지진: `weather.py`의 생활지수에 `quake` 줄(기상청 `EqkInfoService/getEqkMsg`, 최근 3일 조회만 가능, 해외 지진은 `rem`에 "국내영향없음"이라 뺌). 산불위험(`forestPointV2`)은 지수 단계 뜻을 확인하지 못해 아직 안 붙임.
-  · 영양: `backend/tools/build_nutrition.py`로 식약처 식품영양성분DB에서 품목별 생것 100g 영양을 뽑아 `data/nutrition.json`(69품목 중 45개 매칭 — 쇠고기·우유·쌀·깻잎·단감·감귤 등은 미매칭)에 저장하고, `market.py` guide에 `nutrition`으로 실려 장보기 상세 시트에 "영양 · 100g당"으로 보임.
-  · `sources/_kst.py`: 배포 서버가 UTC라 `date.today()`가 한국 새벽 0~9시에 하루 전 날짜를 줌 → 날짜가 중요한 새 코드(청약·임대·집중률·도서관)는 `_kst.today()/now()`를 씀(오래된 코드엔 `date.today()`가 남아 있을 수 있음).
-- **지역(시도·시군구) 반영 규칙 (2026-10-14)**: 새로 붙인 목록(청약·공공임대·도서관·캠핑·반려동물·웰니스·걷기길·이번 주말 한산한 곳)은 모두 **시도로 먼저 거르고, 시군구를 골랐으면 그 시군구 항목이 있을 때 그것만**,
-  없으면 시도 전체를 보여주며 `scope_note`("○○에는 없어서 △△ 전체를 보여드려요")를 목록 위에 띄움(문화 탭 행사와 같은 규칙). 시군구 글자 맞추기는 `geo.sgg_terms()`(이름+별칭, 예: 성남시→분당구·수정구·중원구).
-  예전엔 시군구가 정렬만 바꿨음(해운대구를 골라도 부산 전체가 나왔음). 대출은 전국 공통 + 내 시도 상품(시군구 단위 없음), 정부 지원은 우리 시군구 → 시도 → 중앙부처 순 + `우리 지역` 칩.
-- **장바구니 담기 쉽게 + 투데이 카드 (2026-10-14)**: 담기가 "목록 줄 밀기"(안내 없음, 마우스 웹에선 거의 못 씀)와 상세 시트 버튼뿐이라 목록 줄 끝에 담기 버튼(`ListLine.trailing`, `_BasketButton` 44px)을 달았음 —
-  누르면 바로 담김(채운 아이콘+강조 배경) + 스낵바 "되돌리기"(`persist: false` 필수: 액션이 있는 스낵바는 기본이 안 닫힘). 밀기는 남김. 비어 있을 때 히어로 안내 문구도 버튼 기준으로 바꿈.
-  투데이 `MyBasketToday`(`widgets/my_basket_today.dart`)는 담은 품목이 있을 때만 "내 장바구니"(지난주 대비 많이 움직인 순)를 보임 — `/market`을 이 위젯만 뒤에서 받아(10분 메모) 투데이 첫 화면을 안 막음.
-  통계(`basket_add`)가 0건인 건 지금 테스트하는 사람이 사용자 본인뿐이라서임(사용성 근거 아님). 푸시 알림은 보류(안드로이드 출시 후 가격 변동 알림 우선).
-- **광고 심사 전 정리 (2026-10-14)**: 심사자가 "미완성"으로 볼 만한 것을 정리해 배포. ①예시(스텁) 구간을 화면에서 뺌 — AI 탭(`--dart-define=SHOW_AI_TAB=true`일 때만), 문화 탭 음악 구역(spotify/youtube 실데이터가 있을 때만),
-  생필품 물가지수(`essentials` 실데이터일 때만), 투데이 "오늘의 섹션"의 예시 카드(`live_sections`에 든 것만). 분홍 개발 표시(`kShowStubMarks`)는 기본 꺼짐(`--dart-define=SHOW_STUB_MARKS=true`로 켬).
-  ②`app/web/about.html`(서비스 소개)·`privacy.html`(개인정보처리방침, 접속 로그 14일 보관·익명 통계·위치·내 조건·광고 안내 — 실제 동작 기준, 동작을 바꾸면 같이 고칠 것)·`legal.css`. 앱 ⓘ 시트 맨 아래에 링크.
-  ③`index.html`에 글 형태의 서비스 소개(화면 밖 숨김)와 noscript — 캔버스 앱이라 심사·검색 로봇이 글을 못 읽는 문제 대응. 문의처는 dailycut@itssophie.dev(2026-10-14 사용자 지정 — 실제로 메일을 받는 상자가 있어야 함).
-  애드핏 신청: 매체 종류 웹사이트, 카테고리 라이프스타일, 희망 지면 = 생활·문화(행사·전시/나들이)·혜택 목록 아래 320x100 하단 배너(`AdSlot`).
-- **첫 화면 지연 수정 (2026-10-14)**: 라이브 `/today`가 19.6초 걸린 적이 있음 — 날씨 캐시(25분)가 만료된 직후 처음 온 방문자가 기상청·에어코리아 호출이 끝날 때까지(콜드 약 20~37초) 기다렸음.
-  `sources/_cache.py`의 `cached()`가 이제 stale-while-revalidate: 만료 후 3시간 안이면 옛 값을 바로 주고 새 값은 뒤 스레드에서 받음(락으로 한 번만), 3시간 넘게 지났거나 값이 없으면 예전처럼 기다림.
-  기본 지역(서울)은 `weather_warm` 작업(30분마다)이 미리 데워 둠. 처음 부르는 다른 지역의 날씨는 여전히 첫 요청이 수 초~수십 초 걸림(알려진 한계).
-- **탭 구성 변경: 문화 / 주말 분리 (2026-10-15)**: 문화 탭의 `나들이` 구역을 하단 탭 `주말`로 뺌 → 탭 `투데이 · 생활 · 문화 · 주말 · 혜택`(AI는 `SHOW_AI_TAB`일 때만 여섯째). 문화 = 이번 주말 행사 수 + 행사 달력(음악이 실데이터가 되면 `행사 | 음악` 구역 전환이 다시 생김),
-  주말(`weekendScreen`) = 이번 주말 한산한 곳(`OutingSection`) + 도서관·캠핑·반려동물·웰니스·걷기길(`PlaceFeed`). 두 구역이 각자 데이터를 받아서 주말 탭은 자체 fetch 없음. 광고 칸은 문화·주말 모두 목록 맨 아래(애드핏 신청서에는 "문화 탭 나들이 목록 아래"로 적었음 → 지금은 주말 탭 목록 아래).
-  통계 이름은 `tab_view` 값 `weekend`가 추가됨. 이름은 사용자가 고름(문화·주말).
-- **첫 로드 2차 점검 (2026-10-15, 브라우저 리소스 타이밍으로 측정)**: 첫 방문(캐시 없음) 순서 — 0.3s HTML → 0.5~2.3s main.dart.js(gzip 827KB) → 2.7s 엔진이 뜨고 FontManifest 요청 → 2.8~5.0s 글꼴 4개(세리프 700이 586KB라 가장 늦음)
-  → 5.25s에야 API 요청 시작 → 5.6s 첫 화면. 즉 병목은 서버가 아니라 **글꼴이 엔진 부팅 뒤에 직렬로 시작**하는 것. 조치: ①`index.html`에 글꼴 4개 `<link rel="preload" as="font" crossorigin>`(번들과 동시에 받음; 글꼴 파일명 `-rN`을 올리면 여기도 고칠 것)
-  ②nginx `listen 443 ssl http2`(원래 HTTP/1.1이라 동시 6연결 제한; 백업 `sites-available/itssophie.dev.bak-*`). 캐시된 재방문은 API 요청이 0.9s에 시작(전엔 5.25s).
-  측정 스크립트: 브라우저 콘솔에서 `performance.getEntriesByType('resource')`. **남은 개선 후보**: ①`IndexedStack`이 5개 탭을 시작과 동시에 만들어서 `/market`(130KB)·`/culture`가 투데이 요청과 같이 나감(1코어 서버라 투데이가 0.2→0.5s로 밀림) → 탭을 처음 열 때 만들고 투데이가 뜬 뒤 뒤에서 미리 만들기
-  ②투데이가 `today()`+`weather()` 둘 다 기다림 → 날씨 히어로를 먼저 그리고 "오늘의 섹션"은 따로 ③스플래시에 날씨 한 줄 먼저 띄우기(index.html에서 바로 `/weather` 호출) ④서울이 아닌 지역은 날씨 첫 요청이 콜드(수 초~수십 초).
-- **첫 로드 3차: 먼저 띄우기 3종 (2026-10-15, 위 "남은 개선 후보" ①②③ 처리)**: ①탭 지연 생성 — `main.dart`가 투데이만 먼저 만들고, 투데이가 그려지면(`boot.dart`의 `kFirstScreenReady`) 나머지 탭을 0.7초 간격으로 뒤에서 차례로 만들며, 탭을 먼저 누르면 그 탭은 바로 만듦(`_visited`).
-  ②투데이 분리 — `/weather` 응답이 `headline`까지 줘서(`api.py weather_route`, 안쪽 `weather()`는 그대로) 날씨 히어로·주간·생활지수는 이것만으로 그려지고, "오늘의 섹션"은 `/today`를 따로 받아 오면 보임(느리거나 실패하면 그 구역만 빔).
-  ③스플래시 날씨 — `index.html`이 앱 부팅과 별개로 `/dailycut-api/weather`를 바로 불러(배포 경로 `/dailycut/`에서만, 저장된 지역 `flutter.region_code/region_sgg` 사용, 8초 지나면 포기) 로고 아래에 "14° 맑음 · 낮 최고/최저 · 옷차림"을 먼저 보임.
-  라이브 측정(캐시 있음): 날씨 한 줄 약 1.0초, 앱 본체의 날씨 요청 3.0초(번들 새로 받음), 이어서 market 5.2s·culture 6.5s·혜택 8.7s로 차례로 뒤에서 받음. 서버 반영 순서 주의: `/weather` headline이 먼저 배포돼 있어야 새 앱이 제목을 못 받는 일이 없음.
-- **장소 탭 (2026-10-16, 10-15의 "주말" 탭을 이름·구조 바꿈)**: 탭 `투데이 · 생활 · 문화 · 장소 · 혜택`. 장소(`placesScreen`)는 구역 전환 6개 `한산한 곳 | 도서관 | 캠핑 | 반려동물 | 웰니스 | 걷기길`(`SegmentedHost`, prefKey `place_seg`, 통계는 기존 `culture_kind`로 `seg-○○`) —
-  구역마다 히어로 문장이 다르고, 한산한 곳은 `OutingSection`, 나머지는 `PlaceFeed(kind)`(칩 없이 한 종류만). `SegmentToggle`은 칸이 많으면 가로로 밀어 볼 수 있음. 광고 칸은 구역 목록 아래(애드핏 신청서의 "문화 탭 나들이 목록 아래"는 지금 장소 탭).
-  한산도를 반려동물 목록에 붙이는 안은 서울 기준 이름 매칭 41/75(웰니스·걷기길·캠핑·도서관은 0)라 보류 — 사용자가 구역을 따로 두는 쪽을 택함.
-  **지도 링크(2026-10-16)**: 예전엔 이름으로 네이버 지도 검색(`map.naver.com/p/search/이름`)이라 흔하지 않은 이름은 목록만 떴음 → 좌표가 있는 곳(도서관 lat/lot·캠핑 mapY/mapX·반려동물/웰니스 mapy/mapx)은 `_pin()`으로
-  카카오맵 핀 링크(`map.kakao.com/link/map/이름,위도,경도`)를 줌. 누리집·예약 링크가 있는 항목(도서관·캠핑)은 그걸 대표 버튼으로 두고 `map` 필드로 "지도에서 보기"를 따로 줌(상세 시트 보조 버튼). 걷기길은 좌표가 없어 `시군 + 코스명` 검색.
-  **사진**: 반려동물·웰니스 데이터에는 `firstimage`/`orgImage`와 저작권 유형 `cpyrhtDivCd`(Type1/Type3 …)가 같이 옴. 도서관·캠핑(공개 필드 없음)·걷기길엔 사진 없음. 쓰려면 Type1(출처표시)만 쓰는 기존 원칙(생활 탭 시장 사진과 같음) — 아직 안 붙임.
-- **투데이 로딩 원 깜빡임 수정 (2026-10-16)**: 첫 방문은 서울로 먼저 그리고 위치를 알아낸 뒤 지역이 바뀌는데(`RegionStore._locate`), 그때 투데이가 통째로 새로 만들어져(KeyedSubtree 키 변경) 스플래시가 걷힌 뒤 1초쯤 뒤 로딩 원이 2~3초 다시 돌았음.
-  이제 투데이만 `keyed: false`로 두고 `didUpdateWidget`에서 새 지역 데이터를 받으며, 받는 동안은 이전 내용 위에 가는 진행 막대(`LinearProgressIndicator`)만 보임. 다른 탭은 그대로 지역이 바뀌면 새로 만듦.
-- **지도 앱 고르기 + 주말 날씨 통합 (2026-10-16)**: ①서버는 장소 항목에 지도 링크 대신 `pin`({name, q, lat?, lng?})을 줌(`places._pin`; 좌표가 한국 안이면 lat/lng). 앱 `widgets/map_links.dart`의 `openMapChooser`가 카카오맵·네이버지도·구글지도 중 고르게 하고
-  마지막에 쓴 앱을 맨 위에 둠(`LocalPrefs 'map_app'`, 통계 `life_open` 값 `map-○○`). 좌표 있으면 그 자리 핀(카카오 `link/map/이름,위도,경도`·네이버 `p/search/이름?c=경도,위도,15…`·구글 `search/?api=1&query=위도,경도`), 없으면 검색어(q). **앱으로 낼 땐 `mapUri`만 각 지도 앱 딥링크(`kakaomap://`, `nmap://`)로 바꾸면 됨.**
-  상세 시트(`_BenefitSheet`)는 누리집·예약 링크(`url`)가 있으면 그것이 대표 버튼, 없으면 "지도에서 보기"가 대표 버튼. ②한산한 곳(관광공사 집중률 원본은 관광지 이름·시군구뿐, 주소·좌표 없음)은 줄을 누르면 "시군구 + 이름" 검색으로 지도 앱 고르기.
-  ③주말 날씨는 `WeekendWeather`(`widgets/weekend_weather.dart`) 한 곳 — `/weather`의 주간 목록에서 토·일(일요일이면 오늘)을 뽑아 투데이 주간 날씨와 같은 줄(`weeklyRow`, 투데이 파일에서 이쪽으로 옮김)로 보이고, 밤 5° 이하·강수 50%↑면 줄 밑에 사실 한 줄. 장소 탭 도서관만 빼고 모든 구분 위에 한 번만 나오며, 한산한 곳·캠핑 안에 따로 있던 날씨 줄은 없앰(서버 `/outing` `/places`의 weather 필드는 응답에 남아 있으나 앱은 안 씀).
-- **톤앤매너 정리 (2026-10-16, 점검 보고 → 사용자 지시로 반영)**: ①공용 부품 — `PillChip`(dotColor·large·emphasized 추가; 예전 `_Pill`·`_Chip`·`_MiniPill` 제거), `ActionButton`(윤곽선/filled, 8개 파일의 직접 그린 버튼 대체), `LoadingNote`·`EmptyNote`(로딩·빈 목록 안내),
-  `SheetFrame`(상세 시트 틀: 세리프 24 제목+13 부제; 혜택·장소·정부 지원·시장이 씀; 생활지수·품목·행사 시트는 구조가 달라 아직 따로). 시장 상세의 지도도 장소와 같은 `openMapChooser`.
-  ②글자 크기를 규칙(11/13/16/24/60)에 맞춤: 10→11, 12·14→13, 15·18→16, 20·22·28→24(새로 쓸 때도 이 다섯 값만). ③`HighlightText`가 띄어쓰기 단위로만 줄을 바꿈(`keepAllWrap`, 공백 하나를 줄바꿈 하나로 바꾸므로 글자 위치·강조 구간 유지) — 한글이 글자 사이에서 끊겨 마지막 글자가 혼자 내려오던 것(예: "…21°예 / 요") 해결.
-  ④장소 탭 전용 색(`Section.place`, 초록 `#2E8B57`, 도형 `shape_place.png`는 AI 도형을 같은 색으로 다시 칠함). ⑤`SegmentToggle`이 칸이 넘치면 오른쪽 끝 흐림+화살표 단서(`_more`). ⑥생활 탭: 담은 품목이 없으면 대표 8품목(`suggestions`)의 지수·추이를 기본으로 보여주고, 담으면 내 장바구니로 바뀜(`usingDefault`).
-  ⑦문화 탭 맨 위 숫자는 "이번 주(월~일)에 열리는 행사"(예전 토·일) — 주말은 장소 탭이 맡음. 투데이 카드도 같은 기준("이번 주 행사", `api.py today`).
-- **상세 시트의 출처·안내는 ⓘ로 (2026-10-16)**: 시트 맨 아래에 줄줄이 있던 출처·기준 글(영양 "식약처 DB 기준", 정부24 출처, 시장 데이터 기준·휴장일 안내, 생활지수 출처, 행사 사진·출처, 축산물 평년 설명)을 제목·소제목 옆 ⓘ(`InfoIconButton` → `showNoteSheet`)로 옮김.
-  `SheetFrame(infoLines:)`는 제목 오른쪽에 ⓘ. 생활 품목 시트의 "내 장바구니에 담기/담김" 버튼은 목록 줄 끝 버튼이 이미 상태를 보여줘서 뺌. 시장 상세의 지도는 좌표가 없어(TourAPI로는 서울 14곳 중 6곳만 좌표 매칭) 도로명 주소로 검색.
-- **탭 이름 확정: 장소 → 나들이 (2026-10-16, 사용자 선택)**: 앞의 "장소 탭" 기록은 지금 `나들이` 탭을 가리킴(코드 이름 `placesScreen`·`Section.place`·통계 값 `place`는 그대로). 후보였던 외출·가볼 곳·여가·주변 중 사용자가 처음 이름이던 "나들이"로 되돌림.
-  탭 `투데이 · 생활 · 문화 · 나들이 · 혜택`. 애드핏 신청서의 광고 위치 설명은 "나들이 탭 목록 아래".
-- **목록 아래 작은 설명도 ⓘ로 (2026-10-16)**: 청약·공공임대·대출, 나들이 구분 목록, 정부 지원 목록 맨 아래 "○○ 기준 · …확인해 주세요" 한 줄은 제목 줄 ⓘ(`ListSection.action = InfoIconButton`; 정부 지원은 `내 조건` 버튼 옆)로, 한산한 곳 설명은 기존 ⓘ 설명에 합침, 생활 히어로의 "담은 N품목 합계…" 설명은 지난주 대비 줄 옆 ⓘ로.
-  **남겨 둔 글**: 동작에 필요한 안내(`scope_note` "○○에는 없어서 △△ 전체를 보여드려요"), 달력 범례, 자료 기준일 라벨(`trailing`: "10/14 기준 · 지난주 대비"). 새로 부가 설명을 넣을 땐 본문 아래에 늘어놓지 말고 ⓘ(`InfoIconButton`/`SheetFrame.infoLines`)에 넣을 것.
-- **나들이 탭 표·날씨 개편 (2026-10-16)**: ①한산한 곳은 토/일 알약 대신 **한 표에 토·일 열을 나란히**(`/outing` 응답이 `days`(열 정의)+`spots[].rates`(열 순서 집중률)로 바뀜; 정렬은 두 날 평균이 낮은 순, 두 날 값이 다 있는 곳 우선, 최대 30곳).
-  ②주말 날씨는 목록이 아니라 **히어로 안의 한 문장**(`WeekendWeatherLine`: 서버 `/weather`의 `weekend` 문장 + 비 50%↑·밤 5° 이하면 "○요일엔 우산을 챙기세요/○요일 밤엔 많이 추워요", 16 굵게 + 나들이 색 형광펜, 도서관 구분만 제외). 옛 `WeekendWeather`(줄 목록)는 삭제, 투데이 주간 날씨 줄은 `widgets/weekly_row.dart`로 분리.
-  ③ⓘ 안의 "○○ 기준이에요" 줄은 뺌(지역 안내 `scope_note`가 따로 있어서).
-- **나들이 날씨 문장 고정·형광펜 조정 (2026-10-16)**: 주말 날씨 문장(`WeekendWeatherLine`)을 도서관 포함 모든 구분의 히어로 안에 항상 같은 자리·같은 키로 둠(구분을 바꿔도 다시 만들어지지 않음). 받아 둔 값은 `_done`에 보관해 `initialData`로 써서 다시 그려도 빈 칸이 비치지 않고, 받는 동안은 한 줄 높이(30)만 비워 둠.
-  형광펜은 문장 전체가 아니라 '토요일'·'일요일' 글자(모든 등장 위치)만 — `HighlightText.emphasisAll`(여러 낱말·여러 위치 지원, 기존 `emphasis` 한 개와 같이 쓸 수 있음).
-- **전체 최적화: 두 번·세 번 하던 일 정리 (2026-10-16)**
-  ①**저장값 두 번 그리기 제거**: `main()`이 `LocalPrefs.init()`으로 설정을 먼저 읽고 `MyBasket.loadSync()`·`SupportProfile.loadSync()`를 부른 뒤 `runApp` — 지역(`RegionStore`)·내 장바구니·마지막 구역(`SegmentedHost`)·숨긴 생활지수·달력 종류 칩·통계 스위치·내 조건이 **첫 프레임부터 저장값**으로 시작.
-  예전엔 기본값으로 한 번 그리고(요청까지 보내고) 저장값으로 다시 그려서, 정부 지원이 조건 없이 한 번·조건으로 또 한 번 요청하고, 구역 전환이 첫 구역 요청을 먼저 보내고, 장바구니 히어로가 "대표 → 내 것"으로 깜빡였음. 새 저장값을 화면에서 읽을 땐 `LocalPrefs.stringSync/listSync`를 쓸 것(비동기로 읽어 `setState`하지 말 것).
-  ②**요청 기억을 한 곳으로**: 화면마다 따로 있던 TTL 메모 6개(장소·혜택·정부 지원·한산한 곳·장바구니 카드·날씨 문장)를 `ApiClient._memoGet`으로 합침(같은 조건은 ttl 동안 재요청 없음, 받는 중인 요청도 공유, 실패는 기억 안 함). 그 덕에 투데이와 나들이 날씨 문장이 `/weather`를, 생활과 투데이 장바구니가 `/market`을 **한 번만** 받음.
-  ③**스플래시가 받은 날씨를 앱이 재사용**: `index.html`이 `window.__dcEarly = {key:'시도|시군구', p: Promise<본문>}`을 만들고 `splash_web.dart takeEarlyWeather`가 같은 지역이면 첫 `weather()`에 한 번 꺼내 씀 → 시작할 때 `/weather`가 2번 → 1번(라이브 확인: 시작 요청은 weather·today 둘).
-  ④작은 것들: 투데이의 스플래시 걷기·준비 신호는 한 번만(`kFirstScreenReady` 확인), `keepAllWrap`은 같은 글·폭이면 다시 재지 않음(`_wrapMemo`), `SegmentToggle`의 후처리 예약은 처음 한 번.
-  ⑤**서버**: `store.load_cache(name, shared=True)`가 파싱한 JSON을 기억(저장 시각이 같으면 재사용, 최대 8개 LRU)하고 `_cache.cached(..., shared=True)`로 큰 읽기 전용 캐시(캠핑 3,000곳·도서관·반려동물·웰니스·한산한 곳)에 적용 — 따뜻한 상태에서 캠핑 145→26ms, 한산한 곳 28→11ms, 응답은 같음.
-  **`shared=True`로 받은 값은 읽기만 할 것**(여러 요청이 같은 객체를 씀). 측정: 서버 응답은 대부분 35ms 이하라 병목은 서버가 아니라 앱의 중복 요청·재렌더였음.
-- **ⓘ는 제목 바로 뒤에 (2026-10-16)**: 오른쪽 끝 정렬이 아니라 제목 글 끝에 붙임(맨 위 "데일리컷 날짜 ⓘ"처럼) — `ListSection(info:)`(오른쪽 끝 `action`은 `내 조건` 같은 버튼 전용), `SheetFrame`·생활지수·축산물·행사 시트 제목은 `Flexible`+ⓘ.
-- **스와이프 규칙 + 달력 확장 (2026-10-16)**: 폰에서 옆으로 밀 때의 동작을 층별로 정함(`widgets/swipe.dart`의 `SwipeDetector`: 터치·펜만, 속도 300px/s 넘어야 인정, 마우스 끌기는 무시) — **가장 안쪽이 이김**(Flutter 같은 방향 제스처 규칙; `test/swipe_test.dart`로 확인).
-  ①기본(맨 바깥 `RootShell`) = 이웃 **탭 이동** ②하위 구분이 있는 화면(`SegmentedHost`: 나들이·혜택, 음악이 살아나면 문화)의 본문 = **구분 이동**, 첫 구분에서 오른쪽/마지막에서 왼쪽으로 밀면 이웃 탭으로 이어짐(`boot.dart`의 `swipeToTab`)
-  ③문화 **달력** 위 = **달 이동**(끝에서 더 밀어도 탭이 안 넘어감). 가로로 움직이는 칸(시간대별 날씨·구분 버튼 줄·차트 끌기)은 그 칸이 먼저 반응. 새 가로 제스처를 넣을 땐 이 우선순위를 깨지 않게 `SwipeDetector`를 쓸 것.
-  달력은 이번 달 → 그 뒤에 걸치는 행사가 있는 달까지 `‹ ›`·스와이프로 넘어감(지금 데이터는 12월 초까지라 12월이 마지막; 지난 달은 끝난 행사라 데이터가 없어 이번 달 이전은 막음). 이 달에 걸치는 행사가 5건 미만이면 달력 아래 "이 달은 아직 등록된 행사가 적어요".
-- **한산한 곳을 숫자 대신 4단계 시각으로 (2026-10-16)**: 집중률(0~100)은 사람 수가 아니라 **그 관광지의 앞으로 한 달 안에서의 상대 지수**(서울 20,250개 값: 10%가 30 아래, 중앙값 60, 90%가 91 아래; 한 곳이 한 달에 3→100까지 움직임). 그래서 30 아래 **한산**(초록) · 30~60 **보통**(황토) · 60~80 **붐빔**(주황) · 80↑ **매우 붐빔**(빨강)으로 나누고,
-  칸마다 단계 이름(색)+작은 막대(`_CrowdCell`), 표 위에 색 점 범례, 설명은 제목 옆 ⓘ(`_explain`). 서로 다른 관광지를 사람 수로 비교한 게 아니라 "같은 곳에서 덜 붐비는 날 찾기" 용도라고 밝힘.
-- **나들이는 시군구에 없으면 상위 지역으로 채우지 않음 (2026-10-16, 사용자 결정)**: 예전 규칙("시군구 항목이 있으면 그것만, 없으면 시도 전체+안내", 위 "지역 반영 규칙")은 **나들이(도서관·캠핑·반려동물·웰니스·걷기길·한산한 곳)에서는 폐기** — `places._scope`가 시군구를 골랐는데 없으면 빈 목록을, `outing.weekend`는 `empty: true`를 돌려주고,
-  앱은 "○○에는 등록된 곳이 없어요. 다른 지역으로 찾아보세요 ›"(누르면 지역 고르기). **혜택의 청약·공공임대는 아직 옛 규칙(시도 전체로 채움)** — 정부 지원은 우리 시군구→시도→중앙부처 순 그대로.
-- **반려동물 동반 크기를 발바닥 아이콘으로 (2026-10-16)**: 나들이 > 반려동물·캠핑 목록 줄 오른쪽에 `_PetBadge` — 함께 갈 수 있는 크기를 **발바닥(`Icons.pets`) 개수**로(1개 소형견만 · 2개 중·소형견 · 3개 모든 크기, 나들이 초록), 회색 발바닥 1개 = 안내견·보조견만/조건 있음/캠핑의 "동반 가능"(크기 안내 없음), 금지 표시 = 동반 불가. 아래 작은 글로 단계 이름. 이모지는 폰트가 없어 안 씀.
-  **데이터**: 캠핑(고캠핑)은 목록 필드 `animalCmgCl`(가능 656·가능(소형견) 454·불가능 1,391·빈값)로 바로. 반려동물 동반여행(`KorPetTourService2`)은 **목록에 크기 정보가 없고** 장소마다 `detailPetTour2`(동반 유형 `acmpyTypeCd`·가능 동물 `acmpyPsblCpam`·필요 사항 `acmpyNeedMtr`·참고 `etcAcmpyInfo`)를 한 번씩 불러야 함 →
-  `places._pet_detail`(장소별 7일 캐시 `petd:{id}`) + `pet_level()`이 문구를 단계로 분류(안내견·보조견→guide, 불가→no, "대형견 제외"→mid, 소형견·N kg 이하→small, 전 견종·모든→all, 고양이→"개·고양이", 그 밖→other, 빈 문구→배지 없음). 서울 76곳 기준 모든 크기 53·안내견 5·소형견 4·조건 있음 2·중소형 1·개·고양이 1·불가 1·빈 8.
-  **첫 응답이 오래 걸리지 않게**: 이미 저장된 상세는 바로 쓰고(`_cache.peek`), 없는 것은 풀(`_PET_POOL` 8개)로 받되 2.5초만 기다려 받은 것만 싣고 나머지는 뒤에서 계속 받아 둠(다음에 열면 더 채워짐; 경기 127곳은 첫 호출에 14곳만). 서울은 `places_warm`이 미리 받아 둠. 상세 시트에는 동반 유형·가능 동물·필요 사항·참고가 줄로 붙음. 발바닥 읽는 법은 목록 제목 옆 ⓘ.
-- **동반 크기 아이콘을 직접 그린 강아지로 (2026-10-16, 위 발바닥 표시를 대체)**: `widgets/dog_icon.dart`의 `DogIcon`(CustomPainter, 선으로만·이모지 폰트 안 씀) — 소형견(다리 짧고 둥근 쫑긋 귀)·중소형(`DogSize.medium`)·대형 비율, `DogSize.all`은 세 마리가 크기 순으로 나란히. 목록 배지(`_PetBadge`)는 small→소형견, mid→중간, all→세 마리, 회색 한 마리=안내견·조건 있음·크기 안내 없는 동반 가능, 금지 표시=불가.
-  모양을 바꿀 땐 `flutter test --update-goldens test/dog_golden_test.dart`로 `test/goldens/dogs.png`를 뽑아 눈으로 확인.
-- **광고 전 공공데이터 라이선스 재점검 (2026-10-16, 포털 각 데이터 상세 페이지의 이용허락범위 확인)** — 지금 쓰는 소스는 전부 **상업적 이용 가능**: 제한 없음 = 기상청 지진(15000420)·생활기상지수(15085288)·천문연 특일(15012690)/출몰시각(15012688)·aT 최근일자 소매가(15156063)·축산물유통정보(15000577)·
-  관광공사 국문 관광정보(15101578)/집중률(15128555)/고캠핑(15101933)/반려동물 동반(15135102)/웰니스(15144030)/두루누비(15101974)·문화정보원 한눈에보는문화정보(15138937)·지역정보개발원 공공도서관 열람실(15142580)·소상공인시장진흥공단 전통시장현황(15052837, 파일)·행안부 공공서비스(15113968)·청약홈(15098547)·마이홈 공공주택 모집공고(15108420)·LH 분양임대공고문(15058530)·서민금융진흥원(15106208)·식약처 영양성분(15127578);
-  공공누리 1유형(출처표시) = 기상청 단기·중기예보·기상특보·꽃가루; **공공누리 3유형(출처표시·변경금지) = 한국환경공단 에어코리아(15073861)**. 사진은 관광공사 Type1만·위키미디어 CC만(위 기존 규칙). 금융위·금감원·KOBIS는 그대로 제거 상태(코드 import 없음).
-  **에어코리아 3유형(변경금지) 대응 완료 (2026-10-16)**: 예전엔 시군구 측정소 평균을 내고 등급을 직접 다시 매겼으나(2차 저작물 소지) → `weather._air`가 **측정소 한 곳의 실시간 원값과 에어코리아가 준 1시간 등급(`pm10Grade1h`·`pm25Grade1h`, API `ver=1.3`)을 그대로** 보여줌.
-  측정소 선택: 시군구를 골랐으면 그 시군구 측정소 목록에서 값이 있는 첫 곳, 시도만 골랐으면 시도청에 가장 가까운 시군구의 측정소부터(서울→중구, 부산→연산동). 화면 설명·출처 문구도 "○○ 측정소 · 측정 시각 · 가공 없이 표시"로 바꿈. **이 값에 평균·재등급·반올림 같은 가공을 다시 넣지 말 것.** 빨래·세차 판정의 입력으로 쓰는 건 그대로(우리 자체 지수).
-- **안드로이드 APK 빌드 (2026-10-17)**: `cd app && flutter build apk --release --dart-define=API_BASE_URL=https://itssophie.dev/dailycut-api` → `app/build/app/outputs/flutter-apk/app-release.apk`(약 55MB, 모든 CPU 포함; 복사본은 `dist/`, git 제외). 패키지 `com.dailycut.dailycut`, 앱 이름 `데일리컷`, 버전은 `pubspec.yaml version`.
-  **릴리스 매니페스트에는 `INTERNET` 권한이 기본으로 없어서** `AndroidManifest.xml`에 직접 넣음(없으면 폰에서 데이터를 못 받음) + 위치(`ACCESS_COARSE_LOCATION`) + 웹 링크용 `<queries> https VIEW`. 웹 전용 코드 주의: 앱에서는 `Uri.base`가 파일 경로라 상대 링크가 깨짐(`sources_info.dart`는 `kIsWeb` 분기).
-  지금 APK는 **디버그 키로 서명**(`build.gradle.kts`의 release 서명) — 기기 설치·테스트용. **스토어 출시 전에 할 일**: 업로드 키스토어 만들기(분실하면 업데이트 불가, 비밀번호는 git 밖에), `key.properties`+서명 설정, 앱 아이콘·스플래시(지금은 플러터 기본 아이콘), AAB(`flutter build appbundle`)로 올리기, 개인정보처리방침 URL(`itssophie.dev/dailycut/privacy.html`)·데이터 보안 양식, 광고는 앱용 애드몹으로 이미 교체됨.
-- **APK 내려받기 링크 (2026-10-17)**: `https://itssophie.dev/dailycut/download.html`(설치 안내+버튼, `app/web/download.html`, `noindex`) → 파일 `https://itssophie.dev/dailycut/dailycut.apk`(서버 `/var/www/dailycut-app/dailycut.apk`, 웹 배포 `tar`는 파일을 덮어쓰기만 해서 지워지지 않음).
-  **새 APK를 올리는 법**: 빌드 후 `scp`로 `/tmp`에 올리고 `sudo cp /tmp/dailycut.apk /var/www/dailycut-app/dailycut.apk`, 그리고 `download.html`의 버전·크기·SHA-256(`sha256sum`)을 갱신해 같이 올릴 것. nginx에 apk MIME이 없어 `application/octet-stream`으로 나가지만 내려받기는 정상(필요하면 `types { application/vnd.android.package-archive apk; }`).
-- **위치 안내 흐름 개편 (2026-10-17, 폰 테스트 피드백)**: 예전엔 앱을 켜자마자 시스템 권한 창이 불쑥 떴고, 저장된 지역이 없으면(GPS로 찾은 지역은 저장 안 했음) **켤 때마다 위치를 다시 읽었음**. 지금은 `lib/location_flow.dart`:
-  ①첫 화면이 뜬 0.8초 뒤 **설명 시트**("내 지역으로 시작할까요?" — 대략적 위치를 한 번만, 정확한 위치는 저장 안 함) → "내 위치로 시작"을 눌렀을 때만 권한 창(`LocationService.request`), "직접 고를게요"는 지역 선택 시트. 한 번 물어본 기기는 `loc_asked` 플래그로 다시 안 띄움(이미 허용된 기기는 묻지 않고 조용히 한 번 맞춤).
-  ②찾은 지역은 `RegionStore.locate()`가 **저장**(`choose`) → 다음 실행부턴 위치를 읽지 않음. 이사·여행은 지역 선택 시트 맨 위 **"현재 위치로 찾기"** 버튼. ③거부(`askable`)·"다시 묻지 않음"(`blocked`, 폰 설정 열기 버튼)·위치 서비스 꺼짐(`off`)·못 찾음이면 잠깐 뜨는 안내 시트로 "지역 직접 고르기".
-  ④투데이 맨 위 "서울 · 기본"의 **"· 기본" 꼬리 삭제**(다른 탭엔 없어서). `LocationService`는 이제 `access()`(묻지 않고 상태)·`request()`(권한 창)·`read()`(대략 위치)로 나뉨.
-- **장보기 시세: 정육 합치기 + 곡물 이름 정리 (2026-10-17)**: 분류 칩은 `채소 · 과일 · 수산 · 정육 · 곡물 · 양념`("곡물·두류"→"곡물", 옛 "축산"→"정육"). **정육은 출처가 달라도 같은 목록**에 섞음 — `livestock.catalog_rows()`(축산물품질평가원 소·돼지 소비자가격 100g당, 14개 부위)가 aT 품목 행과 같은 모양(+상세용 `detail`·`label`)으로 만들고 `api.py market_route`(`/market`)가 `catalog`에 붙임.
-  정육 줄은 누르면 기존 축산물 상세 시트(평년 대비·가격 범위), 제철 표시 없음. **장바구니에도 담을 수 있음**(처음엔 뺐다가 같은 날 허용): `livestock.chart_items()`가 aT 품목의 `chart_items`와 같은 모양(단위 원/100g, 이번 달 흐름은 축산물 `price_history`)으로 만들고 `market_route`가 `chart_items`에 합침 — 합계 설명은 "1kg·1개·100g 등 1단위씩"(단위가 달라도 지수는 지난주 대비 비율이라 계산은 같음). 따로 있던 "축산물 시세" 구역은 생활 화면에서 삭제(응답의 `livestock` 필드는 옛 앱 호환용으로 유지).
-  **작은 그래프**: 줄마다 `series` = 최근 14일 안에 기록된 가격 점 최대 8개(`price_history`), 3개 미만이면 그래프 없음. 정육은 `livestock` 작업이 매 실행 때 지난 14일 값을 채움(이미 있는 날은 건너뜀, 휴일은 다시 시도; `store.price_days`). **회색 `－` = 변동 ±0.5% 이내(보합) 또는 비교값 없음**, 빨강 ▲ 상승·파랑 ▼ 하락. 이 설명은 장보기 시세 제목 옆 ⓘ "읽는 법".
-  **옛 앱 주의**: 분류 이름을 바꿨기 때문에 1.0.0 APK는 "곡물" 품목이 안 보임 → 1.0.1(`pubspec version: 1.0.1+2`)로 올려 다시 배포(`download.html`).
-- **"보합" 표시를 쉬운 말로 (2026-10-17, 폰 테스트 피드백)**: 진한 회색 그래프 + `－ 0.4%`가 마이너스처럼 읽혀 헷갈린다는 의견 → `changeLabel()`은 변동 ±0.5% 이내(`flat`)면 숫자 대신 **"비슷해요"**, 작은 그래프 색은 `sparkColor()`로 **옅은 회색**(오르면 빨강·내리면 파랑은 그대로). 장바구니 히어로는 "지난주와 비슷해요 (+0.2%)"(부호 있는 값은 괄호로). "보합" 같은 한자어는 화면에 쓰지 않음. 장보기 시세 ⓘ "읽는 법"도 같은 말로 고침.
-- **앱 광고: 구글 애드몹 연결 (2026-10-18)**: `google_mobile_ads`(^9.1) 추가. `AdSlot`은 앱에서만 그려짐(웹은 아무것도 안 그림) — `widgets/ad/ad_view_mobile.dart`의 `_AdmobBanner`(320x100 `AdSize.largeBanner`, **광고가 실제로 불러와졌을 때만** "광고" 라벨 포함 칸이 보임·실패하면 칸 없음), 앱 시작 때 `initAdsIfEnabled()`로 한 번 초기화. 자리는 웹과 같은 4곳(생활·나들이 구분들·문화·혜택 목록 아래).
-  **빌드 방법**: 광고 단위 ID는 `--dart-define=ADMOB_BANNER_ID=ca-app-pub-…/…`(비면 앱에서 광고 칸이 안 그려짐), 앱 ID는 `android/gradle.properties`의 `ADMOB_APP_ID`(없으면 구글 공식 **테스트 앱 ID** `ca-app-pub-3940256099942544~3347511713`, 매니페스트 `${admobAppId}` 자리표시자). 지금 올린 APK 1.1.0은 구글 공식 테스트 배너(`…/6300978111`, "Test Ad")로 빌드 — 실제 ID가 오면 둘 다 바꿔 다시 빌드.
-  **실제 광고 전에 할 일**: ①애드몹 계정·앱 등록(앱 ID)·배너 광고 단위 만들기 ②실제 ID로 교체(테스트 ID로 실서비스하면 안 됨, 개발 중 실제 광고 ID로 내 광고를 누르면 계정 정지 위험) ③Play Console "데이터 보안" 양식에 광고 ID 수집 선언(SDK가 `AD_ID`·`ACCESS_ADSERVICES_*` 권한을 매니페스트에 합침) ④EEA·영국 사용자에게 배포한다면 UMP 동의(애드몹 콘솔 "개인정보 보호 및 메시지") — 한국만 배포하면 생략 가능 ⑤iOS는 앱 ID·광고 단위가 따로(Info.plist) ⑥출시 전 "광고가 있는 앱" 표시.
-  개인정보처리방침 3항을 앱(애드몹)으로 고침(광고 식별자·맞춤설정 끄는 법 링크).
-- **카카오 애드핏 탈락 → 광고는 애드몹 하나로 (2026-10-18)**: 애드핏 심사에서 떨어져 웹 광고 코드(`ad_view_web.dart`·`web/ad.html`·`ADFIT_UNIT`)를 모두 걷어냄. 지금은 **앱(안드로이드·iOS)에서만 애드몹**, 웹사이트는 광고 없음
-  (`kAdsEnabled => !kIsWeb && ADMOB_BANNER_ID 있음`). 웹에도 광고가 필요하면 구글 애드센스를 따로 신청해야 함(애드몹은 앱 전용). 위쪽 노트의 "애드핏 신청서" 설명은 옛 기록. 개인정보처리방침 3항·출처 시트도 "웹 광고 없음, 앱은 애드몹"으로 맞춤.
-
-## 톤/작업 스타일
-
-이슈팝과 같은 방식 유지 — 감으로 값 정하지 말고 실제로 돌려서 확인, 코드에
-"왜 이렇게 했는지" 날짜와 함께 남기기.
-- **APK 1.1.0은 켜자마자 죽었음 → 1.1.1로 수정 (2026-10-18)**: 사용자가 "앱 실행이 안 돼"라고 알려줘서 에뮬레이터(`Pixel_3a_API_34`, `adb` = `%LOCALAPPDATA%\Android\Sdk\platform-tools`)에 설치해 재현함 — `FATAL EXCEPTION … Failed to create an instance of androidx.work.impl.WorkDatabase`.
-  원인: 애드몹 SDK가 끌고 온 WorkManager의 Room DB 클래스(`WorkDatabase_Impl`)를 **릴리스 빌드의 R8(코드 축소)이 지워서** 앱 시작 단계에서 죽음(디버그 빌드·웹에선 안 보임). 해결: `android/app/proguard-rules.pro`(Room/WorkManager 보존) + `build.gradle.kts` release에 `proguardFiles(...)`. 1.1.1(+6)로 다시 빌드해 에뮬레이터에서 정상 실행·애드몹 SDK 초기화·광고 요청까지 확인하고 `download.html`에 배포.
-  **교훈: 네이티브 SDK(광고·푸시 등)를 추가한 뒤엔 릴리스 APK를 에뮬레이터/실기기에서 한 번 켜 보고 올릴 것** — `flutter analyze`·웹 빌드로는 안 잡힘. 테스트 광고 칸이 실제로 보이는지는 에뮬레이터에서 못 봤음(요청은 나감; 광고 칸은 생활 탭 장보기 시세 목록 아래 등).
-- **홈 화면 위젯 4종 (2026-10-18, 안드로이드 네이티브)**: 사용자가 "각각 위젯으로도, 한 군데 다 모은 것도 좋다"고 해서 둘 다. `WeatherWidget.kt`(AppWidgetProvider 4개 + 공용 데이터·일정)·`res/layout/widget_*.xml`·`res/xml/*_info.xml`·`res/values(-night)/colors.xml`·매니페스트 `<receiver>` 4개.
-  ①**오늘 한눈에**(4x3, 클래스명 `WeatherWidget` — 처음 만든 날씨 위젯 이름 그대로 둠): 날씨·미세먼지 + 줄(장바구니·청약·이번 주 행사), 줄마다 해당 탭으로 열림, 높이 150dp 미만이면 장바구니만 남김 ②날씨(4x2, `WeatherOnlyWidget`) ③장바구니(2x2, `BasketWidget`: 합계 금액+형광펜 "지난주보다 5.4% 내렸어요") ④청약(4x2, `HousingWidget`: 접수 중 N건+마감 가장 가까운 공고). 디자인은 앱 결: 섹션 색 점(생활 노랑·혜택 남색·문화 빨강), 큰 숫자 세리프, 형광펜, 가는 선, 다크 모드 색.
-  **데이터는 서버 `/widget` 한 번**(`api.py _widget`): 날씨·미세먼지·옷차림 + 장바구니(앱 생활 탭 히어로와 같은 계산) + 청약 접수 중 건수 + 이번 주 행사 수. 내 장바구니 품목은 **POST 본문**으로만(GET 쿼리는 접속 로그에 남음). 지역·품목은 앱이 저장한 `FlutterSharedPreferences`(`flutter.region_code`·`region_sgg`·`my_basket_v2` — 플러터 리스트는 앞에 `VGhpcyBp…Qu!`가 붙은 JSON 문자열)를 위젯이 직접 읽음, 좌표는 안 읽음.
-  **끊겨도 멈추지 않는 갱신(WorkManager, `WidgetSync`/`WidgetSyncWorker`)**: 새로 받는 일은 전부 백그라운드 작업이 함 — 위젯 `onUpdate`는 받아 둔 값을 바로 그리고 "연결되면 한 번" 작업만 걸어 둠. ①오프라인이면 연결되는 순간 안드로이드가 실행 ②실패(서버 느림·오류)하면 지수 백오프(30초~)로 재시도 ③30분마다 반복 작업(연결 조건)도 겸함(제조사별 updatePeriodMillis 불안정 보완) ④새로 못 받는 동안엔 마지막 값을 지우지 않고 90분 넘으면 "오래된 정보"로 표시, 지역·품목이 바뀐 값이면 옛 지역 값 대신 "불러오는 중" ⑤위젯이 하나도 없으면 반복 작업 취소. 앱에서 지역·장바구니를 바꾸면 `widget_bridge.dart`→MethodChannel `dailycut/widget` `refresh`→`WidgetSync.now(replace)`. 위젯을 누르면 `tab` extra로 앱이 해당 탭으로 열림(`initialTab`·`openTab`).
-  **에뮬레이터로 확인한 것(2026-10-18, Pixel 3a API 34)**: 4종 위젯 선택창 미리보기(`previewLayout`+`widget_preview_*.xml`) 정상, 실데이터 렌더, 다크 모드, **인터넷 끊고 지역 변경 → 작업이 연결 대기 → 연결 복구 후 약 20초 뒤 자동 갱신**, 처음 부른 지역이 느려 시간 초과(첫 시도 실패) → 30초 뒤 자동 재시도로 성공.
-  **주의(실제로 겪은 것)**: ①위젯(RemoteViews)에는 일반 `<View>`를 못 씀 — 구분선은 `FrameLayout`(처음에 View를 써서 "오늘 한눈에"·날씨가 "Can't load widget"이었음, 미리보기로 발견) ②스팬(형광펜 배경)의 색은 그릴 때 한 번 정해져서 테마가 바뀌어도 안 바뀜 → 띠는 항상 밝게·그 위 글자는 항상 진하게 고정 ③지역 이름만 바뀐 새 지역의 첫 `/widget` 요청은 서버에서 20~30초(날씨 콜드)라 위젯 읽기 대기시간을 45초로 둠.
-  다음 후보: 이번 주 행사·한산한 곳 단독 위젯, iOS 위젯(WidgetKit, 지금 iOS 빌드 없음), 안드로이드 12+ 둥근 모서리를 시스템 값(`system_app_widget_background_radius`)으로.- **위젯 2차: 대표 품목·청약 기준 정리 (2026-10-19, APK 1.3.1)**: ①**장바구니 위젯 대표 품목**: 장보기 시세 품목 상세(채소·과일·수산·정육 모두)에 "홈 화면 위젯에 이 품목 보이기" 버튼(`widgets/widget_item_button.dart`, 기기 저장 `widget_item`, 서버엔 저장·로그 안 함).
-  고르면 장바구니 위젯과 "오늘 한눈에"의 장바구니 줄이 그 품목의 가격·단위·지난주 대비로 바뀌고(`/widget` POST `item` → `basket.single`), 빼면 내 장바구니→대표 8품목 합계로 돌아감. 위젯이 `flutter.widget_item`을 직접 읽음.
-  ②**청약 위젯 기준**(질문 "지금 위치를 바꿨는데 같게 나온다"에서 찾은 것): 데이터는 청약홈(APT·무순위·오피스텔/도시형·공공지원민간임대 4종)에서 접수가 안 끝난 공고를 **시도로 거르고**, 고른 시군구에 접수 중인 게 있으면 그것만, 없으면 시도 전체로 채움 — 이 대체 사실이 위젯엔 안 보여서 같은 시도 안에서 구를 바꿔도 똑같아 보였음.
-  → 이제 서버가 `housing.region`·`housing.fallback`을 주고 위젯이 "서울 전체 · 접수 중 2건"/"청약 · 강남구엔 없어 서울 전체"로 범위를 밝힘. 또 "접수 중 N건"을 태그 글자("접수 중…")로 세서 **"오늘 마감" 공고가 빠졌음** → 공고 항목에 `open`(접수 중 여부, 오늘 마감 포함)을 추가해 그걸로 셈(`benefits.py`).
-  위젯은 **앱에 저장된 지역**(시도·시군구)을 따라감 — 폰의 GPS를 따라가지 않음(위치는 앱의 "현재 위치로 찾기"를 눌렀을 때만 읽어 저장). 위치가 바뀌었다고 위젯이 저절로 옮겨 가진 않음.
-  혜택 vs 청약: 위젯엔 기한이 있는 **청약**이 더 맞음(D-day·마감 임박이 눌러 볼 이유). 정부 지원은 건수가 많고 기한이 거의 없으며 "내 조건"(기기에만 저장)이 있어야 의미가 있어서, 위젯에 넣으려면 조건을 위젯이 읽어 서버에 보내야 함 → 개인정보 정책(조건은 저장·로그 안 함) 재검토 후.
-- **앱 아이콘 적용 (2026-10-19, APK 1.3.2)**: 사용자가 만든 아이콘(`app/assets/icon/app_icon*.png`·`app_icon.svg`, 설정 `app/flutter_launcher_icons.yaml`)을 `flutter pub add dev:flutter_launcher_icons` → `dart run flutter_launcher_icons`로 적용 —
-  안드로이드(적응형: 배경·전경 따로, 매니페스트 `android:icon="@mipmap/launcher_icon"`)·iOS(AppIcon 전체 크기)·웹(`web/favicon.png`·`web/icons/*`·`manifest.json` 테마색 `#E08A3E`)이 한 번에 새로 만들어짐. 아이콘을 바꾸면 이 명령을 다시 돌릴 것.
-  **웹 쪽 새 아이콘(파비콘·PWA 아이콘)은 웹을 다시 빌드·배포해야 사이트에 반영됨**(이번엔 APK만 배포).
-- **위젯 3차: 주거 위젯·구역 직행·광고 위치 (2026-10-19, APK 1.3.3)**: ①**청약 위젯 → "주거"**(클래스명 `HousingWidget` 그대로): 청약은 접수 중이 대부분 지역에서 0건(서울·경기·인천·경남 0, 부산 1)이고 공공임대는 항상 채워져서(서울 4~7·경기 6~24·인천 5~16) 공공임대를 앞, 청약 건수를 뒤에("공공임대 7건 · 청약 0건").
-  서버 `/widget`에 `rent`(공공임대 요약) 추가(기존 `housing`=청약은 옛 위젯 호환용으로 그대로). **임대상가 입점자·토지(용지) 공급 공고는 주거가 아니라서 위젯 건수에서 빼고**(`benefits.py`의 `commercial` 표시: 이름·종류에 상가/입점/용지) 앱 공공임대 목록에서도 주택 뒤로 보냄.
-  ②**위젯을 누르면 해당 구역으로**: 인텐트 extra `tab`에 ":구역"을 붙임(`money:rent`·`money:apply`; 공공임대가 접수 중이면 rent, 아니면 청약이 접수 중일 때 apply). 앱은 `_openTabKey`→`SegmentedHost.request(prefKey,label)`(아직 안 만든 화면은 저장값으로 그 구역에서 시작, 떠 있는 화면은 신호로 바로 전환). 에뮬레이터에서 위젯 탭 → 혜택 > 공공임대로 열림 확인.
-  ③**광고 위치**(원칙: 위젯이 약속한 내용을 먼저 보여 준 다음 자연스러운 경계에 한 번, 버튼 옆·내용 앞은 피함): 생활 = 장바구니 차트와 "장보기 시세" 사이, 혜택(청약·공공임대·대출) = 공고 맨 위 3개 다음(`BenefitFeed`, 광고도 목록 한 칸이라 `limit`+1), 혜택 정부 지원 = 맨 아래, 문화·나들이는 그대로(맨 아래), **투데이는 광고 없음**(첫 화면).
-  광고 칸 아래 여백 16 추가. 위젯 장바구니 선택 규칙: 대표 품목 1개 > 내 장바구니 합계 > 대표 8품목 합계(고르는 곳은 앱 안, 위젯 추가 때 고르는 설정 화면은 아직 없음).
-- **출시 전 점검 후 정리 5종 (2026-10-19, APK 1.3.4)** — 전체 점검(성능·데이터 보관·권한·법·구조)에서 나온 고칠 것 중 1~5를 처리:
-  ①**개인정보처리방침**(`app/web/privacy.html`, 시행일 10-19): 위젯(저장된 지역·품목을 읽어 약 30분마다 백그라운드로 서버에 요청, 본문으로만 보내고 저장 안 함, GPS 안 읽음), 앱 권한 표(위치 선택·인터넷/네트워크 상태·광고 ID), 국외 이전·처리 표(구글 LLC 미국: 광고 식별자·IP·기기 정보 / Oracle 일본: 접속 기록 14일), 자동 백업 미사용을 추가. **법률 자문 아님 — 위치정보법상 위치기반서비스 신고 필요 여부는 별도 확인 필요(좌표는 저장 안 함).** 동작을 바꾸면 방침도 같이 고칠 것.
-  ②**자동 백업 끔**(`android:allowBackup="false"`): 기기에 저장한 생년월일·내 조건·장바구니가 구글 드라이브로 복사돼 "기기에만 저장" 문구와 어긋나던 것. 폰을 바꾸면 이 값은 안 옮겨짐(의도).
-  ③**포그라운드 서비스 권한·서비스 제거**(매니페스트 `tools:node="remove"`: `FOREGROUND_SERVICE`, `androidx.work…SystemForegroundService`): 위젯용 WorkManager가 끌고 온 것인데 안 쓰고, 남기면 플레이 콘솔이 포그라운드 서비스 선언을 요구할 수 있음. 제거 뒤에도 `WidgetSyncWorker` 성공 확인. 남은 권한: INTERNET·ACCESS_COARSE_LOCATION·ACCESS_NETWORK_STATE·WAKE_LOCK + 애드몹 쪽(AD_ID·ACCESS_ADSERVICES_*).
-  ④**데이터 보관 기준과 정리 작업**(`sources/maintenance.py` → `store.prune`, 하루 한 번, 단위 점검 `python backend/test_prune.py`): 요청 때 계산한 캐시(이름에 ':' 또는 '/')는 7일 안 갱신되면 삭제(날짜가 키인 `culture:kcisa:YYYYMMDD`가 하루 600KB씩 쌓이던 것 — 1년 약 220MB), 작업 이름과 같은 칸(last-good)은 유지, 익명 통계 24개월, **가격 이력은 계속 보관**(인사이트용 자산)하되 400일 넘게 기록이 끊긴 품목(2010년 조사값 등)만 삭제, 삭제가 있으면 VACUUM.
-  적용 결과: DB 44→32MB, 캐시 228→197행, 가격 이력 죽은 품목 15행 삭제. 나머지 보관: nginx 접속 로그 14일(logrotate), DB 백업 14일(같은 서버 안이라 서버 자체 유실엔 못 막음 → 다른 곳 보관은 TODO).
-  ⑤**nginx 요청 제한·보안 헤더**(`/etc/nginx/sites-available/itssophie.dev`, 백업 `.bak-20261019004916`): `/dailycut-api/`에 IP당 초당 20회·순간 60회(`limit_req zone=dc_api`, 초과 시 429 — 400회 동시 요청 시험에서 288회 차단되고 잠깐 쉬면 풀림), `/dailycut/`에 HSTS(180일, 호스트 전체에 적용되지만 모든 프로젝트가 HTTPS 전용)·nosniff·Referrer-Policy·X-Frame-Options·Permissions-Policy(geolocation=self). CSP는 CanvasKit(wasm)·구글 CDN 때문에 일부러 안 넣음. 같은 서버의 다른 프로젝트(포트폴리오·Cortex 등)엔 안 걸리게 데일리컷 구간에만 적용.
-  **아직 남은 것(점검 보고)**: 실제 애드몹 ID 교체(지금 테스트 ID)·EEA 배포 시 UMP·"정부와 무관" 문구, 소스별 최대 허용 나이(갱신이 오래 실패해도 옛 값을 계속 보여 줌), `components.dart` 1,752줄 분리·상세 시트 틀 통일(SheetFrame 미사용 4종)·하드코딩 색 21곳·핵심 계산 테스트(현재 5개), AAB 서명 키스토어, `--obfuscate --split-debug-info`, DB 백업 외부 보관.
-- **애드몹 실제 ID 교체 절차 + 테스트 기기 (2026-10-19)**: 실제 ID가 오면 ①앱 ID → `app/android/gradle.properties`의 `ADMOB_APP_ID=ca-app-pub-…~…` ②광고 단위 ID → 빌드 옵션 `--dart-define=ADMOB_BANNER_ID=ca-app-pub-…/…` ③`https://itssophie.dev/app-ads.txt`(서버 `/var/www/portfolio/app-ads.txt`)에 애드몹이 알려 주는 줄(`google.com, pub-…, DIRECT, f08c47fec0942fa0`)을 올림 ④AAB 빌드.
-  **내 폰에서만 테스트 광고가 나오게**: `--dart-define=ADMOB_TEST_DEVICES=기기ID`(쉼표로 여러 개, `ad_view_mobile.dart`의 `updateRequestConfiguration`). 기기 ID는 실제 광고 ID로 처음 광고를 요청했을 때 logcat에 `setTestDeviceIds`로 나오는 32자리 값. **출시용 빌드에는 넣지 말 것.** 출시 후엔 애드몹에서 스토어 앱과 연결. 지금은 구글 테스트 ID(`…~3347511713`·`…/6300978111`)가 기본값.
-- **애드몹 실제 ID 반영 (2026-10-19)**: 앱 ID `ca-app-pub-6270133261936882~2732521763`, 배너 광고 단위 ID `ca-app-pub-6270133261936882/2812412814`(공개 값). 출시용 빌드는 `bash app/tools/build_release.sh [appbundle|apk]`(환경변수 `ORG_GRADLE_PROJECT_ADMOB_APP_ID` + `--dart-define=ADMOB_BANNER_ID`)로만 — 빌드 결과에서 매니페스트의 앱 ID와 코드 안의 광고 단위 ID가 들어간 것을 확인함.
-  **테스트로 나눠 주는 APK(`dist/`·download.html)는 계속 구글 테스트 ID로 빌드**(위 `flutter build apk … ADMOB_BANNER_ID=…/6300978111` 명령) — 실제 ID 빌드를 나눠 주면 테스트하다 누른 광고가 무효 트래픽이 돼 계정이 정지될 수 있음. `gradle.properties`엔 앱 ID를 넣지 않음(넣으면 테스트 빌드도 실제 앱 ID가 됨).
-  `https://itssophie.dev/app-ads.txt`(서버 `/var/www/portfolio/app-ads.txt`, 한 줄 `google.com, pub-6270133261936882, DIRECT, f08c47fec0942fa0`) 올림 — **서버에만 있는 파일**이라 포트폴리오 사이트 배포 때 폴더를 통째로 덮어쓰면 사라짐(지금은 index.html만 올려서 안전). 스토어 등록 정보의 웹사이트 주소는 이 도메인(itssophie.dev)으로 할 것. 새 광고 단위는 광고가 나오기까지 최대 1시간(앱 검토로 더 걸릴 수 있음).
-- **Play Console 등록 진행 (2026-10-19, 사용자 크롬에서 대신 입력)**: 앱 `데일리컷`(패키지 `com.dailycut.dailycut`, 무료 앱, 배포 국가는 **대한민국만** → UMP 동의 불필요) 만들고 "앱 콘텐츠" 선언 전부 저장함 — 개인정보처리방침(`itssophie.dev/dailycut/privacy.html`)·앱 액세스(로그인 없음)·광고(있음)·콘텐츠 등급(IARC)·타겟층·정부 앱(아님)·건강(해당 없음)·금융 기능(**제공 안 함** — 대출·금리 정보만 보여주고 신청·중개 없음)·**데이터 보안**(공유: 대략적 위치·진단·앱 상호작용·기기 ID, 전송 중 암호화, 삭제 요청 방법 없음 + 자동 삭제)·광고 ID(예: 광고·애널리틱스·사기 예방).
-  데이터 보안·광고 ID는 앱이 쓰는 SDK(AdMob)가 바뀌면 같이 고칠 것. **남은 일**: 스토어 등록정보(512 아이콘·1024x500 대표 이미지·폰 스크린샷 2장 이상·짧은/긴 설명, "정부와 무관한 민간 서비스" 문구) → 업로드 키스토어(`key.properties`, git 밖, 분실 금지) → `bash app/tools/build_release.sh appbundle` → 비공개 테스트 트랙 + 테스터 12명 14일 → 프로덕션 신청. 최종 제출은 사용자가 직접.
-- **업로드 키스토어 + 스토어 자료 (2026-10-19)**: 업로드 키 `C:\Projects\key\dailycut-upload.jks`(별칭 `upload`, 비밀번호는 임시값으로 `app/android/key.properties`에 있음 — git 밖; **분실하면 업데이트 불가, 키스토어+비밀번호를 따로 백업할 것**, 임시 비밀번호는 `keytool -storepasswd`/`-keypasswd`로 바꾸고 key.properties도 같이 고침). 인증서 SHA-256 `2F:15:D8:71:92:70:D3:02:5B:CC:13:7A:7F:43:43:90:48:0A:14:18:D6:68:E7:F7:9E:67:B2:EC:52:E8:B1:B0`.
-  `build.gradle.kts`는 환경변수 `ORG_GRADLE_PROJECT_UPLOAD_SIGN=true`(`tools/build_release.sh`가 설정)일 때만 업로드 키로 서명, 그 외 릴리스(테스트로 나눠 주는 APK)는 예전처럼 디버그 키(이미 깔린 앱 덮어쓰기 설치 유지). `bash app/tools/build_release.sh appbundle` → `app/build/app/outputs/bundle/release/app-release.aab`(62MB, 서명 지문 일치 확인).
-  `store/`: `icon-512.png`, `feature-1024x500.png`(생성: 앱 글꼴 NotoSerifKR-**700**(900 굵기 서브셋엔 글자가 모자라 네모로 나옴)+주황 도형), `listing-ko.md`(제목·짧은/긴 설명·태그·"정부와 무관한 민간 서비스" 문구), 폰 스크린샷은 광고 칸 없는 빌드로 에뮬레이터에서 촬영.
-- **Play Console 스토어 등록정보·비공개 테스트 준비 (2026-10-19)**: 기본 스토어 등록정보(한국어: 이름 "데일리컷 - 매일 생활 큐레이션"·짧은/긴 설명·512 아이콘·1024x500 대표 이미지·폰 스크린샷 5장 `store/screenshots/`)와 앱 카테고리(라이프스타일)·연락처(dailycut@itssophie.dev, `https://itssophie.dev/dailycut/`) 저장 → 대시보드 앱 설정 완료. AI 애셋 라벨은 "지정 안 함"(애셋은 앱 화면 캡처와 직접 그린 도형).
-  스크린샷은 **광고 칸이 없는 빌드**(`flutter build apk --release --dart-define=API_BASE_URL=…`, ADMOB_BANNER_ID 없이)를 에뮬레이터(`Pixel_3a_API_34_extension_level_7_x86_64`)에 깔아 `adb exec-out screencap`으로 찍고 위 상태 표시줄 66px를 잘라냄(1080x2154, 비율 2:1 이내). 에뮬레이터에서 `settings put global hide_error_dialogs 1`(ANR 창 숨김)·`sysui_demo_allowed`+`am broadcast … demo`(상태 표시줄 9:30)를 썼음.
-  비공개 테스트 트랙 `비공개 테스트 - Alpha`(트랙 ID 4698692698344079364) 만들어짐 — **아직 AAB 업로드·국가(대한민국)·테스터 지정 안 함**. AAB 파일은 `store/dailycut-release.aab`(62MB, git 제외)에 있음.
-  **자동화 한계(겪은 것)**: 크롬 확장의 `file_upload`는 합계 10MB까지라 AAB(62MB)는 못 올림. 로컬 서버+페이지 JS fetch 방식은 크롬이 "로컬 네트워크 접근 허용/차단" 권한창을 띄워 멈춤(브라우저 권한이라 대신 누르지 않음) → AAB는 사용자가 업로드 칸에 파일을 끌어다 놓거나 "업로드"로 고르는 게 가장 빠름.
-  → **같은 날 이어서**: 사용자가 AAB를 올려 줌(버전 12 / 1.3.4, API 24+, 신규 설치 15.9MB) → 출시명 "1.3.4 비공개 테스트 첫 배포"·한국어 출시 노트 입력 후 임시 저장, 트랙 국가 = 대한민국 1곳 저장. **남은 것: 테스터 지정(이메일 목록/구글 그룹, 12명 이상) → 버전 검토 → "검토를 위해 Google에 전송"**(최종 전송은 사용자가 확인). 전송 전엔 "아직 테스터가 지정되지 않아 이용할 사용자가 없다" 경고가 남음.
-- **플레이 "혼동을 야기하는 주장" 거부와 대응 (2026-10-21)**: 스토어 등록정보 변경이 "정부 정보의 출처 링크 누락(원본 출처 .gov 등으로 가는 명확한 URL이 없음)"으로 거부됨(앱이 아니라 **등록정보**가 거부, "검토 중에 거부되어 변경사항이 게시되지 않았습니다"). 증거로 지목된 곳은 "자세한 설명". 정부와의 제휴를 부인하는 문구는 이미 있었고, 없던 건 **링크** — 그래서 "정부와 관계없다고 이의 제기"가 아니라 링크를 넣어 다시 제출하는 게 맞음.
-  조치: ①스토어 자세한 설명에 "정부·공공기관과 관계없는 민간 서비스" 안내를 첫머리에 두고 "알려 드려요"에 공식 사이트 URL 10개(gov.kr·applyhome.co.kr·myhome.go.kr·kinfa.or.kr·weather.go.kr·airkorea.or.kr·mfds.go.kr·korean.visitkorea.or.kr·culture.go.kr·data.go.kr; 전부 200 확인) 추가(`store/listing-ko.md`) ②앱 출처 시트(`sources_info.dart`): `kAllSources`가 (이름, 설명, 공식 사이트) 3개 값이 되어 기관마다 눌러서 열리는 링크 + 맨 위 민간 서비스 안내, 혜택 탭 각 구역 아래 `OfficialSourceLinks`(정부24·청약홈·마이홈·LH·서민금융진흥원·공공데이터포털) ③`about.html`에 공식 사이트 목록 ④1.3.5+13. 새 데이터를 붙일 땐 출처 시트에 공식 사이트 주소도 같이 넣을 것.
-  → **같은 날 웹 배포·확인**: `flutter build web`을 `/var/www/dailycut-app/`에 `tar` 덮어쓰기로 배포(APK·download.html 유지)하고, 라이브 사이트(모바일 폭)에서 ⓘ 출처 시트(민간 서비스 안내 + 기관별 링크)와 혜택 탭 아래 "원본은 공식 사이트에서 확인하세요 · 정부24 · 공공데이터포털" 줄이 보이는 것을 확인. 사용자가 새 AAB(1.3.5)와 등록정보를 검토 제출함(2026-10-21). 출처 시트의 "분홍색으로 표시된 부분은 아직 예시 데이터예요." 줄은 개발용 표시가 꺼진 지금은 의미가 없어 다음 빌드에서 뺄 것.
-  → **2026-10-22 확인(Play Console)**: 비공개 테스트 Alpha에 **1.3.5(버전 코드 13) "1.3.5 출처 링크 추가"가 검토 중**, 1.3.4는 "다른 버전으로 대체됨". 국가 대한민국 1곳, 테스터는 이메일 목록 "테스터 목록" 44명(체크됨)·의견 채널 dailycut@itssophie.dev. 게시 개요에서 "빠른 검사(최대 14분)" 후 자동 전송. 참여 링크는 게시되면 테스터 탭에 뜸. **14일 테스트(12명 이상 참여 선택) 시작 날짜는 테스터가 실제로 참여를 누른 시점부터.** 크롬 확장의 file_upload는 10MB 제한·파일 선택창이 막혀 있어 AAB는 사용자가 끌어다 놓아야 함.
-- **두 번째 거부: "제공된 출처가 불충분" (2026-10-22)**: 스토어 설명에 공식 링크 10개를 넣었더니 이번엔 "설명에 기재된 내용은 두 개 이상의 정보 출처가 사용된 것처럼 보이나, 모든 출처가 나열되어 있지 않다"로 거부됨(Play Console 정책 상태 → 문제 세부정보; 해결 방법: ①"앱에서 공유되는 **모든** 정부 정보"의 공식·유효·정상 작동하는 출처를 앱 설명에 명시 ②정부 기관을 대표하지 않는다는 면책조항을 설명에서 쉽게 확인). 원인: 링크 10개로 줄이면서 **지역정보개발원(도서관)·천문연·aT·축산물품질평가원·소상공인시장진흥공단·LH·고캠핑·두루누비**가 빠졌음. **정부 앱 선언은 "아니요"가 맞고 거부 원인이 아님**(정책은 정부와의 제휴 여부에 관계없이 적용). 조치: 설명에 "데이터 출처" 섹션(기관별로 무엇을 어디서 쓰는지 + 공식 URL 전부 16개, 위키미디어는 정부 데이터가 아님을 밝힘) 추가(`store/listing-ko.md`, 2,017자), 앱 출처 시트에 지역정보개발원·LH 추가·관광공사 설명 확대·"분홍색…예시 데이터" 줄 삭제(**다음 빌드부터**), `about.html` 서버 배포. 새 데이터 소스를 붙이면 설명·앱 시트·about.html 세 곳을 같이 고칠 것.
-- **아이콘 불일치 발견 (2026-10-24, 사용자가 "APK 아이콘이 안 바뀌었다"고 알려 줌)**: `app/assets/icon/*` 원본은 10-19 02:11에 새 도형(주황색 하나)으로 바뀌었는데 `flutter_launcher_icons`는 01:52에 한 번 돌린 뒤 다시 안 돌려서, **안드로이드 런처·iOS·웹 파비콘이 옛 아이콘(색 도형 5개)**으로 남아 있었음 — 서버 APK 1.3.4(코드 12)·제출한 AAB 1.3.5(코드 13)·웹(10-21 배포)이 전부 옛 아이콘. (스토어 등록정보의 512 아이콘·대표 이미지는 새 원본으로 만들어서 새 도형.) 에뮬레이터에 서버 APK를 깔아 앱 목록 아이콘을 직접 보고 확인함.
-  **교훈: `app/assets/icon/`을 바꾸면 반드시 `dart run flutter_launcher_icons`를 다시 돌릴 것(생성 파일은 git 추적됨).** 10-24에 다시 돌려서 안드로이드·iOS·웹 아이콘 갱신.
-  **스토어 번들은 일부러 안 올림**: 1.3.5 AAB가 검토 중이라 또 올리면 검토가 다시 걸릴 수 있어서, 아래 변경은 **다음 AAB 한 번에 묶어서 반영**(코드 14 이상 필요; 지금 `pubspec.yaml`은 1.3.6+14): ①새 아이콘(안드로이드·iOS) ②앱 출처 시트: 지역정보개발원·LH 추가, 관광공사 설명 확대, "분홍색…예시 데이터" 줄 삭제 ③(테스트 APK·웹은 별도로 먼저 배포함). 다음 AAB 릴리스를 만들 때 출시 노트에 "앱 아이콘 변경"도 적을 것.
-  → **10-24 배포 완료**: 테스트 APK **1.3.6(코드 14, 58.2MB, SHA-256 `2ba1725f…d39962`)**을 `https://itssophie.dev/dailycut/dailycut.apk`에 올리고 `download.html`(버전·크기·SHA)도 갱신, 웹(새 파비콘·about.html·출처 시트)도 배포. 에뮬레이터 앱 목록에서 새 아이콘(주황 도형 하나) 확인. 스토어 번들(AAB)은 아직 1.3.5(옛 아이콘) — 검토가 끝나면 코드 14 이상으로 다시 올려 아이콘·출처 시트 보강을 반영.
-- **출처 시트·토글 UI 정리 (2026-10-24, 사용자 피드백)**: ①"익명 통계 보내기"가 Material 기본 스위치(회색 트랙)라 앱 모양과 안 맞아서, 장보기 시세 "제철만" 필터의 체크 모양 토글을 **공용 `CheckToggle`(components.dart)**로 빼서 둘 다 씀(옛 `_FilterToggle` 삭제). 규칙: **여러 개 중 고르기 = `PillChip`, 하나를 켜고 끄기 = `CheckToggle`**, Material `Switch`는 쓰지 않음. ②출처 시트는 기관 이름 자체가 공식 사이트로 가는 밑줄 링크(굵게)이고 주소 글자 줄은 뺌(항목당 두 줄이던 것을 한 줄+설명으로). 혜택 탭 아래 링크도 이름만("정부24 · 공공데이터포털"). **스토어 설명문의 URL은 Play 정책 때문에 그대로 둠.** 로컬 확인은 `flutter build web --output build/webtest` + `python -m http.server`(`.claude/launch.json`의 dailycut-web은 실행 위치가 앱 폴더가 아니면 "No pubspec.yaml"로 실패함). 이 변경은 아직 배포 안 함 — 다음 AAB·웹 배포 때 같이 나감.
-- **첫 실행 시트에 익명 통계 안내 한 줄 (2026-10-24, 사용자 선택)**: `location_flow.dart`의 "내 지역으로 시작할까요?" 시트 맨 아래에 "화면 사용 횟수만 익명으로 집계해요. 맨 위 ⓘ에서 끌 수 있어요."(11px 회색, 가운데)를 넣음. 통계는 개인정보가 아니라 동의 팝업은 두지 않고(한국 개인정보보호법상 식별 불가·EU 대상 아님, 법률 자문 아님) 투명성만 높이는 방식. 이 시트는 위치 권한이 아직 없고 처음 켜는 기기에만 떠서, 이미 허용된 기기는 방침·ⓘ로만 안내됨. **기기·사용자 ID, 로그인, 입력값(생년월일 등)의 서버 전송을 붙이면 그때는 동의 절차를 새로 만들 것.** 아직 배포 안 함(다음 AAB 코드 14·웹 배포 때 같이).
-- **세 번째 거부 (2026-10-24 14:33 KST, 검토 시작 약 1.7시간 뒤)**: 설명에 출처 16곳+민간 서비스 면책을 넣은 뒤인데도 사유가 똑같음 — "제공된 출처가 불충분: 앱 설명에 기재된 내용은 두 개 이상의 정보 출처가 사용된 것처럼 보이나, 모든 출처가 나열되어 있지 않다"(이 거부엔 "발견된 위치/증거" 칸이 없고 **어떤 출처가 빠졌는지 안 알려 줌**). 정부 앱 선언은 "아니요"가 맞고 원인 아님.
-  조사: 한국어 사례는 못 찾음(검색 3회). 영문 사례 하나 — GitHub `emm3000/gema-app` #292(페루 교육부 정보 앱): 같은 정책으로 두 번 거부(둘째 제출엔 비제휴 면책+"공식 출처" 섹션이 이미 설명에 있었는데도), 구글 안내는 "앱에서 공유하는 모든 정부 정보의 출처를 명확히" — 개발자는 앱 안 "정보" 화면에 면책+출처 링크를 넣는 쪽으로 감(결과 미확인). 구글 공식 문서 `answer/9514050`: ①앱 설명·스토어 등록정보에 출처를 쉽게 확인할 수 있게 ②정부·정치 기관을 대표하지 않는다고 분명히 — 둘 다 해야 함(.gov / .go.jp 같은 도메인 URL이 예시).
-  **빠졌다고 볼 만한 후보(추정)**: ①정부 지원 목록 줄마다 보이는 소관 기관(서울시복지재단·강남구 등)이 "설명에 없는 출처"로 보임 ②기능별로 출처가 어디서 오는지 연결이 안 보임(지금은 아래 목록만) ③검토자가 본 건 앱(1.3.5)의 옛 출처 시트. **다음 시도 후보**: 설명에 기능마다 "(출처: 기상청 …)"를 그 문단에 직접 쓰고, 정부 지원 항목의 소관 기관 설명을 한 줄 추가 / Play 지원("정책 전문가팀에 문의")에 "어떤 출처가 빠졌는지" 질문 / 이의신청(5~8일). 새 시도 전에 사용자에게 방법을 확인받을 것.
-- **TODO (사용자 요청, 나중에): 건강 관련 공공데이터 추가 검토.** 공공데이터포털 후보(승인·이용허락범위는 신청 전에 포털에서 확인할 것): 건강보험심사평가원 병원·약국 정보, 식약처 의약품개요정보(e약은요)·건강기능식품, 국립중앙의료원 응급의료·약국 운영시간, 질병관리청 감염병·독감 통계, 국민건강보험공단 건강검진기관. **주의**: 건강 정보를 넣으면 Play "건강 앱" 선언(지금 "해당 없음")과 건강 관련 주장 정책을 다시 봐야 하고, **정부 정보 출처를 설명에 전부 나열해야 하는 부담이 커짐**(지금 거부 건과 같은 문제) → 현재 거부를 넘긴 뒤에 진행.
-  → **네 번째 시도 준비 (2026-10-24, 사용자가 후보 1·2번 선택)**: 스토어 설명을 **기능 문단마다 "(출처: …기관 + 공식 URL)"를 직접 붙이고**, 혜택 문단에 "정부 지원 목록은 정부24 공공서비스 정보이며 항목마다 운영 부처·지자체 이름이 보이고 '정부24에서 자세히 보기'로 원문 확인"을 추가, 맨 아래 목록 제목을 "앱이 보여 주는 정부·공공 정보의 출처는 아래 기관이 전부예요"로 바꿈(2,891자, `store/listing-ko.md`). Play Console에 저장까지 했고(게시 개요 "변경사항 14개 제출" 대기), **Google에 보내는 제출은 사용자가 함**. 이것도 거부되면 Play 지원(정책 전문가팀)에 "어떤 출처가 빠졌는지" 질문 → 이의신청 순으로.
-  → **10-24 오후 사용자가 4차 설명(기능별 출처 직접 표기)을 포함해 다시 제출함.** 게시 개요에서 "검토 중인 변경사항 — 빠른 검사(최대 7분) 후 자동 전송" 확인(1.3.5 번들·국가·테스터·스토어 등록정보·앱 콘텐츠). 결과가 오면 정책 상태에서 사유 확인.
-- **광고 ID 빌드 구분 + 1.3.6 번들 (2026-10-28)**: 승인된 1.3.5(10-27 01:51 게시, 비공개 테스트 Alpha)는 **실제 애드몹 ID로 빌드**돼 있음(번들 안에서 앱 ID `…6270133261936882~2732521763`·광고 단위 `…/2812412814` 확인, 구글 테스트 ID 없음). 서버 다운로드 APK(1.3.6)만 구글 테스트 ID. 테스터가 광고를 누르면 무효 클릭 위험 → `tools/build_release.sh appbundle test`(앱 ID는 실제 값 그대로, **광고 단위만 구글 테스트 배너 `…/6300978111`**)를 추가해 **비공개 테스트용 번들은 테스트 광고, 프로덕션 번들만 `real`**로 가기로 함. 1.3.6+14 AAB(테스트 광고, 업로드 키 서명 확인, `store/dailycut-release-1.3.6.aab`, 59MB)를 만들어 둠 — 새 아이콘·출처 시트(이름이 링크)·체크 토글·첫 실행 통계 안내 포함. **업로드·승인 후에 테스터 링크를 보낼 것**(승인 전에 보내면 1.3.5 실제 광고 버전이 깔림). 프로덕션용은 버전 코드를 올려(`+15`) `real`로 다시 빌드. 테스트 탭의 Chrome 확장 자동화는 사용자가 다른 탭을 보고 있으면(백그라운드 탭) 화면이 안 그려져서 멈춤 — 그럴 땐 입력할 내용만 알려 주고 사용자가 올림.
+| 파일 | 내용 | 언제 열어 보나 |
+|---|---|---|
+| `design-rules.md` | 디자인 6규칙, 톤앤매너, ⓘ·스와이프·토글 | 새 화면·부품을 만들 때 |
+| `data-sources.md` | 수집 구조, 소스별 메모, 지역 규칙, 탭별 데이터 | 데이터·API 작업, 한계 확인 |
+| `features-log.md` | 탭별 기능 변천(시간순) | "이거 왜 이렇게 돼 있지?" |
+| `licensing.md` | 이용허락 점검, 제거한 데이터, 사진 라이선스 | 소스를 붙이거나 되살릴 때, 광고 관련 |
+| `android-release.md` | APK/AAB, 서명, 애드몹 ID, 위젯, 위치 흐름, 아이콘 | 빌드·위젯·광고 작업 |
+| `play-console.md` | 등록 절차, 거부 3회 이력과 대응, 자동화 한계 | 스토어·심사 작업 |
+| `ops-server.md` | 배포, nginx, DB·백업·정리, 성능 측정, 출시 전 점검 | 서버·성능 |
+| `todo-ideas.md` | 나중에 할 일·아이디어 | 다음 작업 고를 때 |
+| `archive-early.md` | 초기 개요·메모(일부 낡음) | 역사가 궁금할 때만 |

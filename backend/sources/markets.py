@@ -2,7 +2,7 @@
 """전통시장(시도별): 소상공인시장진흥공단 전통시장현황 파일 데이터(2026-08-04 기준).
 
 API가 아니라 공공데이터포털에서 내려받는 CSV라서 backend/data/traditional_markets.json 으로
-줄여 저장해 둠(tools_build_markets.py). 휴장일·좌표는 데이터에 없어서 "어느 시도에 어떤
+줄여 저장해 둠(tools/build_markets.py). 휴장일·좌표는 데이터에 없어서 "어느 시도에 어떤
 시장이 있고 아케이드·주차장이 있는지"까지만 보여줌. 키가 필요 없어서 항상 실데이터(정적).
 응답에 덮어쓰는 필드: markets_nearby, markets_total, markets_source.
 """

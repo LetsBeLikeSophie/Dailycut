@@ -8,7 +8,7 @@
 import json
 from pathlib import Path
 
-P = Path(__file__).with_name("data") / "produce_guide.json"
+P = Path(__file__).resolve().parent.parent / "data" / "produce_guide.json"
 old = json.loads(P.read_text(encoding="utf-8"))
 items_old = old["items"]
 

@@ -17,7 +17,7 @@ from pathlib import Path
 import requests
 from PIL import Image
 
-HERE = Path(__file__).resolve().parent
+HERE = Path(__file__).resolve().parent.parent  # backend/
 OUT = HERE.parent / "app" / "assets" / "produce"
 DST = HERE / "data" / "produce_images.json"
 UA = {"User-Agent": "dailycut-app/1.0 (dkwmsmrdu.sophie@gmail.com)"}

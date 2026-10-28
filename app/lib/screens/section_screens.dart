@@ -378,7 +378,7 @@ Widget placesScreen(ApiClient api, Region region, BuildContext shellContext) => 
     );
 
 /// 혜택(옛 머니 탭): 정부 지원 / 청약 / 공공임대 / 대출을 구역 전환으로. 모두 공공데이터포털 "제한 없음" 데이터.
-/// 2026-10-13: 금융위 지수·상품, 금감원 금리는 광고(상업 이용) 약관 때문에 뺌 — 허락을 받으면 다시 붙일 수 있음(CLAUDE.md 참고).
+/// 2026-10-13: 금융위 지수·상품, 금감원 금리는 광고(상업 이용) 약관 때문에 뺌 — 허락을 받으면 다시 붙일 수 있음(docs/licensing.md 참고).
 Widget benefitsScreen(ApiClient api, Region region, BuildContext shellContext) => SectionScreen(
       section: Section.money,
       fetch: () async => <String, dynamic>{},

@@ -69,6 +69,6 @@ for ko, title in TITLES.items():
         print(ko, "ERR", type(e).__name__, str(e)[:80])
     time.sleep(0.4)
 
-dst = Path(__file__).with_name("data") / "produce_images.json"
+dst = Path(__file__).resolve().parent.parent / "data" / "produce_images.json"
 dst.write_text(json.dumps(out, ensure_ascii=False, indent=1), encoding="utf-8")
 print(len(out), "/", len(TITLES), "→", dst)
