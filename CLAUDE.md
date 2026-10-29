@@ -15,6 +15,8 @@ Flutter(웹 + 안드로이드) + FastAPI(SQLite). 이름은 "데일리컷"으로
 ```
 app/            Flutter 앱(웹+안드로이드+iOS)
   lib/            main·boot·region·api_client·analytics … / screens/(탭 화면) / widgets/(공용 부품·기능별 위젯)
+    widgets/components.dart = 공용 부품의 **목차(export만)**, 실제 코드는 widgets/components/ 8개 파일
+      (basics 서식·색 / text 형광펜·큰 숫자 / hero 화면 맨 위 / charts 차트 / lists 목록 / controls 선택·버튼 / sheets ⓘ·시트 / notes 로딩·라이선스 표시)
   assets/         fonts(한글 서브셋)·icon(원본)·produce(농산물 사진 62장)·shapes(탭 도형)
   android/        매니페스트·위젯(Kotlin)·서명 설정(key.properties는 git 밖)
   web/            index.html·about/privacy/download.html·아이콘(생성물)
@@ -76,7 +78,7 @@ UI 약속: 여러 개 중 고르기 = `PillChip`, 하나 켜고 끄기 = `CheckT
 1. 1.3.6 업로드·승인 → 테스터 링크 전달(안내문에 "광고는 누르지 마세요"·"14일 참여 유지") → 12명 참여 확인.
 2. 프로덕션용 번들(`real`, 코드 15) → 프로덕션 신청. 애드몹 결제·세금 정보, 앱 게시 후 애드몹↔Play 연결, `app-ads.txt`는 이미 올림.
 3. 건강 공공데이터 추가 검토(`docs/todo-ideas.md`) — 현재 거부 이력을 넘긴 뒤. "건강 앱" 선언·출처 나열 부담이 커짐에 주의.
-4. 코드 정리: `widgets/components.dart`(약 1,800줄) 분리, 하드코딩 색, 핵심 계산 테스트 보강(`docs/ops-server.md` 점검 보고).
+4. 코드 정리: 하드코딩 색, 핵심 계산 테스트 보강, 상세 시트 틀(`SheetFrame`) 통일(`docs/ops-server.md` 점검 보고). (`components.dart` 분리는 2026-10-29에 끝남)
 5. DB 백업 외부 보관, 소스별 최대 허용 나이(갱신이 오래 실패해도 옛 값을 보여 줌).
 
 ## 작업 방식
