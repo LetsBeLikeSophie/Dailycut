@@ -6,6 +6,8 @@ import 'package:flutter/services.dart';
 /// 웹·iOS·위젯이 없을 때는 아무 일도 안 함.
 class WidgetBridge {
   static const _channel = MethodChannel('dailycut/widget');
+  /// 안드로이드 앱에서만 true(웹·iOS엔 위젯도 아침 알림도 없음)
+  static bool get supported => _supported;
   static bool get _supported => !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
 
   static Future<void> refresh() async {
@@ -13,6 +15,33 @@ class WidgetBridge {
     try {
       await _channel.invokeMethod<void>('refresh');
     } catch (_) {}
+  }
+
+  /// 아침 날씨 알림(2026-10-31): `brief_time`을 저장한 뒤 불러서 안드로이드 쪽 일정을 다시 걺(없으면 꺼짐).
+  static Future<void> briefApply() async {
+    if (!_supported) return;
+    try {
+      await _channel.invokeMethod<void>('briefApply');
+    } catch (_) {}
+  }
+
+  /// 알림 허용 요청(안드로이드 13+는 시스템 창). 허용돼 있으면 true.
+  static Future<bool> notifRequest() async {
+    if (!_supported) return false;
+    try {
+      return await _channel.invokeMethod<bool>('notifRequest') ?? false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  static Future<bool> notifGranted() async {
+    if (!_supported) return false;
+    try {
+      return await _channel.invokeMethod<bool>('notifGranted') ?? false;
+    } catch (_) {
+      return false;
+    }
   }
 
   /// 위젯을 눌러 앱이 켜졌을 때의 탭 키('life'·'money' 등). 없으면 null. 한 번 꺼내면 비워짐.

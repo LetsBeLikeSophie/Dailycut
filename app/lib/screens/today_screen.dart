@@ -10,6 +10,7 @@ import '../widgets/components.dart';
 import '../widgets/hourly_strip.dart';
 import '../widgets/life_index.dart';
 import '../widgets/my_basket_today.dart';
+import '../widgets/saved_regions_today.dart';
 import '../widgets/weekly_row.dart';
 import '../widgets/weather_icon.dart';
 
@@ -168,6 +169,7 @@ class _TodayScreenState extends State<TodayScreen> {
                 ],
               ],
             ),
+            SavedRegionsToday(api: widget.api, current: widget.region),
             ListSection(
               title: '이번 주 날씨',
               trailing: weather['weekly_range'] as String?,

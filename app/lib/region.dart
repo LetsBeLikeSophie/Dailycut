@@ -25,6 +25,8 @@ class Region {
   String get label => sgg == null ? name : '$name $sgg';
 
   Region withSgg(String? s) => Region(code, name, s);
+
+  bool same(Region o) => code == o.code && sgg == o.sgg;
 }
 
 const kSidos = <Region>[
@@ -64,12 +66,17 @@ class RegionStore extends ChangeNotifier {
 
   static const _prefSido = 'region_code';
   static const _prefSgg = 'region_sgg';
+  static const _prefSaved = 'region_saved'; // 2026-10-31: 저장한 지역 목록("코드|시군구" 문자열 리스트, 기기에만)
+  static const maxSaved = 3;
 
   ApiClient? _api;
   Region current = kSidos.first;
   String source = 'default';
   bool ready = false;
   Map<String, List<SigunguNode>>? _tree;
+
+  /// 저장해 둔 지역(최대 [maxSaved]개). 현재 지역과는 별개 — 현재 지역은 여전히 하나이고, 이 목록은 빠른 전환과 투데이의 "저장한 지역 날씨"에만 씀.
+  List<Region> saved = const [];
 
   Region _sidoByCode(String? code) => kSidos.firstWhere((r) => r.code == code, orElse: () => kSidos.first);
 
@@ -82,6 +89,10 @@ class RegionStore extends ChangeNotifier {
       current = _sidoByCode(saved).withSgg(LocalPrefs.stringSync(_prefSgg));
       source = 'saved';
     }
+    this.saved = [
+      for (final e in LocalPrefs.listSync(_prefSaved))
+        _sidoByCode(e.split('|').first).withSgg(e.contains('|') && e.split('|').last.isNotEmpty ? e.split('|').last : null),
+    ];
     // 기본 지역(서울)으로 바로 첫 화면을 보여줌(위치 확인을 기다리지 않음).
     ready = true;
     notifyListeners();
@@ -114,6 +125,21 @@ class RegionStore extends ChangeNotifier {
       await LocalPrefs.setString(_prefSgg, r.sgg!);
     }
     WidgetBridge.refresh(); // 홈 화면 위젯도 새 지역으로(저장이 끝난 뒤에 불러야 위젯이 새 값을 읽음)
+  }
+
+  bool isSaved(Region r) => saved.any((s) => s.same(r));
+
+  /// 저장 ↔ 해제. 꽉 찼으면 false(저장 안 됨).
+  Future<bool> toggleSaved(Region r) async {
+    if (isSaved(r)) {
+      saved = [for (final s in saved) if (!s.same(r)) s];
+    } else {
+      if (saved.length >= maxSaved) return false;
+      saved = [...saved, r];
+    }
+    notifyListeners();
+    await LocalPrefs.setList(_prefSaved, [for (final s in saved) '${s.code}|${s.sgg ?? ''}']);
+    return true;
   }
 
   /// 화면 맨 위 줄에 붙일 지역 문구(예: "서울 중구"). 다른 탭엔 없는 "· 기본" 꼬리는 뺌(2026-10-17).
@@ -194,7 +220,35 @@ class _RegionSheetState extends State<_RegionSheet> {
                 if (ok) nav.pop();
               },
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 4),
+            // 2026-10-31: 저장한 지역(부모님 댁·직장 등) 빠른 전환 + 지금 지역 저장/해제. 날씨 알림·투데이의 "저장한 지역 날씨"가 이 목록을 씀.
+            if (_store.saved.isNotEmpty) ...[
+              const SizedBox(height: 8),
+              const Text('저장한 지역', style: TextStyle(fontSize: 11, color: AppColors.inkSoft)),
+              const SizedBox(height: 6),
+              Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (final r in _store.saved)
+                    PillChip(large: true, label: r.label, selected: _store.current.same(r), onTap: () => _pick(r)),
+                ],
+              ),
+            ],
+            if (_store.source != 'default')
+              CheckToggle(
+              label: _store.isSaved(_store.current)
+                  ? '${_store.current.label} 저장함'
+                  : _store.saved.length >= RegionStore.maxSaved
+                      ? '저장은 ${RegionStore.maxSaved}곳까지예요'
+                      : '${_store.current.label} 저장',
+              on: _store.isSaved(_store.current),
+              onTap: () async {
+                await _store.toggleSaved(_store.current);
+                if (mounted) setState(() {});
+              },
+            ),
+            const SizedBox(height: 8),
             TextField(
               onChanged: (v) => setState(() => _query = v.trim()),
               style: const TextStyle(fontSize: 16),

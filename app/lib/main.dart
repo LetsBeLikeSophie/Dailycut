@@ -73,6 +73,7 @@ class _RootShellState extends State<RootShell> {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       final tab = await WidgetBridge.initialTab();
       if (tab != null && mounted) _openTabKey(tab);
+      if (LocalPrefs.stringSync('brief_time') != null) WidgetBridge.briefApply(); // 아침 날씨 알림 일정이 살아 있게(켜 둔 경우만)
     });
   }
 

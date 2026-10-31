@@ -4,6 +4,8 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <!-- 내 주변 날씨·문화 정보용(대략적인 위치만 요청) -->
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <!-- 2026-10-31: 아침 날씨 알림(안드로이드 13+는 켤 때 한 번 허용 요청). 정확한 알람 권한은 안 씀 -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <!-- 2026-10-19: 위젯용 WorkManager가 끌고 오는 포그라운드 서비스 권한·서비스는 쓰지 않으므로 합쳐진 매니페스트에서 뺌
          (남겨 두면 플레이 콘솔이 포그라운드 서비스 선언을 요구할 수 있음) -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE" tools:node="remove" />

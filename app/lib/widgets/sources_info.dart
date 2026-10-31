@@ -3,9 +3,11 @@ import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 import '../analytics.dart';
+import '../local_prefs.dart';
 import '../theme.dart';
+import '../widget_bridge.dart';
 import 'ad_slot.dart';
-import 'components.dart' show CheckToggle;
+import 'components.dart' show CheckToggle, PillChip;
 
 /// 앱이 쓰는 공공데이터·외부 데이터 출처(이용 조건 표기 포함). 화면마다 출처를 길게 적는 대신
 /// 작은 ⓘ → 이 시트에서 한 번에 보여줌. 새 데이터를 붙이면 여기에 한 줄 추가.
@@ -138,6 +140,16 @@ Future<void> showSourcesSheet(BuildContext context, {String? current}) {
                 style: TextStyle(fontSize: 13, color: AppColors.inkSoft, height: 1.6),
               ),
             ],
+            if (WidgetBridge.supported) ...[
+              const SizedBox(height: 22),
+              Text('아침 날씨 알림', style: AppTheme.subheading),
+              const SizedBox(height: 6),
+              const Text(
+                '정한 시각에 지금 지역의 날씨·옷차림·미세먼지를 알려 줘요. 이 기기 안에서 예약하는 알림이라 서버에 기기 정보를 보내지 않아요. 폰의 배터리 절약 상태에 따라 몇 분 늦을 수 있어요.',
+                style: TextStyle(fontSize: 13, color: AppColors.inkSoft, height: 1.6),
+              ),
+              const _BriefingSetting(),
+            ],
             const SizedBox(height: 22),
             Text('앱 개선을 위한 익명 통계', style: AppTheme.subheading),
             const SizedBox(height: 6),
@@ -200,6 +212,76 @@ class _AnalyticsSwitchState extends State<_AnalyticsSwitch> {
         setState(() => _on = !_on);
         Analytics.instance.setEnabled(_on);
       },
+    );
+  }
+}
+
+/// 아침 날씨 알림 켜기·끄기와 시각(2026-10-31). 저장값 `brief_time`("07:30", 없으면 꺼짐)을 안드로이드 쪽(Briefing.kt)이 읽음.
+const kBriefTimes = ['06:30', '07:00', '07:30', '08:00', '08:30', '09:00'];
+
+class _BriefingSetting extends StatefulWidget {
+  const _BriefingSetting();
+
+  @override
+  State<_BriefingSetting> createState() => _BriefingSettingState();
+}
+
+class _BriefingSettingState extends State<_BriefingSetting> {
+  String? _time = LocalPrefs.stringSync('brief_time');
+  String? _note;
+
+  Future<void> _toggle() async {
+    if (_time != null) {
+      setState(() {
+        _time = null;
+        _note = null;
+      });
+      await LocalPrefs.remove('brief_time');
+      await WidgetBridge.briefApply();
+      Analytics.instance.track('brief', 'off');
+      return;
+    }
+    final ok = await WidgetBridge.notifRequest();
+    if (!mounted) return;
+    if (!ok) {
+      setState(() => _note = '알림이 꺼져 있어요. 폰 설정 > 앱 > 데일리컷 > 알림에서 켜 주세요.');
+      return;
+    }
+    setState(() {
+      _time = '07:30';
+      _note = null;
+    });
+    await LocalPrefs.setString('brief_time', '07:30');
+    await WidgetBridge.briefApply();
+    Analytics.instance.track('brief', 'on');
+  }
+
+  Future<void> _pick(String t) async {
+    setState(() => _time = t);
+    await LocalPrefs.setString('brief_time', t);
+    await WidgetBridge.briefApply();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        CheckToggle(label: '아침 날씨 알림 받기', on: _time != null, onTap: _toggle),
+        if (_note != null)
+          Padding(
+            padding: const EdgeInsets.only(top: 2, bottom: 4),
+            child: Text(_note!, style: const TextStyle(fontSize: 11, color: AppColors.inkSoft, height: 1.5)),
+          ),
+        if (_time != null) ...[
+          const SizedBox(height: 6),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [for (final t in kBriefTimes) PillChip(label: t, selected: t == _time, onTap: () => _pick(t))],
+          ),
+        ],
+      ],
     );
   }
 }
