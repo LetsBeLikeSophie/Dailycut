@@ -32,6 +32,7 @@ from sources import gov_support as gov_support_src
 from sources import markets as markets_src
 from sources import outing as outing_src
 from sources import rentmarket as rentmarket_src
+from sources import localcurrency as localcurrency_src
 from sources import livestock as livestock_src
 from sources import places as places_src
 from sources import _kst
@@ -159,6 +160,12 @@ def benefits_housing(kind: str = "apply", sido: str | None = None, sgg: str | No
 def benefits_rentmarket(sido: str | None = None, sgg: str | None = None):
     """전월세 시세(국토부 아파트·오피스텔 전월세 실거래가): 시군구를 고른 경우만. 아파트 전세·아파트 월세·오피스텔 월세 중위값과 지난달 대비, 최근 계약 10건."""
     return rentmarket_src.get(sido, sgg)
+
+
+@app.get("/benefits/localcurrency")
+def benefits_localcurrency(sido: str | None = None, sgg: str | None = None):
+    """지역화폐(한국조폐공사 지역사랑상품권 업종별 결제정보): 시군구를 고른 경우만. 지난달 결제금액·건수와 한 달 전 대비, 업종 TOP 6, 연령대 비중."""
+    return localcurrency_src.get(sido, sgg)
 
 
 @app.get("/benefits/loans")

@@ -28,11 +28,12 @@
 (출처: 한국관광공사 https://korean.visitkorea.or.kr — 고캠핑 https://gocamping.or.kr, 두루누비 https://www.durunubi.kr / 지역정보개발원 https://www.klid.or.kr / 한국문화정보원 https://www.culture.go.kr)
 
 ■ 혜택
-정부 지원 혜택(나이·성별 같은 "내 조건"으로 추리기), 접수 중인 청약·공공임대 공고, 우리 동네 전월세 시세, 서민금융 대출 상품을 모아 봤어요. 내 조건은 이 기기에만 저장돼요.
+정부 지원 혜택(나이·성별 같은 "내 조건"으로 추리기), 접수 중인 청약·공공임대 공고, 우리 동네 전월세 시세, 지역사랑상품권(지역화폐) 사용 현황, 서민금융 대출 상품을 모아 봤어요. 내 조건은 이 기기에만 저장돼요.
 - 정부 지원 목록: 행정안전부 정부24의 공공서비스 정보예요. 항목마다 그 서비스를 운영하는 부처·지자체·공공기관 이름이 함께 보이고, 항목을 열어 "정부24에서 자세히 보기"로 원문을 확인할 수 있어요. (출처: 정부24 https://www.gov.kr)
 - 청약 공고: 한국부동산원 청약홈 https://www.applyhome.co.kr
 - 공공임대 공고: 국토교통부 마이홈포털 https://www.myhome.go.kr / 한국토지주택공사 LH청약플러스 https://apply.lh.or.kr
 - 전월세 시세: 국토교통부 실거래가 공개시스템의 아파트·오피스텔 전월세 실거래가 https://rt.molit.go.kr (데일리컷이 계약을 모아 중위값으로 계산한 참고 통계예요)
+- 지역화폐: 한국조폐공사 지역사랑상품권 가맹점 업종별 결제정보 https://www.komsco.com (데일리컷이 시군구별 월 결제를 합쳐 보여 주는 참고 통계예요)
 - 서민 대출 상품: 서민금융진흥원 https://www.kinfa.or.kr
 
 ■ 홈 화면 위젯
@@ -59,6 +60,7 @@
 - 청약 공고: 한국부동산원 청약홈 https://www.applyhome.co.kr
 - 공공임대 공고: 국토교통부 마이홈포털 https://www.myhome.go.kr / 한국토지주택공사 LH청약플러스 https://apply.lh.or.kr
 - 전월세 시세(아파트·오피스텔 전월세 실거래가): 국토교통부 실거래가 공개시스템 https://rt.molit.go.kr
+- 지역화폐(지역사랑상품권 업종별 결제정보): 한국조폐공사 https://www.komsco.com
 - 서민 대출 상품: 서민금융진흥원 https://www.kinfa.or.kr
 - 축제·행사, 관광지 혼잡 예측, 캠핑, 반려동물 동반 여행, 웰니스, 걷기길: 한국관광공사 https://korean.visitkorea.or.kr (고캠핑 https://gocamping.or.kr / 두루누비 https://www.durunubi.kr)
 - 전시·공연, 박물관·미술관: 한국문화정보원 문화포털·전국문화기반시설총람 https://www.culture.go.kr
