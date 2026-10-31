@@ -31,6 +31,7 @@ from sources import benefits as benefits_src
 from sources import gov_support as gov_support_src
 from sources import markets as markets_src
 from sources import outing as outing_src
+from sources import rentmarket as rentmarket_src
 from sources import livestock as livestock_src
 from sources import places as places_src
 from sources import _kst
@@ -152,6 +153,12 @@ def places(kind: str = "library", sido: str | None = None, sgg: str | None = Non
 def benefits_housing(kind: str = "apply", sido: str | None = None, sgg: str | None = None):
     """청약(kind=apply, 한국부동산원 청약홈)·공공임대(kind=rent, 마이홈포털+LH) 공고. 접수가 안 끝난 것만, 선택한 시도 기준."""
     return benefits_src.housing("rent" if kind == "rent" else "apply", sido, sgg)
+
+
+@app.get("/benefits/rentmarket")
+def benefits_rentmarket(sido: str | None = None, sgg: str | None = None):
+    """전월세 시세(국토부 아파트·오피스텔 전월세 실거래가): 시군구를 고른 경우만. 아파트 전세·아파트 월세·오피스텔 월세 중위값과 지난달 대비, 최근 계약 10건."""
+    return rentmarket_src.get(sido, sgg)
 
 
 @app.get("/benefits/loans")

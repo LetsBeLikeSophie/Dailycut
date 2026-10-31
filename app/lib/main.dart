@@ -83,7 +83,7 @@ class _RootShellState extends State<RootShell> {
     final i = _tabKeys.indexOf(parts[0]);
     if (i < 0) return;
     if (parts.length > 1 && parts[0] == 'money') {
-      const labels = {'apply': '청약', 'rent': '공공임대', 'loan': '대출', 'gov': '정부 지원'};
+      const labels = {'apply': '청약', 'rent': '공공임대', 'rentm': '전월세', 'loan': '대출', 'gov': '정부 지원'};
       final label = labels[parts[1]];
       if (label != null) SegmentedHost.request('benefit_seg', label);
     }

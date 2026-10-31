@@ -23,6 +23,7 @@ const kAllSources = <(String, String, String)>[
   ('한국부동산원 청약홈', 'APT·무순위·오피스텔·공공지원 민간임대 분양공고', 'https://www.applyhome.co.kr'),
   ('국토교통부 마이홈포털', '공공임대 입주자 모집공고', 'https://www.myhome.go.kr'),
   ('한국토지주택공사(LH)', '공공임대·분양 공고(LH청약플러스)', 'https://apply.lh.or.kr'),
+  ('국토교통부 실거래가 공개시스템', '아파트·오피스텔 전월세 실거래가(우리 동네 전월세 시세 계산에 사용)', 'https://rt.molit.go.kr'),
   ('서민금융진흥원', '대출상품 한눈에(서민금융 상품 정보)', 'https://www.kinfa.or.kr'),
   ('식품의약품안전처 식품영양성분DB', '장보기 품목의 열량·영양(생것, 100g 기준)', 'https://www.mfds.go.kr'),
   ('축산물품질평가원', '축산물유통정보 — 소·돼지 부위별 소비자가격(평년 대비)', 'https://www.ekape.or.kr'),

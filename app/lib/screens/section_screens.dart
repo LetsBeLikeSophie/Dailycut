@@ -9,6 +9,7 @@ import '../widgets/swipe.dart';
 import '../widgets/basket_hero.dart';
 import '../widgets/weekend_weather.dart';
 import '../widgets/benefit_feed.dart';
+import '../widgets/rent_market.dart';
 import '../widgets/components.dart';
 import '../widgets/ad_slot.dart';
 import '../widgets/outing_section.dart';
@@ -386,14 +387,15 @@ Widget benefitsScreen(ApiClient api, Region region, BuildContext shellContext) =
         GovSupportSection.prefetch(api); // 정부 지원 구역이 바로 보이게 미리 받아 둠(같은 요청은 다시 안 보냄)
         return [
         SegmentedHost(
-          labels: const ['정부 지원', '청약', '공공임대', '대출'],
+          labels: const ['정부 지원', '청약', '공공임대', '전월세', '대출'],
           prefKey: 'benefit_seg',
           trackName: 'benefit_seg',
           builder: (context, index, toggle) {
             final (headline, emphasis, source) = switch (index) {
               1 => ('곧 접수하는 청약, 한눈에 봐요', '청약', '한국부동산원 청약홈'),
               2 => ('신청할 수 있는 공공임대 공고', '공공임대', '국토교통부 마이홈포털 · 한국토지주택공사'),
-              3 => ('내가 쓸 수 있는 서민 대출', '서민 대출', '서민금융진흥원 대출상품 한눈에'),
+              3 => ('우리 동네 전월세, 요즘 얼마일까요', '전월세', '국토교통부 아파트·오피스텔 전월세 실거래가'),
+              4 => ('내가 쓸 수 있는 서민 대출', '서민 대출', '서민금융진흥원 대출상품 한눈에'),
               _ => ('받을 수 있는 혜택, 한 번에 찾아봐요', '혜택', '행정안전부 공공서비스(혜택) 정보'),
             };
             return Column(
@@ -414,7 +416,8 @@ Widget benefitsScreen(ApiClient api, Region region, BuildContext shellContext) =
                 switch (index) {
                   1 => BenefitFeed(key: ValueKey('apply${region.code}${region.sgg}'), api: api, region: region, kind: BenefitKind.apply),
                   2 => BenefitFeed(key: ValueKey('rent${region.code}${region.sgg}'), api: api, region: region, kind: BenefitKind.rent),
-                  3 => BenefitFeed(key: ValueKey('loan${region.code}'), api: api, region: region, kind: BenefitKind.loan),
+                  3 => RentMarketSection(key: ValueKey('rentm${region.code}${region.sgg}'), api: api, region: region),
+                  4 => BenefitFeed(key: ValueKey('loan${region.code}'), api: api, region: region, kind: BenefitKind.loan),
                   _ => GovSupportSection(api: api),
                 },
                 if (index == 0) const AdSlot(),
@@ -422,7 +425,8 @@ Widget benefitsScreen(ApiClient api, Region region, BuildContext shellContext) =
                 OfficialSourceLinks(links: switch (index) {
                   1 => const [('청약홈', 'https://www.applyhome.co.kr'), ('공공데이터포털', 'https://www.data.go.kr')],
                   2 => const [('마이홈포털', 'https://www.myhome.go.kr'), ('LH청약플러스', 'https://apply.lh.or.kr')],
-                  3 => const [('서민금융진흥원', 'https://www.kinfa.or.kr'), ('공공데이터포털', 'https://www.data.go.kr')],
+                  3 => const [('국토교통부 실거래가 공개시스템', 'https://rt.molit.go.kr'), ('공공데이터포털', 'https://www.data.go.kr')],
+                  4 => const [('서민금융진흥원', 'https://www.kinfa.or.kr'), ('공공데이터포털', 'https://www.data.go.kr')],
                   _ => const [('정부24', 'https://www.gov.kr'), ('공공데이터포털', 'https://www.data.go.kr')],
                 }),
               ],

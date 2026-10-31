@@ -74,6 +74,9 @@ class ApiClient {
   /// 청약(kind=apply)·공공임대(kind=rent) 공고, 서민 대출. 지역은 시도 코드·시군구 이름으로만 보냄.
   Future<Map<String, dynamic>> benefitsHousing({required String kind, String? sido, String? sgg}) =>
       _memoGet('housing/$kind/$sido/$sgg', _min10, () => _getJson('/benefits/housing', {'kind': kind, 'sido': sido, 'sgg': sgg}));
+  /// 전월세 시세(국토부 실거래가 요약). 시군구를 고른 경우만 값이 있고, 처음 부르는 지역은 몇 초 걸릴 수 있음.
+  Future<Map<String, dynamic>> rentMarket({String? sido, String? sgg}) =>
+      _memoGet('rentmarket/$sido/$sgg', _min30, () => _getJson('/benefits/rentmarket', {'sido': sido, 'sgg': sgg}));
   Future<Map<String, dynamic>> benefitsLoans({String? usage, String? sido}) => _memoGet('loans/$usage/$sido', _min10, () => _getJson('/benefits/loans', {'usage': usage, 'sido': sido}));
 
   /// 이번 주말 한산한 곳(관광지 집중률 예측 + 그날 날씨). 처음 부르는 지역은 몇 초 걸릴 수 있음.
