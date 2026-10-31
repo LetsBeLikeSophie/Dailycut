@@ -24,8 +24,8 @@
 (출처: 한국문화정보원 문화포털 https://www.culture.go.kr / 한국관광공사 https://korean.visitkorea.or.kr)
 
 ■ 나들이
-이번 주말 덜 붐비는 관광지, 도서관 열람실 남은 좌석, 캠핑장, 반려동물과 갈 수 있는 곳(동반 가능한 크기 표시), 웰니스 관광지, 걷기길을 찾아보세요.
-(출처: 한국관광공사 https://korean.visitkorea.or.kr — 고캠핑 https://gocamping.or.kr, 두루누비 https://www.durunubi.kr / 지역정보개발원 https://www.klid.or.kr)
+이번 주말 덜 붐비는 관광지, 도서관 열람실 남은 좌석, 박물관·미술관, 캠핑장, 반려동물과 갈 수 있는 곳(동반 가능한 크기 표시), 웰니스 관광지, 걷기길을 찾아보세요.
+(출처: 한국관광공사 https://korean.visitkorea.or.kr — 고캠핑 https://gocamping.or.kr, 두루누비 https://www.durunubi.kr / 지역정보개발원 https://www.klid.or.kr / 한국문화정보원 https://www.culture.go.kr)
 
 ■ 혜택
 정부 지원 혜택(나이·성별 같은 "내 조건"으로 추리기), 접수 중인 청약·공공임대 공고, 우리 동네 전월세 시세, 서민금융 대출 상품을 모아 봤어요. 내 조건은 이 기기에만 저장돼요.
@@ -61,7 +61,7 @@
 - 전월세 시세(아파트·오피스텔 전월세 실거래가): 국토교통부 실거래가 공개시스템 https://rt.molit.go.kr
 - 서민 대출 상품: 서민금융진흥원 https://www.kinfa.or.kr
 - 축제·행사, 관광지 혼잡 예측, 캠핑, 반려동물 동반 여행, 웰니스, 걷기길: 한국관광공사 https://korean.visitkorea.or.kr (고캠핑 https://gocamping.or.kr / 두루누비 https://www.durunubi.kr)
-- 전시·공연: 한국문화정보원 문화포털 https://www.culture.go.kr
+- 전시·공연, 박물관·미술관: 한국문화정보원 문화포털·전국문화기반시설총람 https://www.culture.go.kr
 - 전통시장: 소상공인시장진흥공단 https://www.semas.or.kr
 - 공공도서관 열람실: 지역정보개발원 https://www.klid.or.kr
 - 위 데이터를 내려받는 정부 포털: 공공데이터포털 https://www.data.go.kr

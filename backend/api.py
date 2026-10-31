@@ -135,7 +135,7 @@ def outing(sido: str | None = None, sgg: str | None = None):
 
 @app.get("/places")
 def places(kind: str = "library", sido: str | None = None, sgg: str | None = None):
-    """문화 탭 "나들이": kind = library(도서관 빈자리) | camp(캠핑장) | pet(반려동물 동반) | wellness(웰니스) | trail(걷기길).
+    """문화 탭 "나들이": kind = library(도서관 빈자리) | camp(캠핑장) | pet(반려동물 동반) | wellness(웰니스) | trail(걷기길) | museum(박물관·미술관) | hall(문예회관·생활문화센터·문학관).
     캠핑은 이번 주말 날씨(토·일)를 같이 줌."""
     out = places_src.query(kind, sido, sgg)
     if kind == "camp" and out.get("live"):

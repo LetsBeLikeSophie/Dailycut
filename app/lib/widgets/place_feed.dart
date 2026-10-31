@@ -10,7 +10,7 @@ import 'dog_icon.dart';
 /// 장소 탭의 한 구분(도서관 열람실 빈자리 · 캠핑장 · 반려동물 동반 · 웰니스 · 걷기길 중 하나). 구분 전환은 바깥(SegmentedHost)이 함(2026-10-16).
 /// 서버가 줄여서 준 항목({name, sub, tag, span, detail, url, link_label})을 청약·대출 목록과 같은 모양으로 보여주고,
 /// 누르면 같은 상세 시트가 열림. 지역은 앱 전체 지역(시도·시군구)을 따름. 사진은 쓰지 않음(저작권 구분 확인 전).
-enum PlaceKind { library, camp, pet, wellness, trail }
+enum PlaceKind { library, camp, pet, wellness, trail, museum, hall }
 
 const _labels = {
   PlaceKind.library: '도서관',
@@ -18,6 +18,8 @@ const _labels = {
   PlaceKind.pet: '반려동물',
   PlaceKind.wellness: '웰니스',
   PlaceKind.trail: '걷기길',
+  PlaceKind.museum: '박물관·미술관',
+  PlaceKind.hall: '문예회관·문화센터',
 };
 
 String placeKindLabel(PlaceKind k) => _labels[k]!;
@@ -28,6 +30,8 @@ const _titles = {
   PlaceKind.pet: '반려동물과 갈 만한 곳',
   PlaceKind.wellness: '웰니스 관광지',
   PlaceKind.trail: '걷기길·자전거길',
+  PlaceKind.museum: '박물관·미술관',
+  PlaceKind.hall: '문예회관·문화센터',
 };
 
 class PlaceFeed extends StatefulWidget {

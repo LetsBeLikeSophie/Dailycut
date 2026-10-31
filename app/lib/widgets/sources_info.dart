@@ -29,7 +29,7 @@ const kAllSources = <(String, String, String)>[
   ('축산물품질평가원', '축산물유통정보 — 소·돼지 부위별 소비자가격(평년 대비)', 'https://www.ekape.or.kr'),
   ('한국관광공사', '축제·행사, 캠핑(고캠핑), 반려동물 동반 여행, 웰니스 관광, 걷기길(두루누비), 전통시장 사진', 'https://korean.visitkorea.or.kr'),
   ('한국관광공사 관광지 집중률 방문자 추이 예측', '관광지별 예상 방문 집중도(오늘부터 약 30일 뒤까지)', 'https://knto.or.kr'),
-  ('한국문화정보원 문화포털', '전시·공연 정보(사진은 쓰지 않음)', 'https://www.culture.go.kr'),
+  ('한국문화정보원 문화포털', '전시·공연 정보(사진은 쓰지 않음)와 전국문화기반시설총람의 박물관·미술관 정보(공공누리 1유형: 출처표시)', 'https://www.culture.go.kr'),
   ('소상공인시장진흥공단', '전통시장 현황', 'https://www.semas.or.kr'),
   ('지역정보개발원', '공공도서관 정보와 열람실 남은 좌석', 'https://www.klid.or.kr'),
   ('Wikimedia Commons', '채소·과일 사진 (작가·라이선스는 사진 아래에 표시)', 'https://commons.wikimedia.org'),

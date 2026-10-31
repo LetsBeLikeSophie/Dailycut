@@ -127,3 +127,10 @@ claude.ai/artifact/17gytwYuXMFkF4vx8tWv65 (사용 중 · 일부만 · 미사용 
   **월세 중위값은 달마다 크게 움직일 수 있음**(강남 아파트 월세 140→100만원, 평균도 같은 방향 — 거래 구성 변화) → ⓘ에 "단지·면적 구성에 따라 크게 움직일 수 있다" 문구.
   출처 세 곳 반영: `store/listing-ko.md`(혜택 문단·출처 목록)·`widgets/sources_info.dart`·`web/about.html`. **Play 스토어 설명(콘솔)은 아직 안 바꿈 — 이 기능이 들어간 앱 버전(1.3.8)을 올릴 때 같이 바꿀 것.**
 - **문화기반시설(박물관·미술관) 막힘 (2026-10-31)**: 문화정보원 `B553457/nopenapi/rest/cultureartspaces/museum`(미술관), 박물관은 가이드에 `publicperformancedisplays/realm`으로 적혀 있으나 오기로 보임. 기존 키로 호출하면 `SERVICE_KEY_IS_NOT_REGISTERED_ERROR(30)` — 10-13 추가 승인 19개의 키·주소가 들어 있는 새 env 파일(`503e3904-dailycut-api.env`)을 읽지 못해(위치 불명) 어느 키로 승인됐는지 확인 못 함. 사용자가 키를 알려 주거나 포털 마이페이지에서 승인 상태 확인 필요.
+
+- **박물관·미술관·문예회관·생활문화센터·문학관 (나들이 구역, 2026-10-31)**: `places.py`의 `museum`·`hall`(kind), 앱 `PlaceKind.museum`·`hall`("박물관·미술관" · "문예회관·문화센터" 칩). 한국문화정보원 **전국문화기반시설총람**(지역문화통합정보시스템 OpenAPI, 포털 15125097, **공공누리 1유형 = 출처표시, 상업 이용 가능**).
+  엔드포인트 `apis.data.go.kr/B553457/rgnCltrFcltExmnv1/<오퍼레이션>`: 박물관 `clifMsmv1`·미술관 `clifArglv1`·문예회관 `clifClcnv1`·생활문화센터 `clifLvclCntrv1`·문학관 `clifLtrm1`(안 쓰는 것: 지방문화원 `clifLclcv1`·문화의집 `clifClhsv1`·지역문화재단 `clifLcclFndtv1`·공공도서관 `clifLbrryv1`·국립도서관 `clifNtnLbrryv1` — 기관 통계 위주).
+  **`pblshYr`(발간연도)가 필수**(없으면 "필수 Parameter" 오류 코드 11), `resultType=json`, 응답은 `response.body.data[]`. 시군구 코드를 안 주면 전국이 와서(박물관 약 1,000곳) 하루 한 번 전체를 받아 두고(최신 연도를 위에서부터 찾음, 2026-10 기준 2024 발간=2023년 조사) 주소 앞 글자로 지역을 거름. 좌표·운영 시간은 없음 → 지도는 이름+주소 검색, 연 개관일수·관람객은 "○○년 조사"로 표기.
+  **키는 기존 인증키 그대로**(2026-10-31 사용자가 포털의 일반 인증키를 보여 줬고 `.env`의 키와 같음을 비교로 확인). 처음 실패한 건 키가 아니라 **예전 주소**(`cultureartspaces/museum`)로 불러서였음. 새 env 파일 문제는 이 건에선 해당 없음(지역화폐 가맹점 API는 아직 미확인).
+  **도서관 좌석은 이 API가 아님**: 열람실 실시간 남은 좌석은 지역정보개발원 `B551982/plr_v2`(`rlt_rdrm_info_v2`)에서 받음 — 총람의 공공도서관은 연 1회 조사 통계(장서·이용자 수)라 좌석이 없음.
+  출처 세 곳 반영: `store/listing-ko.md`(나들이 문단·출처)·`sources_info.dart`(한국문화정보원 설명에 총람 추가)·`about.html`. Play 설명(콘솔)은 앱 1.3.8 올릴 때 같이.

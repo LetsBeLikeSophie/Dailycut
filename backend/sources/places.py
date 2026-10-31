@@ -31,8 +31,9 @@ PET_URL = "https://apis.data.go.kr/B551011/KorPetTourService2/areaBasedList2"
 PET_DETAIL_URL = "https://apis.data.go.kr/B551011/KorPetTourService2/detailPetTour2"
 WELL_URL = "https://apis.data.go.kr/B551011/WellnessTursmService/areaBasedList"
 TRAIL_URL = "https://apis.data.go.kr/B551011/Durunubi/courseList"
+CLTR_URL = "https://apis.data.go.kr/B553457/rgnCltrFcltExmnv1"  # 한국문화정보원 전국문화기반시설총람(박물관 clifMsmv1·미술관 clifArglv1)
 
-KINDS = ("library", "camp", "pet", "wellness", "trail")
+KINDS = ("library", "camp", "pet", "wellness", "trail", "museum", "hall")
 CONTENT_TYPE = {"12": "관광지", "14": "문화시설", "28": "레포츠", "32": "숙박", "39": "음식점", "38": "쇼핑"}
 
 
@@ -422,8 +423,100 @@ def trail(sido: str | None, sgg: str | None) -> dict:
     return {"live": True, "total": len(out), "items": [t[2] for t in out], "region": label, "scope_note": scope_note, "note": "한국관광공사 두루누비의 걷기길·자전거길 코스예요."}
 
 
+# ---------------- 박물관·미술관 ----------------
+# 2026-10-31: 한국문화정보원 전국문화기반시설총람(지역문화통합정보시스템, 공공누리 1유형 = 출처표시, 상업 이용 가능 — 포털 15125097에서 확인).
+#  - 발간연도(pblshYr)가 필수라서 가장 최근 연도를 위에서부터 찾음(2026-10 기준 2024 발간 = 2023년 조사). 시군구 코드를 안 주면 전국이 오고(박물관 약 1,000곳), 하루 한 번 전체를 받아 둠.
+#  - 좌표·운영 시간은 없음 → 지도는 "주소"로 검색하는 링크. 연 개관일수·관람객은 총람 조사값이라 "○○년 조사"라고 밝힘.
+#  - 키는 다른 소스와 같은 공공데이터포털 인증키. (처음엔 옛 주소 cultureartspaces/museum으로 불러서 키 미등록 오류가 났었음.)
+
+# kind → [(오퍼레이션, 화면 구분 이름, 이름 필드, 설립·운영 필드, 주소 필드)]. 지방문화원·문화의집·지역문화재단·국립/공공도서관은 기관 통계 위주라(도서관은 열람실 실시간 좌석을
+# 지역정보개발원에서 따로 받음) 방문자용 목록에서는 뺌.
+_CLTR_KINDS = {
+    "museum": [("clifMsmv1", "박물관", "msmNm", "fndnMnbdNm", "instAddr"), ("clifArglv1", "미술관", "arglNm", "fndnMnbdNm", "instAddr")],
+    "hall": [
+        ("clifClcnv1", "문예회관", "clcnNm", "clcnErctMnbdNm", "instAddr"),
+        ("clifLvclCntrv1", "생활문화센터", "lvclCntrNm", "lvclCntrOperMthdNm", "instAddr"),
+        ("clifLtrm1", "문학관", "ltrmNm", "ntpbSprtnNm", "addr"),
+    ],
+}
+_CLTR_NOTE = {
+    "museum": "한국문화정보원 전국문화기반시설총람(지역문화통합정보시스템)의 박물관·미술관이에요. 운영 시간·휴관일은 누리집에서 확인해 주세요.",
+    "hall": "한국문화정보원 전국문화기반시설총람(지역문화통합정보시스템)의 문예회관·생활문화센터·문학관이에요. 공연·프로그램과 운영 시간은 누리집에서 확인해 주세요.",
+}
+
+
+def _cltr_pages(op: str, year: int) -> list[dict]:
+    rows: list[dict] = []
+    for page in range(1, 6):
+        r = requests.get(
+            f"{CLTR_URL}/{op}",
+            params={"serviceKey": config.get_key(_http.KEY_ENV), "pageNo": page, "numOfRows": 1000, "resultType": "json", "pblshYr": year},
+            timeout=60,
+        )
+        r.raise_for_status()
+        body = (r.json().get("response") or {}).get("body") or {}
+        data = body.get("data") or []
+        rows.extend(data)
+        if page * 1000 >= int(body.get("totalCount") or 0) or not data:
+            break
+    return rows
+
+
+def _cltr_all(kind: str) -> list[dict]:
+    year = _kst.today().year
+    for y in range(year, year - 5, -1):
+        out: list[dict] = []
+        for op, label, name_key, who_key, addr_key in _CLTR_KINDS[kind]:
+            for x in _cltr_pages(op, y):
+                x["_label"], x["_name"], x["_who"], x["_addr"] = label, x.get(name_key), x.get(who_key), x.get(addr_key)
+                out.append(x)
+        if out:
+            return out
+    return []
+
+
+def _cltr(kind: str, sido: str | None, sgg: str | None) -> dict:
+    rows = _cache.cached("places", f"places:cltr2:{kind}", 1440, lambda: {"v": _cltr_all(kind)}, shared=True)["v"]
+    region = geo.region(sido)
+    terms = geo.sgg_terms(sido, sgg)
+    out = []
+    for x in rows:
+        addr = _clean(x.get("_addr"))
+        name = _clean(x.get("_name"))
+        if not name or not _in_region(addr[:14], region):
+            continue
+        near = _has(terms, addr)
+        label = x["_label"]
+        who = _clean(x.get("_who"))
+        grade = _clean(x.get("msmGradSprtnNm") or x.get("arglGradSprtnNm"))
+        days, visitors = x.get("fyerOpngNmdy"), x.get("fyerVwngNope") or x.get("fyerVstNope")
+        yr = _clean(x.get("crtrYr"))  # 총람의 조사 기준 연도(발간연도의 전년)
+        site = _clean(x.get("hmpgAddr"))
+        url = ("" if not site else site if site.startswith("http") else "https://" + site)
+        item = _item(
+            f"cl{x.get('instId')}{label}", name, " · ".join(p for p in (label, addr) if p), who if kind == "museum" else label, "",
+            [("구분", f"{label}{' · ' + grade if grade else ''}"), ("설립·운영", who), ("주소", addr), ("전화", _clean(x.get("telnoCn"))),
+             ("소장 자료", _clean(x.get("clctnDataKndCn"))[:200]),
+             ("연 개관일수", f"{days}일({yr}년 조사)" if days else None),
+             ("연 관람객", f"{int(visitors):,}명({yr}년 조사)" if isinstance(visitors, int) and visitors else None)],
+            url, "누리집 열기" if url else "", _pin(name, None, None, f"{name} {addr}".strip()),
+        )
+        out.append((0 if near else 1, item["name"], item))
+    out.sort(key=lambda t: t[:2])
+    out, region_label, scope_note = _scope(out, sgg, region)
+    return {"live": True, "total": len(out), "items": [t[2] for t in out], "region": region_label, "scope_note": scope_note, "note": _CLTR_NOTE[kind]}
+
+
+def museum(sido: str | None, sgg: str | None) -> dict:
+    return _cltr("museum", sido, sgg)
+
+
+def hall(sido: str | None, sgg: str | None) -> dict:
+    return _cltr("hall", sido, sgg)
+
+
 def query(kind: str, sido: str | None, sgg: str | None) -> dict:
-    fn = {"library": library, "camp": camp, "pet": pet, "wellness": wellness, "trail": trail}.get(kind)
+    fn = {"library": library, "camp": camp, "pet": pet, "wellness": wellness, "trail": trail, "museum": museum, "hall": hall}.get(kind)
     if not fn:
         return {"live": False, "items": []}
     try:
@@ -434,7 +527,7 @@ def query(kind: str, sido: str | None, sgg: str | None) -> dict:
 
 def _warm() -> dict:
     """사용자가 처음 열 때 기다리지 않게 하루 한 번 큰 목록(도서관·캠핑·걷기길, 서울의 반려동물·웰니스)을 미리 받아 둠."""
-    for fn in (lambda: library("11", None), lambda: camp("11", None), lambda: trail("11", None), lambda: pet("11", None), lambda: wellness("11", None)):
+    for fn in (lambda: library("11", None), lambda: camp("11", None), lambda: trail("11", None), lambda: pet("11", None), lambda: wellness("11", None), lambda: museum("11", None), lambda: hall("11", None)):
         try:
             fn()
         except Exception:
