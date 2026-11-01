@@ -40,10 +40,15 @@ class _BuyGuideSectionState extends State<BuyGuideSection> {
 
   Future<void> _open(String url) => launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
 
-  /// 출처 URL의 사이트 주소만 중복 없이(글 제목은 길어서 안 씀).
-  String _hosts(List<Map<String, dynamic>> sources) {
-    final hosts = <String>{for (final s in sources) ?Uri.tryParse(s['url'] as String? ?? '')?.host};
-    return hosts.take(4).join(' · ') + (hosts.length > 4 ? ' 외 ${hosts.length - 4}곳' : '');
+  /// ⓘ의 출처 링크: 공식 페이지마다 사이트 주소(host)를 이름으로, 사이트마다 첫 주소 하나만(글 제목은 길어서 안 씀).
+  List<(String, String)> _sourceLinks(List<Map<String, dynamic>> sources) {
+    final byHost = <String, String>{};
+    for (final s in sources) {
+      final url = s['url'] as String? ?? '';
+      final host = Uri.tryParse(url)?.host ?? '';
+      if (host.isNotEmpty && !host.contains('apple.com') && !host.contains('google.com')) byHost.putIfAbsent(host, () => url); // 앱 스토어 주소는 출처가 아님
+    }
+    return [for (final e in byHost.entries.take(5)) (e.key, e.value)];
   }
 
   static final _storeSuffix = RegExp(r'\s*\((아이폰|안드로이드)\)$');
@@ -137,7 +142,6 @@ class _BuyGuideSectionState extends State<BuyGuideSection> {
       builder: (context, snap) {
         final d = snap.data;
         if (d == null || d['found'] != true) return const SizedBox.shrink();
-        final checked = d['checked'] as String?;
         final channels = ((d['channels'] as List?) ?? const []).cast<Map<String, dynamic>>();
         final official = d['official'] as Map<String, dynamic>?;
         final phone = d['phone'] as Map<String, dynamic>?;
@@ -172,17 +176,13 @@ class _BuyGuideSectionState extends State<BuyGuideSection> {
         ];
         return ListSection(
           title: '상품권 사는 법',
-          trailing: dotDate(checked).isEmpty ? null : '업데이트 ${dotDate(checked)}',
-          info: InfoIconButton(title: '사는 법 안내', lines: [
-            '데일리컷이 공식 홈페이지를 직접 확인해서 업데이트해요.',
-            if (dotDate(checked).isNotEmpty) '마지막 업데이트 ${dotDate(checked)}',
-          ]),
+          info: InfoIconButton(
+            title: '사는 법 안내',
+            lines: const ['데일리컷이 지자체·운영사 공식 홈페이지를\n직접 확인해서 정리해요.', '할인율·한도는 줄마다 적힌 날짜가 기준이에요.'],
+            sources: _sourceLinks(sources),
+          ),
           children: [
             ExpandableList(unit: '개', children: rows),
-            DataMeta(rows: [
-              DataMetaRow('출처', _hosts(sources)),
-              DataMetaRow('확인일', dotDate(checked)),
-            ]),
           ],
         );
       },

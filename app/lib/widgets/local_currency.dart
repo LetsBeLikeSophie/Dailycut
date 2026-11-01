@@ -58,10 +58,9 @@ class _LocalCurrencySectionState extends State<LocalCurrencySection> {
 
   static const _title = '지난달 우리 동네 상품권';
   static const _info = [
-    '한국조폐공사가 모은 "가맹점 업종별 결제정보"를 월 단위로 합산했어요. 취소를 반영한 값이에요.',
-    '덜 찬 이번 달은 빼고, 자료가 있는 가장 최근 달이에요.',
+    '월 단위로 합산했고 취소를 반영한 값이에요.\n덜 찬 이번 달은 빼고, 자료가 있는 가장 최근 달이에요.',
     '지역은 상품권을 쓴 가게가 있는 시군구, 나이대는 결제한 사람 기준이에요.',
-    '지역마다 상품권 종류와 사용처가 달라 다른 지역과 금액을 그대로 비교하기는 어려워요.',
+    '지역마다 상품권 종류와 사용처가 달라 금액을 그대로 비교하기는 어려워요.',
   ];
 
   /// 위로 올린 통계 그래프에서 지금 보는 쪽(0 결제금액 · 1 많이 쓴 곳 · 2 나이대 · 3 동네).
@@ -138,20 +137,16 @@ class _LocalCurrencySectionState extends State<LocalCurrencySection> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              ArrowSelector(label: pages[page].$1, index: page, count: pages.length, onChanged: (i) => setState(() => _heroPage = i)),
+              // 출처·기준은 다른 화면처럼 ⓘ 안에(2026-11-01 사용자 의견: 표로 따로 늘어놓지 말고 ⓘ로 통일)
+              ArrowSelector(
+                label: pages[page].$1,
+                index: page,
+                count: pages.length,
+                onChanged: (i) => setState(() => _heroPage = i),
+                info: const InfoIconButton(title: '지역화폐 통계 안내', lines: _info, sources: [('한국조폐공사', 'https://www.komsco.com')]),
+              ),
               const SizedBox(height: 14),
               SizedBox(height: 316, child: KeyedSubtree(key: ValueKey('hp$page'), child: pages[page].$2)),
-              Row(
-                children: [
-                  Expanded(
-                    child: DataMeta(top: 0, rows: [
-                      const DataMetaRow('출처', '한국조폐공사 가맹점 업종별 결제정보'),
-                      DataMetaRow('기준', '${now['ym'].toString().substring(0, 4)}년 $month · ${d['region'] ?? ''}'),
-                    ]),
-                  ),
-                  const InfoIconButton(title: '지역화폐 통계 안내', lines: _info),
-                ],
-              ),
             ],
           ),
         );
@@ -211,9 +206,9 @@ class _LocalCurrencySectionState extends State<LocalCurrencySection> {
       info: const InfoIconButton(
         title: '내 또래 안내',
         lines: [
-          '결제한 사람의 나이대별로, 돈이 많이 쓰인 동네와 업종을 순서대로 보여 줘요. 줄을 누르면 그 동네·업종의 상품권 가게 목록이 위에 열려요.',
-          '가게별 결제액은 공개 자료에 없어서 "어느 가게가 1등인지"는 알 수 없어요. 숫자는 그 나이대 결제금액 안에서의 비중이에요.',
-          '"내 조건"에 생년월일을 저장해 두면 내 나이대로 바로 열려요. 생년월일은 이 기기 안에서만 쓰고 서버로 보내지 않아요.',
+          '나이대별로 돈이 많이 쓰인 동네와 업종이에요.\n줄을 누르면 그 동네·업종의 가게 목록이 위에 열려요.',
+          '가게별 결제액은 공개 자료에 없어서\n어느 가게가 1등인지는 알 수 없어요.\n숫자는 그 나이대 결제금액 안에서의 비중이에요.',
+          '"내 조건"에 생년월일을 저장하면 내 나이대로 바로 열려요.\n생년월일은 이 기기에서만 쓰고 서버로 보내지 않아요.',
         ],
       ),
       children: [

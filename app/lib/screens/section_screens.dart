@@ -31,8 +31,10 @@ class SectionScreen extends StatefulWidget {
     required this.section,
     required this.fetch,
     required this.contentBuilder,
+    this.footer,
   });
 
+  final Widget? footer; // 화면 맨 아래 "원본은 공식 사이트에서 확인하세요" (모든 탭 같은 모양, 2026-11-01)
   final Section section;
   final Future<Map<String, dynamic>> Function() fetch;
   final List<Widget> Function(BuildContext context, Map<String, dynamic> data) contentBuilder;
@@ -63,7 +65,7 @@ class _SectionScreenState extends State<SectionScreen> {
         }
         return ListView(
           padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
-          children: widget.contentBuilder(context, snapshot.data!),
+          children: [...widget.contentBuilder(context, snapshot.data!), ?widget.footer],
         );
       },
     );
@@ -81,6 +83,7 @@ List<Widget> _priceRows(List<Map<String, dynamic>> items) => [for (final it in i
 /// (제철 표시·상세 포함), 전통시장. 서버가 아직 실데이터를 못 주면(스텁) 예전 화면(배추 + 제철 목록)으로 보임.
 Widget marketScreen(ApiClient api, Region region, BuildContext shellContext) => SectionScreen(
       section: Section.market,
+      footer: const OfficialSourceLinks(section: Section.market),
       fetch: () => api.market(sido: region.code, sgg: region.sgg),
       contentBuilder: (context, data) {
         final essentials = (data['essentials'] as List).cast<Map<String, dynamic>>();
@@ -188,6 +191,7 @@ Widget marketScreen(ApiClient api, Region region, BuildContext shellContext) => 
 /// 문화: 이번 주말 행사 수 + 행사 달력(+ 음악이 실데이터일 때만 구역 전환). 나들이는 주말 탭으로 나감(2026-10-15). 영화(KOBIS) 구역은 광고 약관 때문에 뺌(2026-10-13).
 Widget cultureScreen(ApiClient api, Region region, BuildContext shellContext) => SectionScreen(
       section: Section.culture,
+      footer: const OfficialSourceLinks(section: Section.culture),
       fetch: () => api.culture(sido: region.code, sgg: region.sgg),
       contentBuilder: (context, data) {
         final spotifyTop = (data['spotify_top'] as List).cast<Map<String, dynamic>>();
@@ -337,6 +341,7 @@ Widget cultureScreen(ApiClient api, Region region, BuildContext shellContext) =>
 /// 구역 전환(SegmentedHost)은 문화 탭의 행사/음악, 혜택 탭의 4구역과 같은 방식. 각 구역이 자기 데이터를 받음(시도·시군구 반영).
 Widget placesScreen(ApiClient api, Region region, BuildContext shellContext) => SectionScreen(
       section: Section.place,
+      footer: const OfficialSourceLinks(section: Section.place),
       fetch: () async => <String, dynamic>{},
       contentBuilder: (context, data) => [
         SegmentedHost(

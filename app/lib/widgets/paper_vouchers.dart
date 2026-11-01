@@ -25,11 +25,12 @@ String _denom(int won) => won >= 10000 ? '${won ~/ 10000}만' : '${won ~/ 1000}�
 class _PaperVoucherSectionState extends State<PaperVoucherSection> {
   late final Future<Map<String, dynamic>> _future = widget.api.localCurrencyPaper(sido: widget.region.code, sgg: widget.region.sgg);
 
-  static const _info = [
-    '종이 상품권을 파는 은행·새마을금고·농협 지점이에요.',
-    '재고는 권종(5천·1만·5만원 등)마다 있음/없음만 알려 줘요. 몇 장 남았는지는 몰라요.',
-    '이 자료를 올리는 지역은 일부뿐이라, 자료가 없는 지역에서는 이 구역이 안 보여요.',
-  ];
+  static List<String> _info(String asof) => [
+        '종이 상품권을 파는 은행·새마을금고·농협 지점이에요.',
+        '재고는 권종(5천·1만·5만원 등)마다 있음/없음만 알려 줘요.\n몇 장 남았는지는 몰라요.',
+        if (dotDate(asof).isNotEmpty) '재고는 ${dotDate(asof)} 기준이에요.',
+        '이 자료를 올리는 지역은 일부뿐이라, 자료가 없는 지역에서는 이 구역이 안 보여요.',
+      ];
 
   @override
   Widget build(BuildContext context) {
@@ -43,7 +44,7 @@ class _PaperVoucherSectionState extends State<PaperVoucherSection> {
         return ListSection(
           title: '종이 상품권 살 수 있는 곳',
           trailing: (d['with_stock'] as int) > 0 ? '재고 있는 곳 ${d['with_stock']}곳' : null,
-          info: const InfoIconButton(title: '종이 상품권 안내', lines: _info),
+          info: InfoIconButton(title: '종이 상품권 안내', lines: _info(asof), sources: const [('한국조폐공사', 'https://www.komsco.com')]),
           children: [
             ExpandableList(
               unit: '곳',
@@ -60,10 +61,6 @@ class _PaperVoucherSectionState extends State<PaperVoucherSection> {
                   ),
               ],
             ),
-            DataMeta(rows: [
-              const DataMetaRow('출처', '한국조폐공사 지류 판매지점·재고정보'),
-              DataMetaRow('기준일', dotDate(asof)),
-            ]),
           ],
         );
       },
@@ -93,7 +90,8 @@ class _PaperVoucherSectionState extends State<PaperVoucherSection> {
         title: name,
         sub: '${it['gt']} · 종이 상품권 판매',
         gapAfterHeader: 20,
-        infoLines: _info,
+        infoLines: [if (dotDate(asof).isNotEmpty) '재고는 ${dotDate(asof)} 기준이에요.', '가기 전에 전화로 재고를 확인해 주세요.'],
+        infoSources: const [('한국조폐공사', 'https://www.komsco.com')],
         children: [
           if (st != null && st.isNotEmpty) ...[
             Text('권종별 재고', style: AppTheme.subheading),
@@ -122,11 +120,6 @@ class _PaperVoucherSectionState extends State<PaperVoucherSection> {
             const SizedBox(height: 10),
             ActionButton(vertical: 12, label: '전화 걸기', onTap: () => launchUrl(Uri.parse('tel:${phone.replaceAll('-', '')}'))),
           ],
-          DataMeta(top: 20, rows: [
-            DataMetaRow('재고 기준일', dotDate(asof)),
-            const DataMetaRow('출처', '한국조폐공사 지류 판매지점·재고정보'),
-            const DataMetaRow('가기 전에', '전화로 재고 확인'),
-          ]),
         ],
       ),
     );

@@ -1,7 +1,9 @@
 // 공용 부품 — 로딩·빈 목록 안내, 라이선스 점검 표시
 // (2026-10-29: 1,787줄짜리 components.dart를 주제별로 나눔. 불러오는 쪽은 그대로 `widgets/components.dart` 하나만 import 하면 됨.)
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+import '../../analytics.dart';
 import '../../theme.dart';
 
 /// 받는 중 표시(작은 원 + 문구). 목록 자리에서 쓰는 공용 모양.
@@ -94,57 +96,6 @@ class LicenseFlag extends StatelessWidget {
   }
 }
 
-/// "출처 · 기준일" 같은 자료 정보를 이름-값 두 칸으로 보여 주는 작은 표(2026-11-01).
-/// 줄글 안내("…일 수 있어요 …해 주세요") 대신 언제 기준인지·어디서 온 건지만 짧게 나란히 놓음.
-/// [rows]의 값이 비어 있으면 그 줄은 건너뜀. [stale]이 true인 줄은 값 뒤에 "오래됨"을 붙임.
-class DataMeta extends StatelessWidget {
-  const DataMeta({super.key, required this.rows, this.top = 14});
-
-  final List<DataMetaRow> rows;
-  final double top;
-
-  @override
-  Widget build(BuildContext context) {
-    final shown = [for (final r in rows) if (r.value.isNotEmpty) r];
-    if (shown.isEmpty) return const SizedBox.shrink();
-    return Padding(
-      padding: EdgeInsets.only(top: top),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          for (final r in shown)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 4),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  SizedBox(width: 64, child: Text(r.label, style: const TextStyle(fontSize: 11, color: AppColors.inkSoft))),
-                  Expanded(
-                    child: Text.rich(
-                      TextSpan(
-                        text: r.value,
-                        children: [if (r.stale) const TextSpan(text: '  오래됨', style: TextStyle(fontWeight: FontWeight.w700))],
-                      ),
-                      style: const TextStyle(fontSize: 11, color: AppColors.inkSoft),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-}
-
-class DataMetaRow {
-  const DataMetaRow(this.label, this.value, {this.stale = false});
-
-  final String label;
-  final String value;
-  final bool stale;
-}
-
 /// 20261101 / 2026-11-01 / 202611 / 2026 → "2026.11.01" / "2026.11" / "2026년" (못 읽으면 빈 문자열).
 String dotDate(String? raw) {
   final d = (raw ?? '').replaceAll(RegExp(r'[^0-9]'), '');
@@ -159,4 +110,27 @@ String dateRange(Iterable<String> ymds) {
   final months = {for (final v in ymds) if (v.replaceAll(RegExp(r'[^0-9]'), '').length >= 6) v.replaceAll(RegExp(r'[^0-9]'), '').substring(0, 6)}.toList()..sort();
   if (months.isEmpty) return '';
   return months.length == 1 ? dotDate(months.first) : '${dotDate(months.first)} ~ ${dotDate(months.last)}';
+}
+
+/// 눌러서 외부(브라우저)로 여는 밑줄 링크 한 줄(출처 시트·ⓘ·화면 맨 아래 "원본 확인"이 같이 씀).
+class SourceLink extends StatelessWidget {
+  const SourceLink(this.label, this.url, {super.key, this.size = 13, this.bold = false});
+
+  final String label;
+  final String url;
+  final double size;
+  final bool bold;
+
+  @override
+  Widget build(BuildContext context) => GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () {
+          Analytics.instance.track('life_open', 'source-link');
+          launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Text(label, style: TextStyle(fontSize: size, color: AppColors.ink, fontWeight: bold ? FontWeight.w700 : FontWeight.w400, decoration: TextDecoration.underline, height: 1.4)),
+        ),
+      );
 }

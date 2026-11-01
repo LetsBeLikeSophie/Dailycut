@@ -163,7 +163,7 @@ class _HeroFrame extends StatelessWidget {
                 ),
                 // 데이터 출처: 날짜 옆의 작은 ⓘ(배경 없이) — 누르면 이 화면의 출처와 앱 전체 출처 목록
                 GestureDetector(
-                  onTap: () => showSourcesSheet(context, current: source),
+                  onTap: () => showSourcesSheet(context, section: section),
                   behavior: HitTestBehavior.opaque,
                   child: const Padding(
                     padding: EdgeInsets.fromLTRB(8, 8, 12, 8),

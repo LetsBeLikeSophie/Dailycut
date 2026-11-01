@@ -69,6 +69,7 @@ class _RootShellState extends State<RootShell> {
     Analytics.instance.track('tab_view', 'today');
     kFirstScreenReady.addListener(_warmOtherTabs);
     swipeToTab = _swipeTab;
+    openTabKey = _openTabKey;
     // 홈 화면 위젯을 눌러 들어왔으면 그 탭으로(켜져 있던 앱이면 openTab 신호, 새로 켠 앱이면 첫 프레임 뒤에 initialTab)
     WidgetBridge.listen(_openTabKey);
     WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -95,6 +96,7 @@ class _RootShellState extends State<RootShell> {
   void dispose() {
     kFirstScreenReady.removeListener(_warmOtherTabs);
     swipeToTab = null;
+    openTabKey = null;
     super.dispose();
   }
 

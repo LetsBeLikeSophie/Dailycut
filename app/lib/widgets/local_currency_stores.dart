@@ -215,18 +215,20 @@ class StoreFinderState extends State<StoreFinder> {
     });
   }
 
-  static const _info = [
-    '한국조폐공사 "지역사랑상품권 가맹점 기본정보"에서 계속사업자로 표시된 모바일·카드 가맹점이에요.',
-    '지류(종이) 상품권 가맹점은 이 자료에 없어요.',
-    '정보 기준일은 가게마다 달라요. 가게를 누르면 그 가게의 기준일이 나와요.',
-  ];
+  List<String> get _info {
+    final range = dateRange([for (final s in _items) s['asof'] as String? ?? '']);
+    return [
+      '계속사업자로 표시된 모바일·카드 가맹점이에요.\n지류(종이) 상품권 가맹점은 이 자료에 없어요.',
+      if (range.isNotEmpty) '정보 기준일은 ${range.contains('~') ? '$range로 가게마다 달라요' : '$range이에요'}.\n가게를 누르면 그 가게의 기준일이 나와요.',
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
     return ListSection(
       title: '상품권 쓸 수 있는 가게',
       trailing: _loading && _items.isEmpty ? null : (_total > 0 ? '약 ${formatNumber(_total)}곳' : null),
-      info: const InfoIconButton(title: '가맹점 안내', lines: _info),
+      info: InfoIconButton(title: '가맹점 안내', lines: _info, sources: const [('한국조폐공사', 'https://www.komsco.com')]),
       children: [
         Padding(
           padding: const EdgeInsets.only(top: 12),
@@ -291,13 +293,6 @@ class StoreFinderState extends State<StoreFinder> {
             ShowMoreButton(count: _items.length - _show, unit: '곳', onTap: () => setState(() => _show = _items.length))
           else if (_more)
             ShowMoreButton(count: 24, unit: '곳', onTap: () => _load(reset: false)),
-          Builder(builder: (_) {
-            final range = dateRange([for (final s in _items) s['asof'] as String? ?? '']);
-            return DataMeta(rows: [
-              const DataMetaRow('출처', '한국조폐공사 가맹점 기본정보'),
-              DataMetaRow('기준일', range.isEmpty ? '' : (range.contains('~') ? '$range (가게마다 달라요)' : range)),
-            ]);
-          }),
         ],
       ],
     );
@@ -331,10 +326,12 @@ class _StoreSheet extends StatelessWidget {
       title: name,
       sub: [if ((store['cat'] as String).isNotEmpty) store['cat'], '${store['kind']} 상품권'].join(' · '),
       gapAfterHeader: 20,
-      infoLines: const [
-        '한국조폐공사 지역사랑상품권 가맹점 기본정보예요.',
-        '카드 가맹점은 도로명 주소의 건물 번호가 빠져 있기도 해요. 지도에서 위치를 확인해 주세요.',
+      infoLines: [
+        if (dotDate(ymd).isNotEmpty) '정보 기준일은 ${dotDate(ymd)}이에요.',
+        '카드 가맹점은 도로명 주소의 건물 번호가\n빠져 있기도 해요. 지도에서 위치를 확인해 주세요.',
+        '가기 전에 전화로 상품권을 받는지 확인해 주세요.',
       ],
+      infoSources: const [('한국조폐공사', 'https://www.komsco.com')],
       children: [
         Text('주소', style: AppTheme.subheading),
         const SizedBox(height: 6),
@@ -355,11 +352,6 @@ class _StoreSheet extends StatelessWidget {
           const SizedBox(height: 10),
           ActionButton(vertical: 12, label: '전화 걸기', onTap: () => launchUrl(Uri.parse('tel:${phone.replaceAll('-', '')}'))),
         ],
-        DataMeta(top: 20, rows: [
-          DataMetaRow('정보 기준일', dotDate(ymd)),
-          const DataMetaRow('출처', '한국조폐공사 가맹점 기본정보'),
-          const DataMetaRow('가기 전에', '전화로 상품권을 받는지 확인'),
-        ]),
       ],
     );
   }

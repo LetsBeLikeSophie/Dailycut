@@ -11,6 +11,7 @@ import '../widgets/hourly_strip.dart';
 import '../widgets/life_index.dart';
 import '../widgets/my_basket_today.dart';
 import '../widgets/saved_regions_today.dart';
+import '../widgets/sources_info.dart';
 import '../widgets/weekly_row.dart';
 import '../widgets/weather_icon.dart';
 
@@ -251,11 +252,18 @@ class _TodayScreenState extends State<TodayScreen> {
                                     valueSub: c['highlight'] != null
                                         ? (c['meta'] ?? c['value'])?.toString()
                                         : null,
+                                    // 카드를 누르면 그 탭으로(생활=지금 제철, 문화=이번 주 행사, 혜택=정부 지원)
+                                    onTap: () => openTabKey?.call(switch (c['section']) {
+                                      'market' => 'life',
+                                      'money' => 'money:gov',
+                                      final k => k as String,
+                                    }),
                                   ),
                               ],
                             );
               },
             ),
+            const OfficialSourceLinks(section: Section.weather),
           ],
         );
       },

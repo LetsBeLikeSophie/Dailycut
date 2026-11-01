@@ -451,8 +451,9 @@ class SeasonLegend extends StatelessWidget {
 
 /// 화살표로 항목을 돌려 보는 선택기: ‹ 코스피 1/4 › — 고정 높이라 고른 항목이 바뀌어도 아래가 출렁이지 않음.
 class ArrowSelector extends StatelessWidget {
-  const ArrowSelector({super.key, required this.label, required this.index, required this.count, required this.onChanged});
+  const ArrowSelector({super.key, required this.label, required this.index, required this.count, required this.onChanged, this.info});
 
+  final Widget? info; // 쪽 번호 바로 뒤에 붙는 ⓘ(출처·기준)
   final String label;
   final int index; // 0부터
   final int count;
@@ -474,7 +475,9 @@ class ArrowSelector extends StatelessWidget {
               TextSpan(children: [
                 TextSpan(text: label, style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700)),
                 TextSpan(text: '   ${index + 1}/$count', style: const TextStyle(fontSize: 13, color: AppColors.inkSoft)),
+                if (info != null) WidgetSpan(alignment: PlaceholderAlignment.middle, child: info!),
               ]),
+              textAlign: TextAlign.center,
             ),
           ),
         ),
