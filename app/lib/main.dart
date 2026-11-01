@@ -12,6 +12,7 @@ import 'widget_bridge.dart';
 import 'widgets/ad_slot.dart';
 import 'widgets/support_profile.dart';
 import 'region.dart';
+import 'splash_stub.dart' if (dart.library.js_interop) 'splash_web.dart' show iosBrowserBarPad;
 import 'theme.dart';
 
 Future<void> main() async {
@@ -161,6 +162,7 @@ class _RootShellState extends State<RootShell> {
         ),
         child: SafeArea(
           top: false,
+          minimum: EdgeInsets.only(bottom: iosBrowserBarPad() + MediaQuery.viewPaddingOf(context).bottom),
           child: SizedBox(
             height: 56,
             child: Row(

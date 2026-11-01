@@ -32,3 +32,17 @@ Future<Map<String, dynamic>?> takeEarlyWeather(String key) async {
     return null;
   }
 }
+
+/// 2026-11-01: iOS 26 사파리는 주소창이 알약 모양으로 화면 아래에 떠서 페이지를 덮음(CSS 환경 변수로도 안 알려 줌) →
+/// 하단 메뉴가 알약 밑에 깔려 안 보였음(사용자 스크린샷). iPhone 사파리 브라우저(홈 화면 앱 아님)에서만 메뉴를 그만큼 올림.
+/// 알약이 접히면 아래가 조금 비지만 메뉴가 가려지는 것보다 나음.
+double iosBrowserBarPad() {
+  try {
+    final ua = web.window.navigator.userAgent;
+    if (!ua.contains('iPhone')) return 0;
+    if (web.window.matchMedia('(display-mode: standalone)').matches) return 0;
+    return 52;
+  } catch (_) {
+    return 0;
+  }
+}
