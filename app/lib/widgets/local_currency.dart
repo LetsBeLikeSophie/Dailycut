@@ -129,7 +129,7 @@ class _LocalCurrencySectionState extends State<LocalCurrencySection> {
         final pages = <(String, Widget)>[
           ('$month 결제금액', _amountPage(now, prev, pct, change)),
           ('많이 쓴 곳', _Bars(rows: [for (final r in industries) (r['name'] as String, (r['share'] as num).toDouble(), '${r['share']}% · ${wonShort(r['amt'] as int)}')])),
-          if (ages.isNotEmpty) ('많이 쓴 나이대', _Bars(rows: [for (final r in ages) (r['label'] as String, (r['share'] as num).toDouble(), '${r['share']}%')])),
+          if (ages.isNotEmpty) ('많이 쓴 나이대', _Columns(rows: [for (final r in ages) (r['label'] as String, (r['share'] as num).toDouble())])),
           if (dongs.isNotEmpty) ('동네별로 보면', _Bars(rows: [for (final r in dongs) (r['name'] as String, (r['share'] as num).toDouble(), '${r['share']}%')])),
         ];
         final page = _heroPage.clamp(0, pages.length - 1);
@@ -140,7 +140,7 @@ class _LocalCurrencySectionState extends State<LocalCurrencySection> {
             children: [
               ArrowSelector(label: pages[page].$1, index: page, count: pages.length, onChanged: (i) => setState(() => _heroPage = i)),
               const SizedBox(height: 14),
-              SizedBox(height: 290, child: KeyedSubtree(key: ValueKey('hp$page'), child: pages[page].$2)),
+              SizedBox(height: 316, child: KeyedSubtree(key: ValueKey('hp$page'), child: pages[page].$2)),
               Row(
                 children: [
                   Expanded(
@@ -292,6 +292,59 @@ class _Bars extends StatelessWidget {
             ),
           ),
       ],
+    );
+  }
+}
+
+
+/// 나이대처럼 순서가 있는 짧은 이름 몇 개를 세로 막대로(왼쪽이 어린 쪽). 가장 큰 막대 끝에만 섹션 색 점(색은 차트 끝점에만 쓰는 규칙).
+class _Columns extends StatelessWidget {
+  const _Columns({required this.rows});
+
+  final List<(String, double)> rows; // (이름, 비중 %)
+
+  @override
+  Widget build(BuildContext context) {
+    final top = rows.fold<double>(0, (m, r) => r.$2 > m ? r.$2 : m);
+    final accent = sectionThemes[Section.money]!.color;
+    return LayoutBuilder(
+      builder: (context, c) {
+        const labelBox = 22.0; // 아래 이름 칸
+        const valueBox = 22.0; // 막대 위 값 칸
+        final maxBar = c.maxHeight - labelBox - valueBox - 12;
+        return Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [
+            for (final r in rows)
+              Expanded(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    SizedBox(
+                      height: valueBox,
+                      child: Align(alignment: Alignment.bottomCenter, child: Text('${r.$2 % 1 == 0 ? r.$2.toInt() : r.$2}%', style: TextStyle(fontSize: 13, fontWeight: r.$2 == top ? FontWeight.w700 : FontWeight.w400))),
+                    ),
+                    const SizedBox(height: 4),
+                    TweenAnimationBuilder<double>(
+                      tween: Tween(begin: 0, end: top == 0 ? 0 : r.$2 / top),
+                      duration: const Duration(milliseconds: 600),
+                      curve: Curves.easeOutCubic,
+                      builder: (context, v, _) => Container(
+                        width: 28,
+                        height: maxBar * v < 3 ? 3 : maxBar * v,
+                        alignment: Alignment.topCenter,
+                        color: AppColors.ink,
+                        child: r.$2 == top ? Transform.translate(offset: const Offset(0, -4), child: Container(width: 8, height: 8, decoration: BoxDecoration(color: accent, shape: BoxShape.circle))) : null,
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    SizedBox(height: labelBox - 8, child: Text(r.$1, maxLines: 1, style: const TextStyle(fontSize: 11, color: AppColors.inkSoft))),
+                  ],
+                ),
+              ),
+          ],
+        );
+      },
     );
   }
 }

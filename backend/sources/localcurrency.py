@@ -420,6 +420,7 @@ def paper(sido: str | None, sgg: str | None) -> dict:
 # 확인일이 오래된 항목은 앱이 "오래됨"으로 표시하고 tools/check_guide_age.py가 다시 확인할 목록을 뽑아 줌.
 GUIDE_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "localcurrency_guide.json")
 _guide_cache: tuple[float, dict] | None = None
+PER_SGG = {"43", "44", "46", "47", "48", "51", "52"}  # 충북·충남·전남·경북·경남·강원·전북
 
 
 def _guide_data() -> dict:
@@ -447,13 +448,23 @@ def _guide_sgg(table: dict, sgg: str | None) -> dict | None:
 
 def guide(sido: str | None, sgg: str | None = None) -> dict:
     """그 지역 상품권 안내. 시군구 항목이 있으면 시도 항목 위에 덮어씀. 없으면 {found: False}."""
+    if sido == "46" and sgg in ("광산구", "남구", "동구", "북구", "서구"):
+        sido = "29"  # 행정구역 개편으로 광주 5개 구가 전남 코드 아래 들어 있음 → 광주상생카드 안내를 씀
     entry = (_guide_data().get("regions") or {}).get(sido or "")
     if not entry:
         return {"found": False}
     sub = _guide_sgg(entry.get("sigungu") or {}, sgg)
+    if sido in PER_SGG:  # 시군이 각자 운영하는 도: 시군 자료가 있을 때만(도 단위 자료를 다른 시군에 끌어다 쓰지 않음)
+        return {**sub, "scope": "sgg", "found": True} if sub else {"found": False}
     merged = {k: v for k, v in entry.items() if k != "sigungu"}
     if sub:
         merged.update(sub)
+        if sido == "41":  # 경기: 31개 시군 공통 앱(경기지역화폐) 줄 + 그 시만의 판매처 줄
+            seen, chans = set(), []
+            for c in (entry.get("channels") or []) + (sub.get("channels") or []):
+                if (c.get("name"), c.get("url")) not in seen:
+                    seen.add((c.get("name"), c.get("url"))); chans.append(c)
+            merged["channels"] = chans
         merged["scope"] = "sgg"
     else:
         merged["scope"] = "sido"
