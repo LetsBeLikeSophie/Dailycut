@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="ko"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="robots" content="noindex"><title>화면 크기 확인</title>
+<style>
+body{margin:0;padding:20px 16px 120px;font:14px/1.6 -apple-system,"Apple SD Gothic Neo",sans-serif;color:#191919;background:#fff}
+h1{font-size:18px;margin:0 0 8px} pre{font:13px/1.7 ui-monospace,Menlo,monospace;white-space:pre-wrap;margin:0}
+.fix{position:fixed;left:0;right:0;bottom:0;height:24px;background:#d9534f;color:#fff;font-size:11px;text-align:center;line-height:24px}
+.p{height:0;width:0;position:fixed;visibility:hidden;left:0;top:0}
+</style></head><body>
+<h1>화면 크기 확인</h1>
+<p>이 화면을 캡처해서 보내 주세요. 빨간 띠는 화면 맨 아래(fixed bottom:0)예요. 위아래로 스크롤해서 주소창이 접힌 상태도 한 장 더 부탁해요.</p>
+<pre id="o">측정 중…</pre>
+<div class="p" id="svh" style="height:100svh"></div><div class="p" id="lvh" style="height:100lvh"></div><div class="p" id="dvh" style="height:100dvh"></div>
+<div class="fix" id="fx">fixed bottom:0</div>
+<div style="height:900px"></div>
+<script>
+function v(){
+  var vv=window.visualViewport, fx=document.getElementById('fx').getBoundingClientRect();
+  var s=document.createElement('div');s.style.cssText='position:fixed;bottom:0;height:env(safe-area-inset-bottom);visibility:hidden';document.body.appendChild(s);var inset=s.offsetHeight;s.remove();
+  var svh=document.getElementById('svh').offsetHeight, lvh=document.getElementById('lvh').offsetHeight, dvh=document.getElementById('dvh').offsetHeight;
+  document.getElementById('o').textContent=[
+    'innerHeight      '+innerHeight,
+    'visualViewport   '+(vv?vv.height.toFixed(1):'-')+'  (offsetTop '+(vv?vv.offsetTop.toFixed(1):'-')+')',
+    'clientHeight     '+document.documentElement.clientHeight,
+    '100svh / dvh / lvh  '+svh+' / '+dvh+' / '+lvh,
+    'screen.height    '+screen.height,
+    'safe-area bottom '+inset,
+    'fixed 빨간 띠 bottom '+fx.bottom.toFixed(1),
+    'devicePixelRatio '+devicePixelRatio,
+    'UA '+navigator.userAgent.replace(/\(.*?\)/,'(…)').slice(0,80),
+  ].join('\n');
+}
+v();addEventListener('resize',v);addEventListener('scroll',v);if(window.visualViewport){visualViewport.addEventListener('resize',v);visualViewport.addEventListener('scroll',v);}setInterval(v,1000);
+</script></body></html>

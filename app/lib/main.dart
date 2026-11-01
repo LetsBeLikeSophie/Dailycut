@@ -153,6 +153,7 @@ class _RootShellState extends State<RootShell> {
     ];
     final screens = [for (var i = 0; i < builders.length; i++) _visited.contains(i) ? builders[i]() : const SizedBox.shrink()];
 
+    MediaQuery.sizeOf(context); // iosBrowserBarPad()가 화면 크기가 바뀔 때마다 다시 재게
     return Scaffold(
       // 옆으로 밀면 이웃 탭(기본 동작). 달력·하위 구분 본문은 안쪽에서 먼저 받음(widgets/swipe.dart)
       body: SafeArea(child: SwipeDetector(onSwipe: _swipeTab, child: IndexedStack(index: _index, children: screens))),
@@ -162,7 +163,7 @@ class _RootShellState extends State<RootShell> {
         ),
         child: SafeArea(
           top: false,
-          minimum: EdgeInsets.only(bottom: iosBrowserBarPad() + MediaQuery.viewPaddingOf(context).bottom),
+          minimum: EdgeInsets.only(bottom: iosBrowserBarPad()), // 화면 크기가 바뀌면(주소창 접힘 등) 다시 재도록 아래 줄이 크기를 구독함
           child: SizedBox(
             height: 56,
             child: Row(

@@ -33,15 +33,23 @@ Future<Map<String, dynamic>?> takeEarlyWeather(String key) async {
   }
 }
 
-/// 2026-11-01: iOS 26 사파리는 주소창이 알약 모양으로 화면 아래에 떠서 페이지를 덮음(CSS 환경 변수로도 안 알려 줌) →
-/// 하단 메뉴가 알약 밑에 깔려 안 보였음(사용자 스크린샷). iPhone 사파리 브라우저(홈 화면 앱 아님)에서만 메뉴를 그만큼 올림.
-/// 알약이 접히면 아래가 조금 비지만 메뉴가 가려지는 것보다 나음.
+/// 2026-11-01: iOS 26 사파리는 주소창이 알약 모양으로 화면 아래에 떠서 페이지를 덮음 → 하단 메뉴가 알약 밑에 깔려 안 보였음(사용자 스크린샷).
+/// 처음엔 고정값 52를 더했다가 너무 올라와서(폰·주소창 상태마다 다름) 같은 날 **재서 쓰는 방식**으로 바꿈:
+/// 앱이 쓰는 화면 높이(visualViewport = 알약 밑까지 포함)에서 `100svh`(주소창이 펼쳐졌을 때 실제로 보이는 높이)를 뺀 만큼이 가려지는 높이.
+/// iPhone 사파리 브라우저(홈 화면 앱 아님)에서만, 못 재면 0.
 double iosBrowserBarPad() {
   try {
     final ua = web.window.navigator.userAgent;
     if (!ua.contains('iPhone')) return 0;
     if (web.window.matchMedia('(display-mode: standalone)').matches) return 0;
-    return 52;
+    final probe = web.document.createElement('div') as web.HTMLElement;
+    probe.style.cssText = 'position:fixed;left:0;top:0;width:0;height:100svh;visibility:hidden;pointer-events:none';
+    web.document.body!.append(probe);
+    final svh = probe.offsetHeight;
+    probe.remove();
+    if (svh <= 0) return 0; // svh를 모르는 옛 사파리
+    final vv = web.window.visualViewport?.height ?? web.window.innerHeight.toDouble();
+    return (vv - svh).clamp(0, 140).toDouble();
   } catch (_) {
     return 0;
   }
