@@ -26,9 +26,9 @@ class _PaperVoucherSectionState extends State<PaperVoucherSection> {
   late final Future<Map<String, dynamic>> _future = widget.api.localCurrencyPaper(sido: widget.region.code, sgg: widget.region.sgg);
 
   static const _info = [
-    '한국조폐공사 "지류 지역사랑상품권 판매지점정보·지점별 재고정보"예요. 종이 상품권을 파는 은행·새마을금고·농협 지점이에요.',
-    '재고는 권종(5천·1만·5만원 등)마다 있음/없음만 알려 줘요. 수시로 바뀌니 가기 전에 전화로 확인해 주세요.',
-    '이 자료를 올리는 지역은 일부뿐이에요. 자료가 없는 지역에서는 이 구역이 안 보여요. 모바일·카드 상품권의 예산 소진은 알 수 없어요.',
+    '종이 상품권을 파는 은행·새마을금고·농협 지점이에요.',
+    '재고는 권종(5천·1만·5만원 등)마다 있음/없음만 알려 줘요. 몇 장 남았는지는 몰라요.',
+    '이 자료를 올리는 지역은 일부뿐이라, 자료가 없는 지역에서는 이 구역이 안 보여요.',
   ];
 
   @override
@@ -40,10 +40,9 @@ class _PaperVoucherSectionState extends State<PaperVoucherSection> {
         if (d == null || d['live'] != true || d['empty'] == true) return const SizedBox.shrink();
         final items = (d['items'] as List).cast<Map<String, dynamic>>();
         final asof = d['asof'] as String? ?? '';
-        final day = asof.length == 8 ? '${int.parse(asof.substring(4, 6))}월 ${int.parse(asof.substring(6))}일 기준' : null;
         return ListSection(
           title: '종이 상품권 살 수 있는 곳',
-          trailing: [if ((d['with_stock'] as int) > 0) '재고 있는 곳 ${d['with_stock']}곳', ?day].join(' · '),
+          trailing: (d['with_stock'] as int) > 0 ? '재고 있는 곳 ${d['with_stock']}곳' : null,
           info: const InfoIconButton(title: '종이 상품권 안내', lines: _info),
           children: [
             ExpandableList(
@@ -57,10 +56,14 @@ class _PaperVoucherSectionState extends State<PaperVoucherSection> {
                     value: _stockText(it)?.$1,
                     valueSub: _stockText(it)?.$2,
                     valueColor: _stockText(it)?.$3,
-                    onTap: () => _showBranch(context, it),
+                    onTap: () => _showBranch(context, it, asof),
                   ),
               ],
             ),
+            DataMeta(rows: [
+              const DataMetaRow('출처', '한국조폐공사 지류 판매지점·재고정보'),
+              DataMetaRow('기준일', dotDate(asof)),
+            ]),
           ],
         );
       },
@@ -75,7 +78,7 @@ class _PaperVoucherSectionState extends State<PaperVoucherSection> {
     return have.isEmpty ? ('재고 없음', null, AppColors.inkSoft) : ('재고 있음', '${have.join('·')}원권', null);
   }
 
-  void _showBranch(BuildContext context, Map<String, dynamic> it) {
+  void _showBranch(BuildContext context, Map<String, dynamic> it, String asof) {
     final name = it['name'] as String;
     final addr = it['addr'] as String;
     final phone = it['phone'] as String?;
@@ -119,8 +122,11 @@ class _PaperVoucherSectionState extends State<PaperVoucherSection> {
             const SizedBox(height: 10),
             ActionButton(vertical: 12, label: '전화 걸기', onTap: () => launchUrl(Uri.parse('tel:${phone.replaceAll('-', '')}'))),
           ],
-          const SizedBox(height: 18),
-          const Text('재고는 수시로 바뀌어요. 가기 전에 전화로 확인해 주세요.', style: TextStyle(fontSize: 11, color: AppColors.inkSoft, height: 1.5)),
+          DataMeta(top: 20, rows: [
+            DataMetaRow('재고 기준일', dotDate(asof)),
+            const DataMetaRow('출처', '한국조폐공사 지류 판매지점·재고정보'),
+            const DataMetaRow('가기 전에', '전화로 재고 확인'),
+          ]),
         ],
       ),
     );

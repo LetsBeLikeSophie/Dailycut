@@ -1,0 +1,3113 @@
+{
+ "updated": "2026-11-01",
+ "regions": {
+  "11": {
+   "name": "서울사랑상품권",
+   "channels": [
+    {
+     "kind": "앱",
+     "name": "서울Pay+ (아이폰)",
+     "url": "https://apps.apple.com/kr/app/new-%EC%84%9C%EC%9A%B8pay-%EC%84%9C%EC%9A%B8%ED%8E%98%EC%9D%B4%ED%94%8C%EB%9F%AC%EC%8A%A4-%EC%84%9C%EC%9A%B8%EC%82%AC%EB%9E%91%EC%83%81%ED%92%88%EA%B6%8C/id6479675842"
+    },
+    {
+     "kind": "앱",
+     "name": "서울Pay+ (안드로이드)",
+     "url": "https://play.google.com/store/apps/details?id=com.bizplay.seoul.pay&hl=ko-KR"
+    },
+    {
+     "kind": "카드",
+     "name": "앱에서 본인 계좌 또는 개인 카드(하나·삼성·국민·현대, 2024-04 기준 안내)로 구매. 신용카드 구매는 월 100만원 한도, 선물·환불 불가",
+     "url": "https://news.seoul.go.kr/economy/archives/category/small-business-digital-economy-news_c1/seoul-love-giftcard_c1/faq"
+    }
+   ],
+   "official": {
+    "label": "서울시 경제 누리집 - 서울페이 소식",
+    "url": "https://news.seoul.go.kr/economy/archives/category/small-business-digital-economy-news_c1/seoulpay_c1/seoulpay-notice-n1"
+   },
+   "phone": {
+    "label": "서울페이+ 고객센터",
+    "number": "1600-6120"
+   },
+   "notice": {
+    "title": "서울사랑상품권 1,500억 원 추가 발행… 최대 15% 혜택을 누리세요",
+    "date": "2026-04-30",
+    "url": "https://news.seoul.go.kr/economy/archives/572359"
+   },
+   "terms": [
+    {
+     "label": "광역(오프라인) 할인율",
+     "value": "5% 선할인 + 2% 페이백(최대 7%)",
+     "asof": "2026-04-30",
+     "url": "https://news.seoul.go.kr/economy/archives/572359"
+    },
+    {
+     "label": "광역(오프라인) 한도",
+     "value": "월 보유한도 50만원 · 총 보유한도 150만원",
+     "asof": "2026-04-30",
+     "url": "https://news.seoul.go.kr/economy/archives/572359"
+    },
+    {
+     "label": "온라인 광역 할인율",
+     "value": "10% 선할인 + 5% 페이백(최대 15%)",
+     "asof": "2026-04-30",
+     "url": "https://news.seoul.go.kr/economy/archives/572359"
+    },
+    {
+     "label": "온라인 광역 한도",
+     "value": "월 보유한도 30만원 · 총 보유한도 100만원",
+     "asof": "2026-04-30",
+     "url": "https://news.seoul.go.kr/economy/archives/572359"
+    },
+    {
+     "label": "자치구 할인율",
+     "value": "5% 할인(자치구별 2~5% 추가 페이백 가능)",
+     "asof": "2026-01-29",
+     "url": "https://news.seoul.go.kr/economy/archives/570768"
+    },
+    {
+     "label": "자치구 월 구매한도",
+     "value": "월 50만원",
+     "asof": "2026-01-29",
+     "url": "https://news.seoul.go.kr/economy/archives/570768"
+    },
+    {
+     "label": "자치구 보유한도",
+     "value": "150만원(보유한도 안에서 선물하기 가능)",
+     "asof": "2026-01-29",
+     "url": "https://news.seoul.go.kr/economy/archives/570768"
+    }
+   ],
+   "sources": [
+    {
+     "label": "서울시 경제 누리집",
+     "url": "https://news.seoul.go.kr/economy/archives/category/small-business-digital-economy-news_c1/seoulpay_c1/seoulpay-notice-n1"
+    },
+    {
+     "label": "서울사랑상품권 1,500억 원 추가 발행",
+     "url": "https://news.seoul.go.kr/economy/archives/572359"
+    },
+    {
+     "label": "2026년 설맞이 자치구 서울사랑상품권 할인 판매 안내",
+     "url": "https://news.seoul.go.kr/economy/archives/570768"
+    },
+    {
+     "label": "자치구 어디서나 5% 할인, 서울사랑상품권 2.11.(수) 발행",
+     "url": "https://news.seoul.go.kr/economy/archives/570999"
+    },
+    {
+     "label": "달빛상품권 100억원 발행",
+     "url": "https://news.seoul.go.kr/economy/archives/574982"
+    },
+    {
+     "label": "서울사랑상품권 FAQ",
+     "url": "https://news.seoul.go.kr/economy/archives/category/small-business-digital-economy-news_c1/seoul-love-giftcard_c1/faq"
+    },
+    {
+     "label": "서울Pay+ 가입방법",
+     "url": "https://news.seoul.go.kr/economy/archives/567838"
+    },
+    {
+     "label": "서울Pay+ App Store 등록 정보",
+     "url": "https://apps.apple.com/kr/app/new-%EC%84%9C%EC%9A%B8pay-%EC%84%9C%EC%9A%B8%ED%8E%98%EC%9D%B4%ED%94%8C%EB%9F%AC%EC%8A%A4-%EC%84%9C%EC%9A%B8%EC%82%AC%EB%9E%91%EC%83%81%ED%92%88%EA%B6%8C/id6479675842"
+    }
+   ],
+   "checked": "2026-11-01",
+   "kinds": [
+    "광역",
+    "온라인 광역",
+    "자치구",
+    "달빛"
+   ]
+  },
+  "26": {
+   "name": "동백전",
+   "channels": [
+    {
+     "kind": "앱",
+     "name": "부산 동백전",
+     "url": "https://apps.apple.com/kr/app/%EB%B6%80%EC%82%B0%EC%9D%B4%EC%A6%88%EA%B5%BF-%EB%8F%99%EB%B0%B1%EC%A0%84/id1611664001"
+    },
+    {
+     "kind": "웹",
+     "name": "부산이즈굿 동백전 공식 안내 사이트",
+     "url": "https://busandong100.kr/"
+    }
+   ],
+   "official": {
+    "label": "부산시 민생100일 비상조치 - 동백전 캐시백 안내",
+    "url": "https://www.busan.go.kr/minsaeng100/sub0101"
+   },
+   "phone": {
+    "label": "동백전 고객센터",
+    "number": "1577-1432"
+   },
+   "notice": {
+    "title": "[민생100일 비상조치]동백전 혜택 안내(캐시백 15% 한시상향 등)",
+    "date": "2026-09-14",
+    "url": "https://www.busan.go.kr/nhot/1754113"
+   },
+   "terms": [
+    {
+     "label": "캐시백률",
+     "value": "최대 10% (연매출 10억 이하 가맹점 10%, 10억~30억 8%) · 2026년 1~6월 적용 발표",
+     "asof": "2025-12-28",
+     "url": "https://www.busan.go.kr/nbtnewsBU/1711993",
+     "until": "2026-06-30"
+    },
+    {
+     "label": "월 캐시백 적용 한도",
+     "value": "50만원",
+     "asof": "2025-12-28",
+     "url": "https://www.busan.go.kr/nbtnewsBU/1711993",
+     "until": "2026-06-30"
+    },
+    {
+     "label": "캐시백 한시 상향",
+     "value": "최대 15% (연매출 10억 이하 15%, 10~30억 13%, 30억 초과 미제공). 캐시백 한도는 변경 없음",
+     "asof": "2026-09-14",
+     "until": "2026-09-30",
+     "url": "https://www.busan.go.kr/nhot/1754113"
+    }
+   ],
+   "sources": [
+    {
+     "label": "동백전 혜택 안내",
+     "url": "https://www.busan.go.kr/nhot/1754113"
+    },
+    {
+     "label": "동백전 캐시백 15% 한시 상향",
+     "url": "https://www.busan.go.kr/minsaeng100/sub0101"
+    },
+    {
+     "label": "부산시 보도자료: 내년 1월부터 동백전 캐시백 최대 10%·월 한도 50만 원",
+     "url": "https://www.busan.go.kr/nbtnewsBU/1711993"
+    },
+    {
+     "label": "2026년 달라지는 부산 정책",
+     "url": "https://www.busan.go.kr/news/totalnews01/view?dataNo=72240"
+    },
+    {
+     "label": "부산이즈굿 동백전 공식 사이트",
+     "url": "https://busandong100.kr/"
+    },
+    {
+     "label": "부산 동백전 App Store 등록 정보",
+     "url": "https://apps.apple.com/kr/app/%EB%B6%80%EC%82%B0%EC%9D%B4%EC%A6%88%EA%B5%BF-%EB%8F%99%EB%B0%B1%EC%A0%84/id1611664001"
+    }
+   ],
+   "checked": "2026-11-01",
+   "kinds": [
+    "캐시백 방식"
+   ]
+  },
+  "27": {
+   "name": "대구로페이",
+   "channels": [
+    {
+     "kind": "앱",
+     "name": "iM샵",
+     "url": "https://apps.apple.com/us/app/-/id1479028844"
+    },
+    {
+     "kind": "카드",
+     "name": "iM뱅크 영업점 방문 충전",
+     "url": "https://m.imbank.co.kr/pps_ebz_nims_prd_dtl_0001.act"
+    }
+   ],
+   "official": {
+    "label": "대구광역시 공지사항",
+    "url": "https://www.daegu.go.kr/index.do?menu_id=00000854"
+   },
+   "phone": {
+    "label": "iM뱅크 고객센터",
+    "number": "1588-5050"
+   },
+   "notice": {
+    "title": "2026년도 하반기 대구사랑상품권 대구로페이 추가 캐시백 안내",
+    "date": "2026-10-26",
+    "url": "https://www.daegu.go.kr/index.do?menu_id=00000854&menu_link=/icms/bbs/selectBoardArticle.do&bbsId=BBS_00029&nttId=828698"
+   },
+   "terms": [
+    {
+     "label": "충전 할인율",
+     "value": "10% 할인(2026-02-02부터 판매)",
+     "asof": "2026-01-23",
+     "url": "https://daegu.go.kr/index.do?bbsId=BBS_00029&menu_id=00000854&menu_link=%2Ficms%2Fbbs%2FselectBoardArticle.do&nttId=784080"
+    },
+    {
+     "label": "월 구매한도",
+     "value": "월 30만원까지 구매 가능",
+     "asof": "2026-01-23",
+     "url": "https://daegu.go.kr/index.do?bbsId=BBS_00029&menu_id=00000854&menu_link=%2Ficms%2Fbbs%2FselectBoardArticle.do&nttId=784080"
+    },
+    {
+     "label": "추가 캐시백",
+     "value": "기존 충전할인 10% + 추가 캐시백 5%, 착한가격업소 이용 시 5% 더해 최대 20%. 비할인 충전은 최대 10%. 예산 소진 시 조기 종료 · 코리아 그랜드 페스티벌",
+     "asof": "2026-10-26",
+     "until": "2026-11-15",
+     "url": "https://info.daegu.go.kr/newshome/mtnmain.php?mtnkey=articleview&mkey=scatelist&mkey2=1&aid=279470"
+    }
+   ],
+   "sources": [
+    {
+     "label": "대구로페이 추가 캐시백 안내 공지",
+     "url": "https://www.daegu.go.kr/index.do?menu_id=00000854&menu_link=/icms/bbs/selectBoardArticle.do&bbsId=BBS_00029&nttId=828698"
+    },
+    {
+     "label": "대구로페이 할인 판매 시작 공지",
+     "url": "https://daegu.go.kr/index.do?bbsId=BBS_00029&menu_id=00000854&menu_link=%2Ficms%2Fbbs%2FselectBoardArticle.do&nttId=784080"
+    },
+    {
+     "label": "대구시 뉴스룸: 대구로페이 최대 20% 할인",
+     "url": "https://info.daegu.go.kr/newshome/mtnmain.php?mtnkey=articleview&mkey=scatelist&mkey2=1&aid=279470"
+    },
+    {
+     "label": "iM뱅크 대구로페이 상품 안내",
+     "url": "https://m.imbank.co.kr/pps_ebz_nims_prd_dtl_0001.act"
+    },
+    {
+     "label": "iM샵 App Store 등록 정보",
+     "url": "https://apps.apple.com/us/app/-/id1479028844"
+    }
+   ],
+   "checked": "2026-11-01"
+  },
+  "28": {
+   "name": "인천사랑상품권(인천e음)",
+   "channels": [
+    {
+     "kind": "앱",
+     "name": "인천e음",
+     "url": "https://apps.apple.com/us/app/-/id1383589803"
+    },
+    {
+     "kind": "웹",
+     "name": "인천e음 공식 안내 사이트",
+     "url": "https://incheoneum.or.kr/about"
+    }
+   ],
+   "official": {
+    "label": "인천시 경제·투자 게시판(인천e음 공지 게시)",
+    "url": "https://www.incheon.go.kr/eco/ECO050101/list"
+   },
+   "phone": {
+    "label": "인천e음 고객센터",
+    "number": "1811-8668"
+   },
+   "notice": {
+    "title": "인천사랑상품권(인천e음) 캐시백 요율 상향(10%→15%) 안내(10.29.~11.15. 예산소진 시 종료)",
+    "date": "2026-10-27",
+    "url": "https://www.incheon.go.kr/eco/ECO050101/view?nttNo=2046317"
+   },
+   "terms": [
+    {
+     "label": "캐시백률",
+     "value": "10% (캐시백 재개 2026-09-18) · 기본",
+     "asof": "2026-09-16",
+     "url": "https://www.incheon.go.kr/eco/ECO050101/view?nttNo=2046197"
+    },
+    {
+     "label": "월 결제한도",
+     "value": "월 100만원 · 추석 집중기간",
+     "asof": "2026-09-16",
+     "until": "2026-09-30",
+     "url": "https://www.incheon.go.kr/eco/ECO050101/view?nttNo=2046197"
+    },
+    {
+     "label": "월 결제한도",
+     "value": "월 50만원 · 연말 적용기간",
+     "asof": "2026-09-16",
+     "until": "2026-12-31",
+     "url": "https://www.incheon.go.kr/eco/ECO050101/view?nttNo=2046197"
+    },
+    {
+     "label": "캐시백률 한시 상향",
+     "value": "10%에서 15%로 상향(착한가격업소 20%, 강화·옹진 20%/착한가격업소 25%), 월 50만원 이내 결제액, 연매출 30억 이하 가맹점 대상. 예산 소진 시 종료",
+     "asof": "2026-10-27",
+     "until": "2026-11-15",
+     "url": "https://www.incheon.go.kr/eco/ECO050101/view?nttNo=2046317"
+    }
+   ],
+   "sources": [
+    {
+     "label": "인천시 경제·투자 게시판 목록",
+     "url": "https://www.incheon.go.kr/eco/ECO050101/list"
+    },
+    {
+     "label": "캐시백 요율 상향 안내",
+     "url": "https://www.incheon.go.kr/eco/ECO050101/view?nttNo=2046317"
+    },
+    {
+     "label": "인천e음 캐시백 재개",
+     "url": "https://www.incheon.go.kr/eco/ECO050101/view?nttNo=2046197"
+    },
+    {
+     "label": "인천e음 공식 안내 사이트",
+     "url": "https://incheoneum.or.kr/about"
+    },
+    {
+     "label": "인천e음 App Store 등록 정보",
+     "url": "https://apps.apple.com/us/app/-/id1383589803"
+    },
+    {
+     "label": "연수구청 인천e음 안내",
+     "url": "https://www.yeonsu.go.kr/main/part/economy/eum.asp"
+    }
+   ],
+   "checked": "2026-11-01",
+   "sigungu": {
+    "연수구": {
+     "name": "연수e음(인천e음 연수구 카드)",
+     "channels": [
+      {
+       "kind": "앱",
+       "name": "인천e음 앱에서 회원가입 후 카드 신청(3~7일 내 배송), 앱에서 은행계좌 연결해 충전",
+       "url": "https://www.yeonsu.go.kr/main/part/economy/eum.asp"
+      },
+      {
+       "kind": "카드",
+       "name": "관내 농협은행 6개 지점 현장 발급, 현장 충전은 현금 1만원 이상·신분증 지참",
+       "url": "https://www.yeonsu.go.kr/main/part/economy/eum.asp"
+      }
+     ],
+     "sources": [
+      {
+       "label": "연수구청 인천e음 안내(날짜 표기 없음)",
+       "url": "https://www.yeonsu.go.kr/main/part/economy/eum.asp"
+      }
+     ],
+     "checked": "2026-11-01"
+    }
+   },
+   "kinds": [
+    "캐시백 방식"
+   ]
+  },
+  "29": {
+   "name": "광주상생카드(광주사랑상품권)",
+   "kinds": [
+    "체크카드",
+    "선불카드(3·5·10·20·50만원권)"
+   ],
+   "channels": [
+    {
+     "kind": "카드",
+     "name": "체크카드: 광주은행 영업점·광주은행 모바일웹에서 발급(만 14세 이상). 현금 또는 광주은행 신용카드로 구매",
+     "url": "https://www.gwangju.go.kr/economy/contentsView.do?pageId=economy124"
+    },
+    {
+     "kind": "카드",
+     "name": "선불카드: 광주은행 영업점에서만 발급·구매",
+     "url": "https://www.gwangju.go.kr/economy/contentsView.do?pageId=economy124"
+    },
+    {
+     "kind": "앱",
+     "name": "광주은행 인터넷·스마트뱅킹: 체크카드 발급과 기명 등록 후 비대면 충전",
+     "url": "https://www.gwangju.go.kr/economy/boardView.do?pageId=economy132&boardId=BD_0802013200&seq=15&movePage=1&recordCnt=10"
+    }
+   ],
+   "official": {
+    "label": "광주시 광주상생카드 공지사항",
+    "url": "https://www.gwangju.go.kr/economy/boardList.do?boardId=BD_0802013200&pageId=economy132"
+   },
+   "phone": {
+    "label": "광주상생카드 고객센터",
+    "number": "1600-4000"
+   },
+   "notice": {
+    "title": "2026년 9월 광주상생카드 특별할인 종료 안내",
+    "date": "2026-09-03",
+    "url": "https://www.gwangju.go.kr/economy/boardView.do?pageId=economy132&boardId=BD_0802013200&seq=19&movePage=1&recordCnt=10"
+   },
+   "terms": [
+    {
+     "label": "할인율",
+     "value": "10% (2026년 1~12월, 예산 소진 시 종료. 법인은 할인 대상 아님) · 상시",
+     "asof": "2026-03-04",
+     "url": "https://www.gwangju.go.kr/economy/boardView.do?pageId=economy132&boardId=BD_0802013200&seq=15&movePage=1&recordCnt=10"
+    },
+    {
+     "label": "월 구매한도",
+     "value": "체크·선불 합산 1인당 월 50만원",
+     "asof": "2026-06-15",
+     "url": "https://www.gwangju.go.kr/economy/contentsView.do?pageId=economy125"
+    },
+    {
+     "label": "추석 특별할인",
+     "value": "15% (한도 1천억원 선착순, 소진 시 10%). 9월 3일 소진되어 종료, 종료 전 충전분만 9월 중 15% 적용",
+     "asof": "2026-09-03",
+     "until": "2026-09-03",
+     "url": "https://www.gwangju.go.kr/economy/boardView.do?pageId=economy132&boardId=BD_0802013200&seq=19&movePage=1&recordCnt=10"
+    }
+   ],
+   "sources": [
+    {
+     "label": "광주상생카드 안내(고객센터)",
+     "url": "https://www.gwangju.go.kr/economy/contentsView.do?pageId=economy122"
+    },
+    {
+     "label": "광주상생카드 발급신청 및 구매방법(날짜 표기 없음)",
+     "url": "https://www.gwangju.go.kr/economy/contentsView.do?pageId=economy124"
+    },
+    {
+     "label": "광주상생카드 혜택(기준 2026.6.15.)",
+     "url": "https://www.gwangju.go.kr/economy/contentsView.do?pageId=economy125"
+    },
+    {
+     "label": "광주상생카드 공지사항 목록",
+     "url": "https://www.gwangju.go.kr/economy/boardList.do?boardId=BD_0802013200&pageId=economy132"
+    },
+    {
+     "label": "2026년 광주상생카드 할인 발행계획",
+     "url": "https://www.gwangju.go.kr/economy/boardView.do?pageId=economy132&boardId=BD_0802013200&seq=15&movePage=1&recordCnt=10"
+    },
+    {
+     "label": "9월 특별할인 발행 계획 안내",
+     "url": "https://www.gwangju.go.kr/economy/boardView.do?pageId=economy132&boardId=BD_0802013200&seq=17&movePage=1&recordCnt=10"
+    },
+    {
+     "label": "9월 특별할인 종료 안내",
+     "url": "https://www.gwangju.go.kr/economy/boardView.do?pageId=economy132&boardId=BD_0802013200&seq=19&movePage=1&recordCnt=10"
+    }
+   ],
+   "checked": "2026-11-01"
+  },
+  "30": {
+   "name": "온통대전 (대전사랑카드)",
+   "channels": [
+    {
+     "kind": "앱",
+     "name": "온통대전(대전사랑카드) 앱",
+     "url": "https://apps.apple.com/kr/app/id1510076479"
+    },
+    {
+     "kind": "카드",
+     "name": "대전 관내 하나은행 영업점·농협(지역농협 포함)에서 카드 발급",
+     "url": "https://www.daejeon.go.kr/drh/drhStoryDaejeonView.do?boardId=blog_0001&categorySeq=294&menuSeq=1627&ntatcSeq=1486253289"
+    }
+   ],
+   "official": {
+    "label": "대전시 공보담당관 '온통대전, 혜택은 더 크게! 12월까지 쭉!' (대전시 경제 이야기)",
+    "url": "https://www.daejeon.go.kr/drh/drhStoryDaejeonView.do?boardId=blog_0001&categorySeq=294&menuSeq=1627&pageIndex=1&ntatcSeq=1524952642"
+   },
+   "phone": {
+    "label": "온통대전 고객센터",
+    "number": "1661-9645"
+   },
+   "notice": {
+    "title": "온통대전, 혜택은 더 크게! 12월까지 쭉!",
+    "date": "2026-10-20",
+    "url": "https://www.daejeon.go.kr/drh/drhStoryDaejeonView.do?boardId=blog_0001&categorySeq=294&menuSeq=1627&pageIndex=1&ntatcSeq=1524952642"
+   },
+   "terms": [
+    {
+     "label": "월 충전한도",
+     "value": "70만원 · 2026-11~12월",
+     "asof": "2026-10-20",
+     "url": "https://www.daejeon.go.kr/drh/drhStoryDaejeonView.do?boardId=blog_0001&categorySeq=294&menuSeq=1627&pageIndex=1&ntatcSeq=1524952642"
+    },
+    {
+     "label": "캐시백",
+     "value": "13% (복지대상자 16%) · 2026-11~12월",
+     "asof": "2026-10-20",
+     "url": "https://www.daejeon.go.kr/drh/drhStoryDaejeonView.do?boardId=blog_0001&categorySeq=294&menuSeq=1627&pageIndex=1&ntatcSeq=1524952642"
+    },
+    {
+     "label": "월 충전한도·캐시백",
+     "value": "50만원 / 10% · 2026-10-20~31",
+     "asof": "2026-10-20",
+     "url": "https://www.daejeon.go.kr/drh/drhStoryDaejeonView.do?boardId=blog_0001&categorySeq=294&menuSeq=1627&pageIndex=1&ntatcSeq=1524952642"
+    }
+   ],
+   "sources": [
+    {
+     "label": "대전시 '온통대전, 혜택은 더 크게! 12월까지 쭉!'",
+     "url": "https://www.daejeon.go.kr/drh/drhStoryDaejeonView.do?boardId=blog_0001&categorySeq=294&menuSeq=1627&pageIndex=1&ntatcSeq=1524952642"
+    },
+    {
+     "label": "대전시 '오늘부터 온통대전! 아주 쉬운 가입방법' (2020-05-14, 앱·카드 발급·고객센터)",
+     "url": "https://www.daejeon.go.kr/drh/drhStoryDaejeonView.do?boardId=blog_0001&categorySeq=&menuSeq=1479&pageIndex=1&ntatcSeq=1337661161"
+    },
+    {
+     "label": "대전시 대전사랑카드 안내 (하나은행 영업점, 대전시 콜센터 042-120)",
+     "url": "https://www.daejeon.go.kr/livelihood/index.do?menuId=0003"
+    },
+    {
+     "label": "대전시 '월 구매한도 50만 원으로 ↑' (2025-06-30, 하나은행·농협 카드 발급)",
+     "url": "https://www.daejeon.go.kr/drh/drhStoryDaejeonView.do?boardId=blog_0001&categorySeq=294&menuSeq=1627&ntatcSeq=1486253289"
+    },
+    {
+     "label": "App Store 온통대전",
+     "url": "https://apps.apple.com/kr/app/id1510076479"
+    }
+   ],
+   "checked": "2026-11-01"
+  },
+  "31": {
+   "name": "울산페이 (울산사랑상품권)",
+   "channels": [
+    {
+     "kind": "앱",
+     "name": "울산페이 앱",
+     "url": "https://apps.apple.com/kr/app/%EC%9A%B8%EC%82%B0%ED%8E%98%EC%9D%B4/id6448714917"
+    }
+   ],
+   "official": {
+    "label": "울산시 경제/일자리 > 울산페이 > 공지사항",
+    "url": "https://www.ulsan.go.kr/u/economy/bbs/list.ulsan?bbsId=BBS_0000000000000069&mId=001007004002003000"
+   },
+   "phone": {
+    "label": "울산페이 콜센터",
+    "number": "1600-7934"
+   },
+   "notice": {
+    "title": "코리아그랜드페스티벌 기간 울산페이 5% 추가 캐시백 혜택(11월1일~11월15일)",
+    "date": "2026-10-28",
+    "url": "https://www.ulsan.go.kr/u/economy/bbs/view.do?mId=001007004002003000&bbsId=BBS_0000000000000069&dataId=184807"
+   },
+   "terms": [],
+   "sources": [
+    {
+     "label": "울산시 울산페이 공지사항 목록",
+     "url": "https://www.ulsan.go.kr/u/economy/bbs/list.ulsan?bbsId=BBS_0000000000000069&mId=001007004002003000"
+    },
+    {
+     "label": "울산시 공지 '울산페이 충전한도 및 캐시백 요율 변경 안내' (2026-07-31, 수치는 이미지)",
+     "url": "https://www.ulsan.go.kr/u/economy/bbs/view.do?mId=001007004002003000&bbsId=BBS_0000000000000069&dataId=182739"
+    },
+    {
+     "label": "울산시 보도자료 '2026년 울산페이 2,340억원 발행'",
+     "url": "https://www.ulsan.go.kr/u/rep/bbs/view.do?mId=001004003001000000&bbsId=BBS_0000000000000027&dataId=177982"
+    },
+    {
+     "label": "울산시 울산페이 소개 (콜센터 1600-7934, 2023년 개편 기준이라 수치는 옛값)",
+     "url": "https://www.ulsan.go.kr/u/economy/contents.ulsan?mId=001007004002001000"
+    },
+    {
+     "label": "울산시 울산페이 이용방법 (앱 설치·충전)",
+     "url": "https://ulsan.go.kr/u/economy/contents.ulsan?mId=001007004002002000"
+    },
+    {
+     "label": "App Store 울산페이",
+     "url": "https://apps.apple.com/kr/app/%EC%9A%B8%EC%82%B0%ED%8E%98%EC%9D%B4/id6448714917"
+    }
+   ],
+   "checked": "2026-11-01"
+  },
+  "36": {
+   "name": "여민전",
+   "channels": [
+    {
+     "kind": "앱",
+     "name": "여민전 앱",
+     "url": "https://apps.apple.com/kr/app/%EC%97%AC%EB%AF%BC%EC%A0%84/id6754589057"
+    },
+    {
+     "kind": "카드",
+     "name": "이응패스·여민전 통합카드",
+     "url": "https://www.sejong.go.kr/bbs/R0079/view.do?nttId=B000000139409Jy4wE9m"
+    }
+   ],
+   "official": {
+    "label": "세종시 여민전 안내 (생활정보)",
+    "url": "https://www.sejong.go.kr/life/sub07_01.do"
+   },
+   "phone": {
+    "label": "여민전 고객센터",
+    "number": "1577-5628"
+   },
+   "sources": [
+    {
+     "label": "세종시 여민전 안내 (확인일 2026-09-10 표기; 월 한도·캐시백률은 '정책에 따라 변동'이라고만 적혀 수치 없음)",
+     "url": "https://www.sejong.go.kr/life/sub07_01.do"
+    },
+    {
+     "label": "세종시 여민전 공지사항 (2026년 월별 데이터 공개만 있고 발행·판매 공지 없음)",
+     "url": "https://www.sejong.go.kr/bbs/R4040/list.do"
+    },
+    {
+     "label": "세종시 보도자료 '이응패스·여민전, 카드 하나로 해결하세요!'",
+     "url": "https://www.sejong.go.kr/bbs/R0079/view.do?nttId=B000000139409Jy4wE9m"
+    },
+    {
+     "label": "App Store 여민전 앱 (고객센터 1577-5628)",
+     "url": "https://apps.apple.com/kr/app/%EC%97%AC%EB%AF%BC%EC%A0%84/id6754589057"
+    }
+   ],
+   "checked": "2026-11-01"
+  },
+  "50": {
+   "name": "탐나는전",
+   "official": {
+    "label": "제주도 보도자료 (경제정책과)",
+    "url": "https://www.jeju.go.kr/group/part13/notice/report.htm"
+   },
+   "phone": {
+    "label": "제주도 경제정책과",
+    "number": "064-710-2516"
+   },
+   "notice": {
+    "title": "코리아 그랜드 페스티벌 연계 탐나는전 5% 추가 적립",
+    "date": "2026-10-30",
+    "url": "https://www.jeju.go.kr/group/part13/notice/report.htm?act=view&seq=2039869"
+   },
+   "terms": [
+    {
+     "label": "캐시백",
+     "value": "10% (월 최대 적립 10만원) · 월 결제 100만원까지, 연말까지 유지",
+     "asof": "2026-10-30",
+     "url": "https://www.jeju.go.kr/group/part13/notice/report.htm?act=view&seq=2039869"
+    },
+    {
+     "label": "추가 적립",
+     "value": "5% · 2026-11-01~15, 행사기간 결제 35만원까지, 연매출 10억 이하 가맹점",
+     "asof": "2026-10-30",
+     "url": "https://www.jeju.go.kr/group/part13/notice/report.htm?act=view&seq=2039869"
+    }
+   ],
+   "sources": [
+    {
+     "label": "제주도 보도자료 '코리아 그랜드 페스티벌 연계 탐나는전 5% 추가 적립'",
+     "url": "https://www.jeju.go.kr/group/part13/notice/report.htm?act=view&seq=2039869"
+    }
+   ],
+   "checked": "2026-11-01"
+  },
+  "41": {
+   "name": "경기지역화폐",
+   "channels": [
+    {
+     "kind": "앱",
+     "name": "경기지역화폐 앱",
+     "url": "https://apps.apple.com/kr/app/%EA%B2%BD%EA%B8%B0%EC%A7%80%EC%97%AD%ED%99%94%ED%8F%90/id1451774088"
+    },
+    {
+     "kind": "카드",
+     "name": "충전식 카드형",
+     "url": "https://gmoney.or.kr/base/contents/view?contentsNo=8&menuLevel=2&menuNo=1"
+    },
+    {
+     "kind": "지류",
+     "name": "지류형: 농협은행에서 구매",
+     "url": "https://gmoney.or.kr/base/contents/view?contentsNo=8&menuLevel=2&menuNo=1"
+    },
+    {
+     "kind": "웹",
+     "name": "경기지역화폐 누리집",
+     "url": "https://gmoney.or.kr"
+    }
+   ],
+   "official": {
+    "label": "경기지역화폐 알림소식(공지사항)",
+    "url": "https://gmoney.or.kr/base/board/list?boardManagementNo=1&menuLevel=2&menuNo=33"
+   },
+   "phone": {
+    "label": "경기지역화폐 앱·카드 고객센터",
+    "number": "1899-7997"
+   },
+   "sources": [
+    {
+     "label": "경기지역화폐 누리집 메인 (앱, 고객센터 1899-7997·1600-8001)",
+     "url": "https://www.gmoney.or.kr"
+    },
+    {
+     "label": "경기지역화폐 소개 (카드·모바일·지류, 사용처 제한)",
+     "url": "https://gmoney.or.kr/base/contents/view?contentsNo=8&menuLevel=2&menuNo=1"
+    },
+    {
+     "label": "경기지역화폐 알림소식 목록",
+     "url": "https://gmoney.or.kr/base/board/list?boardManagementNo=1&menuLevel=2&menuNo=33"
+    },
+    {
+     "label": "경기지역화폐 '지역화폐 상황별 문의처' (2026-10-08, 시군별 담당 부서 전화)",
+     "url": "https://gmoney.or.kr/base/board/read?boardManagementNo=1&boardNo=459&searchCategory=&page=1&searchType=&searchWord=&menuLevel=2&menuNo=33"
+    },
+    {
+     "label": "경기지역화폐 인센티브 현황 (모든 시군이 '-'로 비어 있음)",
+     "url": "https://gmoney.or.kr/base/gmoney/insentive/index?menuLevel=2&menuNo=72"
+    },
+    {
+     "label": "App Store 경기지역화폐 (코나아이, 고객센터 1899-7997)",
+     "url": "https://apps.apple.com/kr/app/%EA%B2%BD%EA%B8%B0%EC%A7%80%EC%97%AD%ED%99%94%ED%8F%90/id1451774088"
+    }
+   ],
+   "checked": "2026-11-01",
+   "sigungu": {
+    "수원시": {
+     "name": "수원페이",
+     "channels": [
+      {
+       "kind": "앱",
+       "name": "경기지역화폐 앱",
+       "url": "https://apps.apple.com/kr/app/%EA%B2%BD%EA%B8%B0%EC%A7%80%EC%97%AD%ED%99%94%ED%8F%90/id1451774088"
+      },
+      {
+       "kind": "카드",
+       "name": "수원페이 오프라인 충전소",
+       "url": "https://news.suwon.go.kr/?p=26&reqIdx=202601280927018493&viewMode=view"
+      }
+     ],
+     "official": {
+      "label": "수원시 지역화폐 공지사항",
+      "url": "https://www.suwon.go.kr/web/board/BD_board.list.do?bbsCd=1399"
+     },
+     "phone": {
+      "label": "수원시 지역경제과",
+      "number": "031-5191-3893"
+     },
+     "notice": {
+      "title": "수원페이 오프라인 충전소 안내",
+      "date": "2026-08-12",
+      "url": "https://www.suwon.go.kr/web/board/BD_board.list.do?bbsCd=1399"
+     },
+     "terms": [
+      {
+       "label": "1인 월 충전(인센티브) 한도",
+       "value": "50만원",
+       "asof": "2026-01-28",
+       "url": "https://news.suwon.go.kr/?p=26&reqIdx=202601280927018493&viewMode=view"
+      },
+      {
+       "label": "1인 보유한도",
+       "value": "100만원",
+       "asof": "2026-01-28",
+       "url": "https://news.suwon.go.kr/?p=26&reqIdx=202601280927018493&viewMode=view"
+      },
+      {
+       "label": "설맞이 2월 인센티브",
+       "value": "20% · 한시",
+       "asof": "2026-01-28",
+       "url": "https://news.suwon.go.kr/?p=26&reqIdx=202601280927018493&viewMode=view"
+      }
+     ],
+     "sources": [
+      {
+       "label": "수원시 지역화폐 공지사항 목록 (게시글 링크가 '#'라 개별 URL 확인 못 함)",
+       "url": "https://www.suwon.go.kr/web/board/BD_board.list.do?bbsCd=1399"
+      },
+      {
+       "label": "e수원뉴스 '설 맞아 2월 수원페이 인센티브 20%로 확대'",
+       "url": "https://news.suwon.go.kr/?p=26&reqIdx=202601280927018493&viewMode=view"
+      },
+      {
+       "label": "경기지역화폐 시군별 문의처 (수원시 지역경제과)",
+       "url": "https://gmoney.or.kr/base/board/read?boardManagementNo=1&boardNo=459&searchCategory=&page=1&searchType=&searchWord=&menuLevel=2&menuNo=33"
+      }
+     ],
+     "checked": "2026-11-01"
+    },
+    "성남시": {
+     "name": "성남사랑상품권",
+     "channels": [
+      {
+       "kind": "앱",
+       "name": "지역상품권 chak 앱",
+       "url": "https://apps.apple.com/kr/app/%EC%A7%80%EC%97%AD%EC%83%81%ED%92%88%EA%B6%8C-chak/id6449449658"
+      },
+      {
+       "kind": "카드",
+       "name": "카드형: chak 앱 또는 농협에서 발급·충전",
+       "url": "https://www.seongnam.go.kr/ec-cn010201"
+      },
+      {
+       "kind": "지류",
+       "name": "지류형: 관내 금융기관(농협은행·농축협·신협·새마을금고 등)에서 현금 구매, 만 18세 이상 본인",
+       "url": "https://www.seongnam.go.kr/ec-cn010201"
+      }
+     ],
+     "official": {
+      "label": "성남시청 성남사랑상품권 구매이용안내",
+      "url": "https://www.seongnam.go.kr/ec-cn010201"
+     },
+     "phone": {
+      "label": "성남콜센터",
+      "number": "1577-3100"
+     },
+     "notice": {
+      "title": "성남시, 11월 3~15일 모바일 성남사랑상품권 5% 캐시백 추가 지급",
+      "date": "2026-10-30",
+      "url": "http://snvision.seongnam.go.kr/sub_read.html?uid=23549"
+     },
+     "terms": [
+      {
+       "label": "2026년 11월 할인 판매 할인율",
+       "value": "8% · 지류 11/2 09시, 모바일 11/3 07시 판매 시작, 소진 시까지",
+       "asof": "2026-10-30",
+       "url": "http://snvision.seongnam.go.kr/sub_read.html?uid=23549"
+      },
+      {
+       "label": "2026년 11월 1인당 구매한도",
+       "value": "30만원",
+       "asof": "2026-10-30",
+       "url": "http://snvision.seongnam.go.kr/sub_read.html?uid=23549"
+      },
+      {
+       "label": "모바일 11/3~15 추가 캐시백",
+       "value": "5% (1인 최대 2만원, 지류 제외)",
+       "asof": "2026-10-30",
+       "url": "http://snvision.seongnam.go.kr/sub_read.html?uid=23549"
+      }
+     ],
+     "sources": [
+      {
+       "label": "성남시청 성남사랑상품권 구매이용안내 (콜센터 1577-3100, chak 1577-4321)",
+       "url": "https://www.seongnam.go.kr/ec-cn010201"
+      },
+      {
+       "label": "비전성남(성남시 시정소식지) 11월 판매·캐시백 기사",
+       "url": "http://snvision.seongnam.go.kr/sub_read.html?uid=23549"
+      },
+      {
+       "label": "비전성남 추석맞이 10% 특별할인 기사",
+       "url": "http://snvision.seongnam.go.kr/sub_read.html?uid=23217"
+      },
+      {
+       "label": "App Store 지역상품권_chak (한국조폐공사, 고객센터 1577-4321)",
+       "url": "https://apps.apple.com/kr/app/%EC%A7%80%EC%97%AD%EC%83%81%ED%92%88%EA%B6%8C-chak/id6449449658"
+      }
+     ],
+     "checked": "2026-11-01"
+    },
+    "용인시": {
+     "name": "용인와이페이",
+     "channels": [
+      {
+       "kind": "앱",
+       "name": "경기지역화폐 앱",
+       "url": "https://apps.apple.com/kr/app/%EA%B2%BD%EA%B8%B0%EC%A7%80%EC%97%AD%ED%99%94%ED%8F%90/id1451774088"
+      }
+     ],
+     "official": {
+      "label": "용인시청 용인와이페이카드 안내",
+      "url": "http://www.yongin.go.kr/home/www/www08/www08_03/www08_03_01.jsp"
+     },
+     "phone": {
+      "label": "용인시 콜센터",
+      "number": "1577-1122"
+     },
+     "sources": [
+      {
+       "label": "용인시청 용인와이페이카드 안내 (인센티브 '충전액의 10%, 정책 방향에 따라 변동'이라고만 있고 날짜 없음",
+       "url": "http://www.yongin.go.kr/home/www/www08/www08_03/www08_03_01.jsp"
+      },
+      {
+       "label": "용인시 시정소식 (2026-10-20, 콜센터 1577-1122 / 용인와이페이 모바일 카드는 경기지역화폐 앱)",
+       "url": "https://www.yongin.go.kr/user/bbs/BD_selectBbs.do?q_bbsCode=1001&q_clCode=1&q_bbscttSn=20261020155145312"
+      },
+      {
+       "label": "경기지역화폐 시군별 문의처 (용인시 민생경제과)",
+       "url": "https://gmoney.or.kr/base/board/read?boardManagementNo=1&boardNo=459&searchCategory=&page=1&searchType=&searchWord=&menuLevel=2&menuNo=33"
+      }
+     ],
+     "checked": "2026-11-01"
+    },
+    "고양시": {
+     "name": "고양페이",
+     "channels": [
+      {
+       "kind": "앱",
+       "name": "경기지역화폐 앱 (회원가입",
+       "url": "https://www.goyang.go.kr/www/www03/www03_4/www03_4_12/www03_4_12_tab1.jsp"
+      }
+     ],
+     "official": {
+      "label": "고양특례시청 고양페이 안내",
+      "url": "https://www.goyang.go.kr/www/www03/www03_4/www03_4_12/www03_4_12_tab1.jsp"
+     },
+     "phone": {
+      "label": "경기지역화폐 상담콜센터",
+      "number": "1899-7997"
+     },
+     "terms": [
+      {
+       "label": "구매자 인센티브",
+       "value": "10% 이내 · 월 충전 혜택 한도 금액은 시 페이지에 없고 앱에서 확인하라고 안내",
+       "asof": "2026-10-23",
+       "url": "https://www.goyang.go.kr/www/www03/www03_4/www03_4_12/www03_4_12_tab1.jsp"
+      }
+     ],
+     "sources": [
+      {
+       "label": "고양특례시청 고양페이 안내 (페이지 최종수정 2026-10-23)",
+       "url": "https://www.goyang.go.kr/www/www03/www03_4/www03_4_12/www03_4_12_tab1.jsp"
+      },
+      {
+       "label": "경기지역화폐 시군별 문의처 (고양시 소상공인지원과)",
+       "url": "https://gmoney.or.kr/base/board/read?boardManagementNo=1&boardNo=459&searchCategory=&page=1&searchType=&searchWord=&menuLevel=2&menuNo=33"
+      }
+     ],
+     "checked": "2026-11-01"
+    },
+    "부천시": {
+     "name": "부천페이",
+     "channels": [
+      {
+       "kind": "앱",
+       "name": "경기지역화폐 앱",
+       "url": "https://bucheon.go.kr/site/homepage/menu/viewMenu?menuid=148006004013001"
+      },
+      {
+       "kind": "카드",
+       "name": "NH농협은행 13개 지점에서 현금 구매·충전",
+       "url": "https://bucheon.go.kr/site/homepage/menu/viewMenu?menuid=148006004013001"
+      }
+     ],
+     "official": {
+      "label": "부천시청 부천페이 공지사항",
+      "url": "https://www.bucheon.go.kr/site/program/board/basicboard/list?boardtypeid=27296&menuid=148006004013002"
+     },
+     "phone": {
+      "label": "부천시 지역경제과 경제기획팀",
+      "number": "032-625-2696"
+     },
+     "notice": {
+      "title": "부천페이 구매혜택한도 월30만원, 인센티브 10%(2026년 11월)",
+      "date": "2026-10-26",
+      "url": "https://www.bucheon.go.kr/site/program/board/basicboard/view?menuid=148006004013002&pagesize=10&boardtypeid=27296&encid=YQdIhPbptH1mIbTTIufY/w=="
+     },
+     "terms": [
+      {
+       "label": "2026년 11월 구매혜택한도",
+       "value": "30만원 · 월",
+       "asof": "2026-11",
+       "url": "https://www.bucheon.go.kr/site/program/board/basicboard/view?menuid=148006004013002&pagesize=10&boardtypeid=27296&encid=YQdIhPbptH1mIbTTIufY/w=="
+      },
+      {
+       "label": "2026년 11월 인센티브",
+       "value": "10%",
+       "asof": "2026-11",
+       "url": "https://www.bucheon.go.kr/site/program/board/basicboard/view?menuid=148006004013002&pagesize=10&boardtypeid=27296&encid=YQdIhPbptH1mIbTTIufY/w=="
+      }
+     ],
+     "sources": [
+      {
+       "label": "부천시청 부천페이 공지사항 목록 (월별 한도·인센티브 제목 공지, 2026-10-26 글 본문은 이미지라 값은 제목 기준)",
+       "url": "https://www.bucheon.go.kr/site/program/board/basicboard/list?boardtypeid=27296&menuid=148006004013002"
+      },
+      {
+       "label": "부천시청 부천페이(카드형) 소개",
+       "url": "https://bucheon.go.kr/site/homepage/menu/viewMenu?menuid=148006004013001"
+      }
+     ],
+     "checked": "2026-11-01"
+    },
+    "화성시": {
+     "name": "희망화성지역화폐",
+     "channels": [
+      {
+       "kind": "앱",
+       "name": "경기지역화폐 앱",
+       "url": "https://www.hscity.go.kr/www/information/ntcnInfo/hhcLocal/localInfo.jsp"
+      },
+      {
+       "kind": "카드",
+       "name": "오프라인: NH농협은행·지역농협",
+       "url": "https://www.hscity.go.kr/www/information/ntcnInfo/hhcLocal/localInfo.jsp"
+      }
+     ],
+     "official": {
+      "label": "화성특례시청 희망화성지역화폐 소개 ('2026년 인센티브 및 이용 안내')",
+      "url": "https://www.hscity.go.kr/www/information/ntcnInfo/hhcLocal/localInfo.jsp"
+     },
+     "phone": {
+      "label": "고객센터",
+      "number": "1899-7997"
+     },
+     "terms": [
+      {
+       "label": "인센티브",
+       "value": "충전액의 10% · 월 최대 5만원",
+       "asof": "2026",
+       "url": "https://www.hscity.go.kr/www/information/ntcnInfo/hhcLocal/localInfo.jsp"
+      },
+      {
+       "label": "월 구매한도",
+       "value": "50만원 · 초과 충전분은 인센티브 없음",
+       "asof": "2026",
+       "url": "https://www.hscity.go.kr/www/information/ntcnInfo/hhcLocal/localInfo.jsp"
+      }
+     ],
+     "sources": [
+      {
+       "label": "화성특례시청 희망화성지역화폐 소개 (제목 '2026년 ... 이용 안내', 연 단위 기준, 정확한 날짜 없음)",
+       "url": "https://www.hscity.go.kr/www/information/ntcnInfo/hhcLocal/localInfo.jsp"
+      }
+     ],
+     "checked": "2026-11-01"
+    },
+    "안산시": {
+     "name": "안산화폐 다온",
+     "channels": [
+      {
+       "kind": "앱",
+       "name": "경기지역화폐 앱",
+       "url": "https://www.ansan.go.kr/www/common/cntnts/selectContents.do?cntnts_id=C0001274"
+      },
+      {
+       "kind": "카드",
+       "name": "농협중앙회 10개 지점 현장구입",
+       "url": "https://www.ansan.go.kr/www/common/cntnts/selectContents.do?cntnts_id=C0001274"
+      }
+     ],
+     "official": {
+      "label": "안산시청 안산화폐 다온 안내",
+      "url": "https://www.ansan.go.kr/www/common/cntnts/selectContents.do?cntnts_id=C0001274"
+     },
+     "phone": {
+      "label": "안산시 민원콜센터",
+      "number": "1666-1234"
+     },
+     "terms": [
+      {
+       "label": "충전 인센티브",
+       "value": "10% · 월 최대 3만원, 매월 1일 0시 충전 시작; 상록구청 안내 페이지의 11월 행사 안내에 함께 적힘",
+       "asof": "2026-11",
+       "url": "https://www.ansan.go.kr/sangnokgu/main/main.do?key=1380"
+      }
+     ],
+     "sources": [
+      {
+       "label": "안산시청 안산화폐 다온 안내 (지류 2023-01-01 발행 중단, 평상시 혜택율 6~8%·월 30~60만원은 날짜 없어 terms 제외)",
+       "url": "https://www.ansan.go.kr/www/common/cntnts/selectContents.do?cntnts_id=C0001274"
+      },
+      {
+       "label": "안산시 상록구청 '코리아 그랜드 페스티벌 5% 캐시백' (2026-11-05~15)",
+       "url": "https://www.ansan.go.kr/sangnokgu/main/main.do?key=1380"
+      }
+     ],
+     "checked": "2026-11-01"
+    },
+    "남양주시": {
+     "name": "남양주사랑상품권 (Thank You Pay-N)",
+     "channels": [
+      {
+       "kind": "앱",
+       "name": "경기지역화폐 앱",
+       "url": "https://www.nyj.go.kr/www/contents.do?key=2961"
+      },
+      {
+       "kind": "카드",
+       "name": "관내 농·축협 9개소 방문 신청·충전",
+       "url": "https://www.nyj.go.kr/www/contents.do?key=2961"
+      }
+     ],
+     "official": {
+      "label": "남양주시청 남양주사랑상품권 소개",
+      "url": "https://www.nyj.go.kr/www/contents.do?key=2961"
+     },
+     "phone": {
+      "label": "남양주시 지역경제과 소비자경제팀",
+      "number": "031-590-8731"
+     },
+     "notice": {
+      "title": "코리아 그랜드 페스티벌 남양주사랑상품권 캐시백 이벤트",
+      "date": "2026-10-27",
+      "url": "https://www.nyj.go.kr/www/selectBbsNttView.do?key=2963&bbsNo=86&nttNo=550384&pageUnit=10&pageIndex=1&searchCnd=all"
+     },
+     "terms": [
+      {
+       "label": "상시 인센티브",
+       "value": "10% · 예산 소진 시 조기 종료",
+       "asof": "2026-03-05",
+       "url": "https://www.nyj.go.kr/www/contents.do?key=2961"
+      },
+      {
+       "label": "월 충전한도",
+       "value": "30만원 · 인센티브 기준; 명절 2월·9월은 50만원",
+       "asof": "2026-03-05",
+       "url": "https://www.nyj.go.kr/www/contents.do?key=2961"
+      },
+      {
+       "label": "보유한도",
+       "value": "200만원 · 경기지역화폐 앱 충전계좌 연결 시; 오프라인 무기명·등록카드는 기본 50만원",
+       "asof": "2026-03-05",
+       "url": "https://www.nyj.go.kr/www/contents.do?key=2961"
+      }
+     ],
+     "sources": [
+      {
+       "label": "남양주시청 남양주사랑상품권 소개 (최종수정 2026.03.05)",
+       "url": "https://www.nyj.go.kr/www/contents.do?key=2961"
+      },
+      {
+       "label": "남양주시청 이벤트 정보 목록",
+       "url": "https://www.nyj.go.kr/www/selectBbsNttList.do?key=2963&bbsNo=86"
+      }
+     ],
+     "checked": "2026-11-01"
+    },
+    "안양시": {
+     "name": "안양사랑페이",
+     "channels": [
+      {
+       "kind": "앱",
+       "name": "카드형: 경기지역화폐 앱에서 안양시 선택 후 신청, 만 14세 이상",
+       "url": "https://www.anyang.go.kr/main/contents.do?key=3155"
+      },
+      {
+       "kind": "지류",
+       "name": "종이형(안양사랑상품권 1만원권): 관내 NH농협 35개소 현금 구매",
+       "url": "https://www.anyang.go.kr/main/contents.do?key=3156"
+      }
+     ],
+     "official": {
+      "label": "안양시청 안양사랑페이 안내",
+      "url": "https://www.anyang.go.kr/main/contents.do?key=3154"
+     },
+     "phone": {
+      "label": "안양시 기업경제과 소상공인지원",
+      "number": "031-8045-2955"
+     },
+     "terms": [
+      {
+       "label": "개인 상시 할인율",
+       "value": "8% · 2026년 1월, 3~8월, 10~12월",
+       "asof": "2026",
+       "url": "https://www.anyang.go.kr/main/contents.do?key=3154"
+      },
+      {
+       "label": "개인 특별 할인율",
+       "value": "10% · 2026년 2월 설, 9월 추석",
+       "asof": "2026",
+       "url": "https://www.anyang.go.kr/main/contents.do?key=3154"
+      },
+      {
+       "label": "1인 월 할인 구매한도 - 카드형",
+       "value": "20만원",
+       "asof": "2026",
+       "url": "https://www.anyang.go.kr/main/contents.do?key=3154"
+      },
+      {
+       "label": "1인 월 할인 구매한도 - 종이형",
+       "value": "10만원",
+       "asof": "2026",
+       "url": "https://www.anyang.go.kr/main/contents.do?key=3154"
+      }
+     ],
+     "sources": [
+      {
+       "label": "안양시청 안양사랑페이 안내 (2026년 할인계획 표; 같은 사이트 카드형 페이지 key=3155는 옛값 월 30만원이라 불일치)",
+       "url": "https://www.anyang.go.kr/main/contents.do?key=3154"
+      },
+      {
+       "label": "안양시청 안양사랑페이(카드형)",
+       "url": "https://www.anyang.go.kr/main/contents.do?key=3155"
+      },
+      {
+       "label": "안양시청 안양사랑페이(종이형)",
+       "url": "https://www.anyang.go.kr/main/contents.do?key=3156"
+      }
+     ],
+     "checked": "2026-11-01"
+    },
+    "평택시": {
+     "name": "경기평택사랑상품권 (평택사랑카드)",
+     "channels": [
+      {
+       "kind": "앱",
+       "name": "카드형: 경기지역화폐 앱에서 카드 신청·계좌 연결·충전, 만 14세 이상",
+       "url": "http://www.pyeongtaek.go.kr/depart/contents.do?mid=1305000000"
+      },
+      {
+       "kind": "지류",
+       "name": "종이형: 본인인증 후 현금 구매, 할인구매 시 신분증 지참",
+       "url": "http://www.pyeongtaek.go.kr/depart/contents.do?mid=1305000000"
+      }
+     ],
+     "official": {
+      "label": "평택시청 상품권안내",
+      "url": "http://www.pyeongtaek.go.kr/depart/contents.do?mid=1305000000"
+     },
+     "phone": {
+      "label": "경기지역화폐 고객센터",
+      "number": "1899-7997"
+     },
+     "terms": [
+      {
+       "label": "개인 할인율",
+       "value": "8% · 평시",
+       "asof": "2026",
+       "url": "http://www.pyeongtaek.go.kr/depart/contents.do?mid=1305000000"
+      },
+      {
+       "label": "개인 할인율",
+       "value": "10% · 명절",
+       "asof": "2026",
+       "url": "http://www.pyeongtaek.go.kr/depart/contents.do?mid=1305000000"
+      },
+      {
+       "label": "월 구매한도 - 지류형",
+       "value": "20만원 · 개인",
+       "asof": "2026",
+       "url": "http://www.pyeongtaek.go.kr/depart/contents.do?mid=1305000000"
+      },
+      {
+       "label": "월 구매한도 - 카드형",
+       "value": "50만원 · 개인",
+       "asof": "2026",
+       "url": "http://www.pyeongtaek.go.kr/depart/contents.do?mid=1305000000"
+      }
+     ],
+     "sources": [
+      {
+       "label": "평택시청 상품권안내 (2026년 기준 표기, 정확한 날짜 없음; 검색에 같은 시 사이트의 다른 URL이 카드형 80만원으로 적혀 있다는 요약이 있었으나 열리지 않아 확인 못 함)",
+       "url": "http://www.pyeongtaek.go.kr/depart/contents.do?mid=1305000000"
+      },
+      {
+       "label": "경기지역화폐 시군별 문의처 (평택시 일자리경제과)",
+       "url": "https://gmoney.or.kr/base/board/read?boardManagementNo=1&boardNo=459&searchCategory=&page=1&searchType=&searchWord=&menuLevel=2&menuNo=33"
+      }
+     ],
+     "checked": "2026-11-01"
+    }
+   }
+  },
+  "51": {
+   "sources": [
+    {
+     "label": "강원 시군별 공식 페이지는 sigungu 항목 참조",
+     "url": "https://ccgc.chuncheon.go.kr/"
+    }
+   ],
+   "checked": "2026-11-01",
+   "sigungu": {
+    "춘천시": {
+     "name": "춘천사랑상품권",
+     "channels": [
+      {
+       "kind": "앱",
+       "name": "춘천사랑상품권 앱",
+       "url": "https://apps.apple.com/kr/app/id1509831682"
+      },
+      {
+       "kind": "웹",
+       "name": "춘천사랑상품권 공식 누리집",
+       "url": "https://ccgc.chuncheon.go.kr/site/intro/guide.do"
+      },
+      {
+       "kind": "지류",
+       "name": "관내 농협·축협·새마을금고·신협 지점(현금, 만 14세 이상, 신분증, 대리구매 불가). 11·12월 판매는 매월 은행 첫 영업일 09시",
+       "url": "https://ccgc.chuncheon.go.kr/site/intro/guide.do"
+      }
+     ],
+     "official": {
+      "label": "춘천사랑상품권 공식 누리집(춘천시 경제정책과 운영)",
+      "url": "https://ccgc.chuncheon.go.kr/"
+     },
+     "phone": {
+      "label": "춘천시청 경제정책과",
+      "number": "033-250-3351"
+     },
+     "notice": {
+      "title": "2026년 11월·12월 춘천사랑상품권 판매 계획 안내",
+      "date": "2026-10-29",
+      "url": "https://ccgc.chuncheon.go.kr/site/board/selectBoardList.do?bbsId=BBSMSTR_000000000001"
+     },
+     "terms": [
+      {
+       "label": "할인율",
+       "value": "10% (모바일 땡겨요 상품권은 15%) · 11·12월 판매",
+       "asof": "2026-10-29",
+       "url": "https://ccgc.chuncheon.go.kr/"
+      },
+      {
+       "label": "월 구매한도",
+       "value": "55만원 (종이 20만원 + 모바일 25만원 + 모바일 땡겨요 10만원) · 11·12월, 개인",
+       "asof": "2026-10-29",
+       "url": "https://ccgc.chuncheon.go.kr/"
+      },
+      {
+       "label": "추가 캐시백",
+       "value": "+5%p, 상품권 적립금으로 12월 지급, 예산 소진 시 종료 · 모바일 결제, 10.29~11.15",
+       "asof": "2026-10-29",
+       "url": "https://ccgc.chuncheon.go.kr/"
+      }
+     ],
+     "sources": [
+      {
+       "label": "춘천사랑상품권 누리집 메인(할인율·한도·공지)",
+       "url": "https://ccgc.chuncheon.go.kr/"
+      },
+      {
+       "label": "구매 및 사용방법(지류 판매처·문의)",
+       "url": "https://ccgc.chuncheon.go.kr/site/intro/guide.do"
+      },
+      {
+       "label": "공지사항 목록",
+       "url": "https://ccgc.chuncheon.go.kr/site/board/selectBoardList.do?bbsId=BBSMSTR_000000000001"
+      },
+      {
+       "label": "App Store 춘천사랑상품권(비즈플레이)",
+       "url": "https://apps.apple.com/kr/app/id1509831682"
+      }
+     ],
+     "checked": "2026-11-01"
+    },
+    "강릉시": {
+     "name": "강릉사랑상품권(강릉페이)",
+     "channels": [
+      {
+       "kind": "앱",
+       "name": "강릉페이 앱",
+       "url": "https://apps.apple.com/kr/app/id1492650711"
+      },
+      {
+       "kind": "카드",
+       "name": "앱에서 카드 신청(우편 수령 5~7일). 오프라인 가입·발급은 강릉시청 소상공인과",
+       "url": "https://www.gn.go.kr/www/contents.do?key=3253"
+      },
+      {
+       "kind": "카드",
+       "name": "현금 충전: 판매대행점 NH농협(강릉시지부·시청 출장소·주문진 등), 신분증 지참",
+       "url": "https://www.gn.go.kr/www/contents.do?key=3253"
+      }
+     ],
+     "official": {
+      "label": "강릉시청 강릉사랑상품권 안내(생활경제)",
+      "url": "https://www.gn.go.kr/www/contents.do?key=3253"
+     },
+     "phone": {
+      "label": "강릉시청 소상공인과",
+      "number": "033-640-5696"
+     },
+     "notice": {
+      "title": "착한가격업소 강릉페이 추가 5% 캐시백 지원",
+      "date": "2026-09-14",
+      "url": "https://www.gn.go.kr/www/selectBbsNttView.do?key=258&bbsNo=12&nttNo=233467"
+     },
+     "terms": [
+      {
+       "label": "캐시백 지급률",
+       "value": "10% (1월 8%). 예산 상황에 따라 변경 가능 · 할인 아님, 충전 후 사용 시 지급, 2~12월",
+       "asof": "2026-10-01",
+       "url": "https://www.gn.go.kr/www/contents.do?key=3253"
+      },
+      {
+       "label": "1인 월 캐시백 지급 대상 사용금액 한도",
+       "value": "50만원 (1~8월 30만원) · 9~12월",
+       "asof": "2026-10-01",
+       "url": "https://www.gn.go.kr/www/contents.do?key=3253"
+      },
+      {
+       "label": "착한가격업소 추가 캐시백",
+       "value": "15% (일반 가맹점 10% + 5%p) · 9.16~12.31",
+       "asof": "2026-09-14",
+       "url": "https://www.gn.go.kr/www/selectBbsNttView.do?key=258&bbsNo=12&nttNo=233467"
+      }
+     ],
+     "sources": [
+      {
+       "label": "강릉시청 강릉사랑상품권 안내(최종수정 2026.10.01)",
+       "url": "https://www.gn.go.kr/www/contents.do?key=3253"
+      },
+      {
+       "label": "착한가격업소 강릉페이 추가 캐시백 공지",
+       "url": "https://www.gn.go.kr/www/selectBbsNttView.do?key=258&bbsNo=12&nttNo=233467"
+      },
+      {
+       "label": "App Store 강릉페이(코나아이)",
+       "url": "https://apps.apple.com/kr/app/id1492650711"
+      }
+     ],
+     "checked": "2026-11-01"
+    },
+    "원주시": {
+     "name": "원주사랑상품권",
+     "channels": [
+      {
+       "kind": "앱",
+       "name": "지역상품권 chak",
+       "url": "https://apps.apple.com/kr/app/id6449449658"
+      },
+      {
+       "kind": "웹",
+       "name": "원주사랑상품권 구매 및 이용안내",
+       "url": "http://wonju.go.kr/wonjusarang/user_sub.php?gid=www&mu_idx=7"
+      }
+     ],
+     "official": {
+      "label": "원주사랑상품권 누리집(원주시 경제진흥과)",
+      "url": "http://www.wonju.go.kr/wonjusarang"
+     },
+     "phone": {
+      "label": "원주시청 경제진흥과",
+      "number": "033-737-2317"
+     },
+     "notice": {
+      "title": "원주사랑상품권의 발행일이 매월 첫 번째 수요일로 변경됩니다",
+      "date": "2026-04-21",
+      "url": "http://wonju.go.kr/wonjusarang/user_sub.php?bcd=notice&bk=WIWUY1776749573&gid=www&mu_idx=15&bt=rd"
+     },
+     "terms": [
+      {
+       "label": "구매지원",
+       "value": "10% · 선할인",
+       "asof": "2026-04-21",
+       "url": "http://wonju.go.kr/wonjusarang/user_sub.php?bcd=notice&bk=WIWUY1776749573&gid=www&mu_idx=15&bt=rd"
+      },
+      {
+       "label": "1인 월 구매한도",
+       "value": "30만원",
+       "asof": "2026-04-21",
+       "url": "http://wonju.go.kr/wonjusarang/user_sub.php?bcd=notice&bk=WIWUY1776749573&gid=www&mu_idx=15&bt=rd"
+      },
+      {
+       "label": "1인 보유한도",
+       "value": "150만원",
+       "asof": "2026-04-21",
+       "url": "http://wonju.go.kr/wonjusarang/user_sub.php?bcd=notice&bk=WIWUY1776749573&gid=www&mu_idx=15&bt=rd"
+      },
+      {
+       "label": "정기 발행일",
+       "value": "매월 첫 번째 수요일 10:00 (공휴일이면 다음 영업일)",
+       "asof": "2026-04-21",
+       "url": "http://wonju.go.kr/wonjusarang/user_sub.php?bcd=notice&bk=WIWUY1776749573&gid=www&mu_idx=15&bt=rd"
+      }
+     ],
+     "sources": [
+      {
+       "label": "원주사랑상품권 누리집(공지·문의)",
+       "url": "http://www.wonju.go.kr/wonjusarang"
+      },
+      {
+       "label": "구매 및 이용안내(chak 앱, 한도",
+       "url": "http://wonju.go.kr/wonjusarang/user_sub.php?gid=www&mu_idx=7"
+      },
+      {
+       "label": "발행일 변경 공지 2026-04-21",
+       "url": "http://wonju.go.kr/wonjusarang/user_sub.php?bcd=notice&bk=WIWUY1776749573&gid=www&mu_idx=15&bt=rd"
+      },
+      {
+       "label": "App Store 지역상품권_chak(한국조폐공사)",
+       "url": "https://apps.apple.com/kr/app/id6449449658"
+      }
+     ],
+     "checked": "2026-11-01"
+    },
+    "속초시": {
+     "name": "속초사랑상품권",
+     "channels": [
+      {
+       "kind": "앱",
+       "name": "지역상품권 chak",
+       "url": "https://apps.apple.com/kr/app/id6449449658"
+      },
+      {
+       "kind": "카드",
+       "name": "관내 농협·신협·새마을금고·우리은행·우체국 방문 신청·구매",
+       "url": "https://giftcard.sokcho.go.kr/kr/contents?cid=85316ea8298e4861825dc5e1db7f7b17"
+      }
+     ],
+     "official": {
+      "label": "속초사랑상품권 누리집(속초시 지역경제과)",
+      "url": "https://giftcard.sokcho.go.kr/kr"
+     },
+     "phone": {
+      "label": "속초시 지역경제과",
+      "number": "033-639-2328"
+     },
+     "sources": [
+      {
+       "label": "속초사랑상품권 소개(구매 방법·발행은행 지점)",
+       "url": "https://giftcard.sokcho.go.kr/kr/contents?cid=85316ea8298e4861825dc5e1db7f7b17"
+      },
+      {
+       "label": "구매 및 사용방법(chak 앱)",
+       "url": "https://giftcard.sokcho.go.kr/kr/contents?cid=0f002988874d45cdadfbae2a3fdfca24"
+      },
+      {
+       "label": "공지사항(최신 글은 운영자금 현황뿐)",
+       "url": "https://giftcard.sokcho.go.kr/kr/contents?cid=f390bfa536854e5383706bc58ffb57a3"
+      }
+     ],
+     "checked": "2026-11-01"
+    }
+   }
+  },
+  "43": {
+   "sources": [
+    {
+     "label": "충북 시군별 공식 페이지는 sigungu 항목 참조",
+     "url": "https://www.cheongju.go.kr/www/contents.do?key=22212"
+    }
+   ],
+   "checked": "2026-11-01",
+   "sigungu": {
+    "청주시": {
+     "name": "청주사랑상품권(청주페이)",
+     "channels": [
+      {
+       "kind": "앱",
+       "name": "청주페이 앱",
+       "url": "https://apps.apple.com/kr/app/id1489140343"
+      },
+      {
+       "kind": "카드",
+       "name": "카드 형태. 판매대행점 방문 현금 충전: NH농협 5곳·신협 24곳",
+       "url": "https://www.cheongju.go.kr/www/contents.do?key=22212"
+      }
+     ],
+     "official": {
+      "label": "청주시청 청주페이 소개",
+      "url": "https://www.cheongju.go.kr/www/contents.do?key=22212"
+     },
+     "phone": {
+      "label": "청주시청 지역경제팀",
+      "number": "043-201-1024"
+     },
+     "notice": {
+      "title": "청주페이 2026년 인센티브율 10%, 지급한도는 30만원",
+      "date": "2026-01-02",
+      "url": "https://cheongju.go.kr/seowon/selectBbsNttView.do?bbsNo=40&integrDeptCode=&key=1195&nttNo=249137&pageIndex=1&searchCnd=all&searchCtgry=&searchKrwd="
+     },
+     "terms": [
+      {
+       "label": "인센티브율",
+       "value": "10% (착한가격업소는 +5%p) · 캐시백, 2026년 1월 3일부터",
+       "asof": "2026-01-02",
+       "url": "https://cheongju.go.kr/seowon/selectBbsNttView.do?bbsNo=40&integrDeptCode=&key=1195&nttNo=249137&pageIndex=1&searchCnd=all&searchCtgry=&searchKrwd="
+      },
+      {
+       "label": "월 인센티브 지급 기준 금액",
+       "value": "30만원 (한 달 최대 3만원 혜택)",
+       "asof": "2026-01-02",
+       "url": "https://cheongju.go.kr/seowon/selectBbsNttView.do?bbsNo=40&integrDeptCode=&key=1195&nttNo=249137&pageIndex=1&searchCnd=all&searchCtgry=&searchKrwd="
+      }
+     ],
+     "sources": [
+      {
+       "label": "청주페이 소개(채널·판매대행점)",
+       "url": "https://www.cheongju.go.kr/www/contents.do?key=22212"
+      },
+      {
+       "label": "청주시 서원구청 새소식",
+       "url": "https://cheongju.go.kr/seowon/selectBbsNttView.do?bbsNo=40&integrDeptCode=&key=1195&nttNo=249137&pageIndex=1&searchCnd=all&searchCtgry=&searchKrwd="
+      },
+      {
+       "label": "청주페이 공지사항 목록",
+       "url": "https://www.cheongju.go.kr/www/selectBbsNttList.do?key=22215&bbsNo=2087"
+      },
+      {
+       "label": "App Store 청주페이(코나아이, 고객센터 1811-7882)",
+       "url": "https://apps.apple.com/kr/app/id1489140343"
+      }
+     ],
+     "checked": "2026-11-01"
+    },
+    "충주시": {
+     "name": "충주사랑상품권",
+     "channels": [
+      {
+       "kind": "앱",
+       "name": "충주사랑상품권 앱",
+       "url": "https://apps.apple.com/kr/app/id6755811831"
+      },
+      {
+       "kind": "지류",
+       "name": "판매대행점(금융기관, 지류·카드 판매처) 81개소",
+       "url": "http://www.chungju.go.kr/www/selectBbsNttView.do?key=3067&bbsNo=250&nttNo=230410"
+      }
+     ],
+     "official": {
+      "label": "충주시청 충주사랑상품권 공지사항",
+      "url": "https://www.chungju.go.kr/www/selectBbsNttList.do?bbsNo=250&key=3067"
+     },
+     "phone": {
+      "label": "충주시청 경제기업과",
+      "number": "043-850-6016"
+     },
+     "notice": {
+      "title": "충주사랑상품권 추석 명절 특별할인(13%)",
+      "date": "2026-09-07",
+      "url": "http://www.chungju.go.kr/www/selectBbsNttView.do?key=3067&bbsNo=250&nttNo=324780"
+     },
+     "terms": [
+      {
+       "label": "기본 할인율",
+       "value": "10% · 2026.3.2부터",
+       "asof": "2026-02-19",
+       "url": "http://www.chungju.go.kr/www/selectBbsNttView.do?key=3067&bbsNo=250&nttNo=317568"
+      },
+      {
+       "label": "월 구매한도",
+       "value": "50만원 · 2026.3.2부터",
+       "asof": "2026-02-19",
+       "url": "http://www.chungju.go.kr/www/selectBbsNttView.do?key=3067&bbsNo=250&nttNo=317568"
+      },
+      {
+       "label": "추가 캐시백",
+       "value": "5% · 착한가격업소, 2026-09-07 공지",
+       "asof": "2026-09-07",
+       "url": "http://www.chungju.go.kr/www/selectBbsNttView.do?key=3067&bbsNo=250&nttNo=324779"
+      }
+     ],
+     "sources": [
+      {
+       "label": "공지: 2026년 3월부터 기본 할인율 10% 운영 알림",
+       "url": "http://www.chungju.go.kr/www/selectBbsNttView.do?key=3067&bbsNo=250&nttNo=317568"
+      },
+      {
+       "label": "공지: 추석 명절 특별할인(13%) 2026.9.1~9.30, 한도 50만원",
+       "url": "http://www.chungju.go.kr/www/selectBbsNttView.do?key=3067&bbsNo=250&nttNo=324780"
+      },
+      {
+       "label": "공지: 착한가격업소 캐시백(5%)",
+       "url": "http://www.chungju.go.kr/www/selectBbsNttView.do?key=3067&bbsNo=250&nttNo=324779"
+      },
+      {
+       "label": "충주사랑상품권 안내 페이지(날짜 없음, 아래 notes 참조)",
+       "url": "https://www.chungju.go.kr/www/contents.do?key=3064"
+      },
+      {
+       "label": "App Store 충주사랑상품권(코나아이, 고객센터 1833-2910)",
+       "url": "https://apps.apple.com/kr/app/id6755811831"
+      }
+     ],
+     "checked": "2026-11-01"
+    },
+    "제천시": {
+     "name": "제천화폐 모아",
+     "channels": [
+      {
+       "kind": "앱",
+       "name": "지역상품권 chak",
+       "url": "https://apps.apple.com/kr/app/id6449449658"
+      },
+      {
+       "kind": "카드",
+       "name": "NH카드",
+       "url": "https://www.jecheon.go.kr/www/contents.do?key=4833"
+      },
+      {
+       "kind": "지류",
+       "name": "지류형(1만원권) 관내 50개 금융기관, 현금만, 신분증, 대리구매 불가",
+       "url": "https://www.jecheon.go.kr/www/contents.do?key=4833"
+      }
+     ],
+     "official": {
+      "label": "제천시청 제천화폐(모아) 이용 안내",
+      "url": "https://www.jecheon.go.kr/www/contents.do?key=4833"
+     },
+     "phone": {
+      "label": "제천시청 일자리경제과",
+      "number": "043-641-6603"
+     },
+     "notice": {
+      "title": "2026년 제천화폐 모아 12% 할인판매 안내",
+      "date": "2026-01-06",
+      "url": "https://www.jecheon.go.kr/www/selectBbsNttView.do?key=114&bbsNo=11&nttNo=393414"
+     },
+     "terms": [
+      {
+       "label": "할인율",
+       "value": "12% · 2026년 1월부터",
+       "asof": "2026-01-06",
+       "url": "https://www.jecheon.go.kr/www/selectBbsNttView.do?key=114&bbsNo=11&nttNo=393414"
+      },
+      {
+       "label": "월 구매한도",
+       "value": "100만원 · 지류+모바일 합산",
+       "asof": "2026-01-06",
+       "url": "https://www.jecheon.go.kr/www/selectBbsNttView.do?key=114&bbsNo=11&nttNo=393414"
+      },
+      {
+       "label": "지류 월 구매한도",
+       "value": "50만원 · 만 40세 이상만 구매",
+       "asof": "2026-01-06",
+       "url": "https://www.jecheon.go.kr/www/selectBbsNttView.do?key=114&bbsNo=11&nttNo=393414"
+      },
+      {
+       "label": "보유한도",
+       "value": "150만원",
+       "asof": "2026-01-06",
+       "url": "https://www.jecheon.go.kr/www/selectBbsNttView.do?key=114&bbsNo=11&nttNo=393414"
+      }
+     ],
+     "sources": [
+      {
+       "label": "제천시청 제천화폐(모아) 이용 안내(날짜 없음)",
+       "url": "https://www.jecheon.go.kr/www/contents.do?key=4833"
+      },
+      {
+       "label": "공지: 2026년 제천화폐 모아 12% 할인판매 안내",
+       "url": "https://www.jecheon.go.kr/www/selectBbsNttView.do?key=114&bbsNo=11&nttNo=393414"
+      },
+      {
+       "label": "App Store 지역상품권_chak(한국조폐공사)",
+       "url": "https://apps.apple.com/kr/app/id6449449658"
+      }
+     ],
+     "checked": "2026-11-01"
+    }
+   }
+  },
+  "44": {
+   "channels": [
+    {
+     "kind": "앱",
+     "name": "충남상품권 chak",
+     "url": "https://apps.apple.com/kr/app/id1643801490"
+    },
+    {
+     "kind": "앱",
+     "name": "지역상품권 chak",
+     "url": "https://apps.apple.com/kr/app/id6449449658"
+    }
+   ],
+   "sources": [
+    {
+     "label": "App Store 충남상품권 chak(한국조폐공사)",
+     "url": "https://apps.apple.com/kr/app/id1643801490"
+    },
+    {
+     "label": "App Store 지역상품권_chak(한국조폐공사)",
+     "url": "https://apps.apple.com/kr/app/id6449449658"
+    }
+   ],
+   "checked": "2026-11-01",
+   "sigungu": {
+    "천안시": {
+     "name": "천안사랑상품권(천안사랑카드)",
+     "channels": [
+      {
+       "kind": "앱",
+       "name": "천안사랑카드 앱",
+       "url": "https://www.cheonan.go.kr/kor/sub06_09_01_01.do"
+      },
+      {
+       "kind": "카드",
+       "name": "충전식 선불 IC카드. 방문신청·현금 충전: 판매대행점 NH농협은행 13곳·단위농협 17곳",
+       "url": "https://www.cheonan.go.kr/kor/sub06_09_01_01.do"
+      }
+     ],
+     "official": {
+      "label": "천안시청 천안사랑카드 소개(최종수정 2026-01-25)",
+      "url": "https://www.cheonan.go.kr/kor/sub06_09_01_01.do"
+     },
+     "phone": {
+      "label": "천안시청 일자리경제과",
+      "number": "041-521-5620"
+     },
+     "notice": {
+      "title": "2026 코리아 그랜드 페스티벌과 함께하는 천안사랑카드 50만원 한도 15% 캐시백 지급 (천안시청 메인 팝업)",
+      "date": "2026-10-29",
+      "url": "https://www.cheonan.go.kr/kor.do"
+     },
+     "terms": [
+      {
+       "label": "캐시백",
+       "value": "10% (최대 30,000원). 30만원 초과~100만원 이하 1% (최대 7,000원), 100만원 초과 미지급 · 2026년, 월 30만원 이하 구간",
+       "asof": "2026-01-25",
+       "url": "https://www.cheonan.go.kr/kor/sub06_09_01_01.do"
+      },
+      {
+       "label": "코리아 그랜드 페스티벌 캐시백",
+       "value": "최대 15% (기존 10% + 추가 5%) · 2026.10.29~11.15, 50만원 한도",
+       "asof": "2026-10-29",
+       "url": "https://www.cheonan.go.kr/kor.do"
+      },
+      {
+       "label": "착한가격업소 추가 캐시백",
+       "value": "+5%p (최대 15%, 행사 기간엔 최대 20%) · 2026.10.19~12.31",
+       "asof": "2026-10-28",
+       "url": "https://www.cheonan.go.kr/kor.do"
+      }
+     ],
+     "sources": [
+      {
+       "label": "천안사랑카드 소개(캐시백·판매대행점·문의)",
+       "url": "https://www.cheonan.go.kr/kor/sub06_09_01_01.do"
+      },
+      {
+       "label": "천안시청 메인(2026-10 캐시백 팝업)",
+       "url": "https://www.cheonan.go.kr/kor.do"
+      }
+     ],
+     "checked": "2026-11-01"
+    },
+    "아산시": {
+     "name": "아산사랑상품권(아산페이)",
+     "channels": [
+      {
+       "kind": "앱",
+       "name": "지역상품권 chak",
+       "url": "https://www.asan.go.kr/main/cms/?no=403"
+      },
+      {
+       "kind": "지류",
+       "name": "지류 아산페이: 관내 농협 53·신협 11·우체국 8·새마을금고 10개소",
+       "url": "https://www.asan.go.kr/main/cms/?no=387"
+      }
+     ],
+     "official": {
+      "label": "아산시청 모바일 아산페이 안내",
+      "url": "https://www.asan.go.kr/main/cms/?no=403"
+     },
+     "phone": {
+      "label": "아산시청 지역경제과",
+      "number": "041-530-6952"
+     },
+     "terms": [
+      {
+       "label": "모바일 선할인율",
+       "value": "10%",
+       "asof": "2026-10-05",
+       "url": "https://www.asan.go.kr/main/cms/?no=403"
+      },
+      {
+       "label": "모바일 구매한도",
+       "value": "50만원 (보유한도 100만원, 선물하기 한도 50만원) · 월",
+       "asof": "2026-10-05",
+       "url": "https://www.asan.go.kr/main/cms/?no=403"
+      },
+      {
+       "label": "지류 할인율",
+       "value": "10%",
+       "asof": "2026-10-05",
+       "url": "https://www.asan.go.kr/main/cms/?no=387"
+      },
+      {
+       "label": "지류 개인 월 구매한도",
+       "value": "30만원 · 지류·모바일·카드 통합",
+       "asof": "2026-10-05",
+       "url": "https://www.asan.go.kr/main/cms/?no=387"
+      }
+     ],
+     "sources": [
+      {
+       "label": "모바일 아산페이(26.10.5 갱신)",
+       "url": "https://www.asan.go.kr/main/cms/?no=403"
+      },
+      {
+       "label": "지류 아산페이(26.10.5 갱신)",
+       "url": "https://www.asan.go.kr/main/cms/?no=387"
+      },
+      {
+       "label": "아산페이 정보 게시판(최신 글은 2026-07-01 운영자금 현황)",
+       "url": "https://www.asan.go.kr/main/cms/?no=551"
+      }
+     ],
+     "checked": "2026-11-01"
+    },
+    "서산시": {
+     "name": "서산사랑상품권",
+     "channels": [
+      {
+       "kind": "지류",
+       "name": "관내 판매점 56곳(농협·축협·새마을금고·신협·은행·우체국·수협 등), 신분증, 대리구매 불가. 지류는 매월 첫째 영업일 판매점 개점 시",
+       "url": "https://www.seosan.go.kr/www/contents.do?key=5010"
+      },
+      {
+       "kind": "앱",
+       "name": "지역상품권 chak",
+       "url": "https://apps.apple.com/kr/app/id6449449658"
+      }
+     ],
+     "official": {
+      "label": "서산시청 서산사랑상품권 안내",
+      "url": "https://www.seosan.go.kr/www/contents.do?key=5010"
+     },
+     "phone": {
+      "label": "서산시청 일자리경제과",
+      "number": "041-660-2351"
+     },
+     "notice": {
+      "title": "2026년 11월 10% 할인 판매, 1인 40만원 서산사랑상품권 (서산시청 메인 팝업)",
+      "date": "2026-10-20",
+      "url": "https://www.seosan.go.kr/www/index.do"
+     },
+     "terms": [
+      {
+       "label": "2026년 11월 할인율",
+       "value": "10%",
+       "asof": "2026-11",
+       "url": "https://www.seosan.go.kr/www/index.do"
+      },
+      {
+       "label": "2026년 11월 1인 구매한도",
+       "value": "40만원 (모바일 1일 06시부터, 지류 2일 판매점 개점부터)",
+       "asof": "2026-11",
+       "url": "https://www.seosan.go.kr/www/index.do"
+      },
+      {
+       "label": "모바일 1인 보유한도",
+       "value": "150만원",
+       "asof": "2026-11",
+       "url": "https://www.seosan.go.kr/www/index.do"
+      },
+      {
+       "label": "코리아 그랜드 페스티벌 모바일 캐시백",
+       "value": "5% · 2026.10.29~11.15",
+       "asof": "2026-10",
+       "url": "https://www.seosan.go.kr/www/index.do"
+      }
+     ],
+     "sources": [
+      {
+       "label": "서산시청 메인 팝업(11월 판매 안내, 이미지 대체텍스트)",
+       "url": "https://www.seosan.go.kr/www/index.do"
+      },
+      {
+       "label": "서산사랑상품권 안내(최종수정 2023.07.26)",
+       "url": "https://www.seosan.go.kr/www/contents.do?key=5010"
+      },
+      {
+       "label": "서산사랑상품권 공지사항(마지막 글 2023-01-25)",
+       "url": "https://www.seosan.go.kr/www/selectBbsNttList.do?bbsNo=1286&key=5015"
+      }
+     ],
+     "checked": "2026-11-01"
+    },
+    "당진시": {
+     "name": "당진사랑상품권",
+     "channels": [
+      {
+       "kind": "앱",
+       "name": "지역상품권 chak",
+       "url": "https://www.dangjin.go.kr/cop/bbs/BBSMSTR_000000000013/selectBoardArticle.do?nttId=1135526"
+      },
+      {
+       "kind": "지류",
+       "name": "관내 판매대행점 55곳",
+       "url": "https://www.dangjin.go.kr/kor/sub05_02_01_01.do"
+      }
+     ],
+     "official": {
+      "label": "당진시청 당진사랑상품권 안내(최종수정 2026-09-15)",
+      "url": "https://www.dangjin.go.kr/kor/sub05_02_01_01.do"
+     },
+     "phone": {
+      "label": "당진시청 지역경제팀",
+      "number": "041-350-4019"
+     },
+     "notice": {
+      "title": "2026년 10월 모바일(카드) 당진사랑상품권 판매 안내",
+      "date": "2026-09-28",
+      "url": "https://www.dangjin.go.kr/cop/bbs/BBSMSTR_000000000013/selectBoardArticle.do?nttId=1135526"
+     },
+     "terms": [
+      {
+       "label": "할인율",
+       "value": "10% · 선할인, 예산에 따라 변동, 법인 미적용",
+       "asof": "2026-09-15",
+       "url": "https://www.dangjin.go.kr/kor/sub05_02_01_01.do"
+      },
+      {
+       "label": "모바일 1인 월 구매한도",
+       "value": "50만원 · 10월 판매",
+       "asof": "2026-09-28",
+       "url": "https://www.dangjin.go.kr/cop/bbs/BBSMSTR_000000000013/selectBoardArticle.do?nttId=1135526"
+      },
+      {
+       "label": "보유한도",
+       "value": "100만원 · 개인",
+       "asof": "2026-09-28",
+       "url": "https://www.dangjin.go.kr/cop/bbs/BBSMSTR_000000000013/selectBoardArticle.do?nttId=1135526"
+      },
+      {
+       "label": "지류 1인 월 구매한도",
+       "value": "60만원 (10% 할인) · 9월 판매",
+       "asof": "2026-08-25",
+       "url": "https://www.dangjin.go.kr/cop/bbs/BBSMSTR_000000000013/selectBoardArticle.do?nttId=1134543"
+      }
+     ],
+     "sources": [
+      {
+       "label": "당진사랑상품권 안내(최종수정 2026-09-15)",
+       "url": "https://www.dangjin.go.kr/kor/sub05_02_01_01.do"
+      },
+      {
+       "label": "공지: 2026년 10월 모바일(카드) 판매 안내",
+       "url": "https://www.dangjin.go.kr/cop/bbs/BBSMSTR_000000000013/selectBoardArticle.do?nttId=1135526"
+      },
+      {
+       "label": "공지: 2026년 9월 지류형 판매 안내",
+       "url": "https://www.dangjin.go.kr/cop/bbs/BBSMSTR_000000000013/selectBoardArticle.do?nttId=1134543"
+      },
+      {
+       "label": "공지: 2026년 2월 모바일(카드) 판매 안내(월 60만원)",
+       "url": "https://www.dangjin.go.kr/cop/bbs/BBSMSTR_000000000013/selectBoardArticle.do?nttId=1128030"
+      }
+     ],
+     "checked": "2026-11-01"
+    }
+   }
+  },
+  "52": {
+   "sources": [
+    {
+     "label": "전북 시군별 공식 페이지는 sigungu 항목 참조",
+     "url": "https://www.jeonju.go.kr/index.9is?contentUid=ff8080818990c349018b041ab74e3b4a"
+    }
+   ],
+   "checked": "2026-11-01",
+   "sigungu": {
+    "전주시": {
+     "name": "전주사랑상품권",
+     "channels": [
+      {
+       "kind": "앱",
+       "name": "전주사랑상품권 앱",
+       "url": "https://apps.apple.com/kr/app/id1533766546"
+      },
+      {
+       "kind": "카드",
+       "name": "카드형(체크카드형) 지역화폐. 전북은행 영업점 방문 신청",
+       "url": "https://www.jeonju.go.kr/index.9is?contentUid=ff8080818990c349018b041ab74e3b4a"
+      }
+     ],
+     "official": {
+      "label": "전주시청 전주사랑상품권이란",
+      "url": "https://www.jeonju.go.kr/index.9is?contentUid=ff8080818990c349018b041ab74e3b4a"
+     },
+     "phone": {
+      "label": "전주시청 민생사회적경제과",
+      "number": "063-281-2514"
+     },
+     "notice": {
+      "title": "전주사랑상품권, 9월부터 총 13% 할인 혜택 제공 (2025년 9~12월 한시 - 종료됨)",
+      "date": "2025-08-29",
+      "url": "https://www.jeonju.go.kr/planweb/board/view.9is?contentUid=ff8080818990c349018b041a87fe3960&boardUid=ff8080818b5bc5cf018ba8ca7216641f&dataUid=9be517a89719f4400198f45b411259f8"
+     },
+     "sources": [
+      {
+       "label": "전주사랑상품권이란(날짜 표기 없음)",
+       "url": "https://www.jeonju.go.kr/index.9is?contentUid=ff8080818990c349018b041ab74e3b4a"
+      },
+      {
+       "label": "보도자료 2025-08-29",
+       "url": "https://www.jeonju.go.kr/planweb/board/view.9is?contentUid=ff8080818990c349018b041a87fe3960&boardUid=ff8080818b5bc5cf018ba8ca7216641f&dataUid=9be517a89719f4400198f45b411259f8"
+      },
+      {
+       "label": "App Store 전주사랑상품권(KIS정보통신, 고객센터 02-2101-1699)",
+       "url": "https://apps.apple.com/kr/app/id1533766546"
+      }
+     ],
+     "checked": "2026-11-01"
+    },
+    "군산시": {
+     "name": "군산사랑상품권",
+     "channels": [
+      {
+       "kind": "앱",
+       "name": "지역상품권 chak",
+       "url": "https://apps.apple.com/kr/app/id6449449658"
+      },
+      {
+       "kind": "카드",
+       "name": "관내 농협·전북은행·새마을금고·신협 창구",
+       "url": "https://www.gunsan.go.kr/main/m64"
+      },
+      {
+       "kind": "지류",
+       "name": "관내 농협·전북은행·새마을금고·신협 창구. 지류는 만 65세 이상만, 월 10만원까지",
+       "url": "https://www.gunsan.go.kr/main/m64"
+      }
+     ],
+     "official": {
+      "label": "군산시청 군산사랑상품권 안내(최근수정 2026-06-16)",
+      "url": "https://www.gunsan.go.kr/main/m64"
+     },
+     "phone": {
+      "label": "군산시청 일자리경제과 유통화폐계",
+      "number": "063-454-2662"
+     },
+     "notice": {
+      "title": "군산사랑상품권 월 구매한도 조정(70만원 -> 50만원, '26.11.1. 구매분부터)",
+      "date": "2026-10-27",
+      "url": "https://www.gunsan.go.kr/main/m304/view/9835814"
+     },
+     "terms": [
+      {
+       "label": "개인 월 구매한도",
+       "value": "50만원 (기존 70만원) · 종이·모바일·카드 통합, 2026.11.1 구매분부터",
+       "asof": "2026-10-27",
+       "url": "https://www.gunsan.go.kr/main/m304/view/9835814"
+      },
+      {
+       "label": "개인 할인율",
+       "value": "10% (법인 할인 없음) · 2026년 판매개시 기준",
+       "asof": "2025-12-30",
+       "url": "https://www.gunsan.go.kr/main/m304/view/8170180"
+      },
+      {
+       "label": "지류 월 구매한도",
+       "value": "10만원 · 만 65세 이상",
+       "asof": "2026-06-16",
+       "url": "https://www.gunsan.go.kr/main/m64"
+      },
+      {
+       "label": "추가 캐시백",
+       "value": "5% · 모바일·카드 결제, 2026.10.29~11.15",
+       "asof": "2026-10-27",
+       "url": "https://www.gunsan.go.kr/main/m304/view/9835815"
+      }
+     ],
+     "sources": [
+      {
+       "label": "군산사랑상품권 안내(최근수정 2026-06-16)",
+       "url": "https://www.gunsan.go.kr/main/m64"
+      },
+      {
+       "label": "공지: 월 구매한도 조정",
+       "url": "https://www.gunsan.go.kr/main/m304/view/9835814"
+      },
+      {
+       "label": "공지: 추가 5% 캐시백",
+       "url": "https://www.gunsan.go.kr/main/m304/view/9835815"
+      },
+      {
+       "label": "공지: 2026년 판매개시 안내",
+       "url": "https://www.gunsan.go.kr/main/m304/view/8170180"
+      },
+      {
+       "label": "상품권 공지사항 목록",
+       "url": "https://www.gunsan.go.kr/main/m304"
+      }
+     ],
+     "checked": "2026-11-01"
+    },
+    "익산시": {
+     "name": "익산사랑상품권(익산 다이로움)",
+     "channels": [
+      {
+       "kind": "앱",
+       "name": "익산 다이로움 앱",
+       "url": "https://apps.apple.com/kr/app/id6741744179"
+      }
+     ],
+     "official": {
+      "label": "익산시 읍면동포털 - 익산 다이로움 특별할인 이벤트 안내",
+      "url": "https://www.iksan.go.kr/town/board/post/view.do?menuUid=ff808081975e28f701978ad9f31a4f5f&boardUid=ff8080819a57232e019a582b3f2e0482&postUid=4028a610a15cfbb001a18508b4cd2cec&codeUids=ff80808197c01f9101980bc1c74276bc"
+     },
+     "phone": {
+      "label": "익산 다이로움 앱 고객센터",
+      "number": "1600-1017"
+     },
+     "notice": {
+      "title": "「익산 다이로움 특별할인 이벤트」 안내",
+      "date": "2026-10-29",
+      "url": "https://www.iksan.go.kr/town/board/post/view.do?menuUid=ff808081975e28f701978ad9f31a4f5f&boardUid=ff8080819a57232e019a582b3f2e0482&postUid=4028a610a15cfbb001a18508b4cd2cec&codeUids=ff80808197c01f9101980bc1c74276bc"
+     },
+     "terms": [
+      {
+       "label": "충전 인센티브",
+       "value": "10% · 기본",
+       "asof": "2026-10-29",
+       "url": "https://www.iksan.go.kr/town/board/post/view.do?menuUid=ff808081975e28f701978ad9f31a4f5f&boardUid=ff8080819a57232e019a582b3f2e0482&postUid=4028a610a15cfbb001a18508b4cd2cec&codeUids=ff80808197c01f9101980bc1c74276bc"
+      },
+      {
+       "label": "특별할인 이벤트 캐시백",
+       "value": "결제액 5% (사용금액 30만원 한도, 최대 15,000원), 12월 초 지급 · 2026.10.29~11.15",
+       "asof": "2026-10-29",
+       "url": "https://www.iksan.go.kr/town/board/post/view.do?menuUid=ff808081975e28f701978ad9f31a4f5f&boardUid=ff8080819a57232e019a582b3f2e0482&postUid=4028a610a15cfbb001a18508b4cd2cec&codeUids=ff80808197c01f9101980bc1c74276bc"
+      }
+     ],
+     "sources": [
+      {
+       "label": "익산시 읍면동포털 이벤트 안내",
+       "url": "https://www.iksan.go.kr/town/board/post/view.do?menuUid=ff808081975e28f701978ad9f31a4f5f&boardUid=ff8080819a57232e019a582b3f2e0482&postUid=4028a610a15cfbb001a18508b4cd2cec&codeUids=ff80808197c01f9101980bc1c74276bc"
+      },
+      {
+       "label": "익산시 읍면동포털(메인)",
+       "url": "https://www.iksan.go.kr/town"
+      },
+      {
+       "label": "App Store 익산 다이로움(비즈플레이)",
+       "url": "https://apps.apple.com/kr/app/id6741744179"
+      }
+     ],
+     "checked": "2026-11-01"
+    },
+    "정읍시": {
+     "name": "정읍사랑상품권",
+     "channels": [
+      {
+       "kind": "앱",
+       "name": "지역상품권 chak",
+       "url": "https://www.jeongeup.go.kr/board/view.jeongeup?boardId=BBS_0000012&orderBy=REGISTER_DATE+DESC&paging=ok&startPage=1&dataSid=1396547"
+      }
+     ],
+     "official": {
+      "label": "정읍시청 일자리경제과(정읍사랑상품권 발행·운용 담당)",
+      "url": "https://www.jeongeup.go.kr/buseo/index.jeongeup?menuCd=DOM_000001039000000000"
+     },
+     "phone": {
+      "label": "정읍시청 일자리경제과",
+      "number": "063-539-5614"
+     },
+     "sources": [
+      {
+       "label": "일자리경제과 업무·담당자(정읍사랑상품권 발행 및 운용)",
+       "url": "https://www.jeongeup.go.kr/buseo/index.jeongeup?menuCd=DOM_000001039000000000"
+      },
+      {
+       "label": "2026년도 정읍시 입영지원금 신청 안내(2026-01-06, chak 앱)",
+       "url": "https://www.jeongeup.go.kr/board/view.jeongeup?boardId=BBS_0000012&orderBy=REGISTER_DATE+DESC&paging=ok&startPage=1&dataSid=1396547"
+      },
+      {
+       "label": "정읍시 민생회복지원금(2026-01-06, 콜센터 063-539-8101~2)",
+       "url": "https://www.jeongeup.go.kr/board/view.jeongeup?boardId=BBS_0000012&orderBy=REGISTER_DATE+DESC&paging=ok&startPage=1&dataSid=1396548"
+      }
+     ],
+     "checked": "2026-11-01"
+    }
+   }
+  },
+  "46": {
+   "name": "전남 시군별 지역사랑상품권 (시군이 각자 운영)",
+   "channels": [
+    {
+     "kind": "앱",
+     "name": "지역상품권 chak",
+     "url": "https://apps.apple.com/kr/app/%EC%A7%80%EC%97%AD%EC%83%81%ED%92%88%EA%B6%8C-chak/id6449449658"
+    },
+    {
+     "kind": "앱",
+     "name": "전남상품권 chak",
+     "url": "https://apps.apple.com/tj/app/%EC%A0%84%EB%82%A8%EC%83%81%ED%92%88%EA%B6%8C-chak/id6475802206"
+    }
+   ],
+   "sources": [
+    {
+     "label": "지역상품권_chak (App Store, 판매자 한국조폐공사)",
+     "url": "https://apps.apple.com/kr/app/%EC%A7%80%EC%97%AD%EC%83%81%ED%92%88%EA%B6%8C-chak/id6449449658"
+    },
+    {
+     "label": "전남상품권 chak (App Store, 판매자 한국조폐공사)",
+     "url": "https://apps.apple.com/tj/app/%EC%A0%84%EB%82%A8%EC%83%81%ED%92%88%EA%B6%8C-chak/id6475802206"
+    }
+   ],
+   "checked": "2026-11-01",
+   "sigungu": {
+    "목포시": {
+     "name": "목포사랑상품권",
+     "channels": [
+      {
+       "kind": "앱",
+       "name": "지역상품권 Chak",
+       "url": "https://www.mokpo.go.kr/www/life_welfare/industry_economy/voucher"
+      },
+      {
+       "kind": "카드",
+       "name": "카드형: 광주은행 방문 또는 온라인 신청",
+       "url": "https://www.mokpo.go.kr/www/life_welfare/industry_economy/voucher"
+      },
+      {
+       "kind": "지류",
+       "name": "관내 53개 금융기관",
+       "url": "https://www.mokpo.go.kr/www/life_welfare/industry_economy/voucher"
+      }
+     ],
+     "official": {
+      "label": "목포시 목포사랑상품권",
+      "url": "https://www.mokpo.go.kr/www/life_welfare/industry_economy/voucher"
+     },
+     "phone": {
+      "label": "목포시청 지역경제과 지역경제팀",
+      "number": "061-270-8785"
+     },
+     "terms": [
+      {
+       "label": "할인율",
+       "value": "10% · 선할인",
+       "asof": "2026-09-29",
+       "url": "https://www.mokpo.go.kr/www/life_welfare/industry_economy/voucher"
+      },
+      {
+       "label": "개인 월 구매한도",
+       "value": "70만원 (카드 50만원, 모바일+지류 20만원)",
+       "asof": "2026-09-29",
+       "url": "https://www.mokpo.go.kr/www/life_welfare/industry_economy/voucher"
+      },
+      {
+       "label": "2026년 11월 적용(2026.11.2~11.30): 할인율 10% 선할인, 월 구매한도 70만원",
+       "value": "10% / 월 70만원 (카드 50만원, 모바일+지류 20만원)",
+       "asof": "2026-11",
+       "url": "https://www.mokpo.go.kr"
+      }
+     ],
+     "sources": [
+      {
+       "label": "목포시 목포사랑상품권 안내 (최종업데이트 2026.09.29 표기)",
+       "url": "https://www.mokpo.go.kr/www/life_welfare/industry_economy/voucher"
+      },
+      {
+       "label": "목포시청 첫 화면 배너 '목포사랑상품권 11월 변경사항 안내' (배너, 개별 URL 없음)",
+       "url": "https://www.mokpo.go.kr"
+      },
+      {
+       "label": "목포사랑상품권 공지사항 게시판 (최신 글이 2025-09-08로 오래됨)",
+       "url": "https://www.mokpo.go.kr/www/life_welfare/industry_economy/voucher/notice"
+      }
+     ],
+     "checked": "2026-11-01"
+    },
+    "여수시": {
+     "name": "여수사랑상품권 (카드형 이름: 섬섬여수페이)",
+     "channels": [
+      {
+       "kind": "앱",
+       "name": "지역사랑상품권 chak",
+       "url": "https://www.yeosu.go.kr/www/sphere/industry/consumer/voucher/yeosu_voucher"
+      },
+      {
+       "kind": "카드",
+       "name": "섬섬여수페이",
+       "url": "https://www.yeosu.go.kr/www/sphere/industry/consumer/voucher/yeosu_voucher"
+      },
+      {
+       "kind": "지류",
+       "name": "대행 금융기관",
+       "url": "https://www.yeosu.go.kr/www/sphere/industry/consumer/voucher/sale_bank"
+      }
+     ],
+     "official": {
+      "label": "여수시 여수사랑상품권 안내",
+      "url": "https://www.yeosu.go.kr/www/sphere/industry/consumer/voucher/yeosu_voucher"
+     },
+     "phone": {
+      "label": "여수시청 경제일자리과 민생경제",
+      "number": "061-659-3603"
+     },
+     "notice": {
+      "title": "여수시, 11월 섬섬여수페이 10% 할인에 5% 캐시백 혜택까지",
+      "date": "2026-10-29",
+      "url": "https://www.yeosu.go.kr/www/govt/news/hotnews?idx=584221&mode=view"
+     },
+     "terms": [
+      {
+       "label": "카드 충전 할인율",
+       "value": "10%~ · 예산 상황에 따라 변동",
+       "asof": "2026-07-06",
+       "url": "https://www.yeosu.go.kr/www/sphere/industry/consumer/voucher/yeosu_voucher"
+      },
+      {
+       "label": "지류 개인 할인율",
+       "value": "7%~",
+       "asof": "2026-07-06",
+       "url": "https://www.yeosu.go.kr/www/sphere/industry/consumer/voucher/yeosu_voucher"
+      },
+      {
+       "label": "월 구매한도",
+       "value": "30만원 · 카드+지류 합산",
+       "asof": "2026-07-06",
+       "url": "https://www.yeosu.go.kr/www/sphere/industry/consumer/voucher/yeosu_voucher"
+      },
+      {
+       "label": "11월 섬섬여수페이 특별할인 판매(11/3 09시~, 100억 규모): 할인율",
+       "value": "10% (+가맹점 결제 5% 캐시백)",
+       "asof": "2026-10-29",
+       "url": "https://www.yeosu.go.kr/www/govt/news/hotnews?idx=584221&mode=view"
+      },
+      {
+       "label": "11월 특별할인 구매한도 / 보유한도",
+       "value": "구매 30만원 / 보유 70만원",
+       "asof": "2026-10-29",
+       "url": "https://www.yeosu.go.kr/www/govt/news/hotnews?idx=584221&mode=view"
+      }
+     ],
+     "sources": [
+      {
+       "label": "여수시 여수사랑상품권 안내 (최종업데이트 2026.07.06 표기)",
+       "url": "https://www.yeosu.go.kr/www/sphere/industry/consumer/voucher/yeosu_voucher"
+      },
+      {
+       "label": "여수시 상품권 판매·환전 금융기관 (최종업데이트 2026.01.05 표기)",
+       "url": "https://www.yeosu.go.kr/www/sphere/industry/consumer/voucher/sale_bank"
+      },
+      {
+       "label": "여수시 11월 섬섬여수페이 보도 (2026.10.29)",
+       "url": "https://www.yeosu.go.kr/www/govt/news/hotnews?idx=584221&mode=view"
+      }
+     ],
+     "checked": "2026-11-01"
+    },
+    "순천시": {
+     "name": "순천사랑상품권",
+     "channels": [
+      {
+       "kind": "지류",
+       "name": "판매대행점 47개소(농협은행·순천농협·원협·축협·낙농농협), 신분증 지참 현금 구매",
+       "url": "https://www.suncheon.go.kr/kr/life/0001/0001/0003"
+      }
+     ],
+     "official": {
+      "label": "순천시 순천사랑상품권 안내",
+      "url": "https://www.suncheon.go.kr/kr/life/0001/0001/0002"
+     },
+     "phone": {
+      "label": "순천시청 경제진흥과",
+      "number": "061-749-5895"
+     },
+     "terms": [
+      {
+       "label": "개인 할인율",
+       "value": "5% (특별 시 8~10%) · 평상시 5%, 명절·재난·지역경제 위기 시 8~10%",
+       "asof": "2025-07-23",
+       "url": "https://www.suncheon.go.kr/kr/life/0001/0001/0002"
+      },
+      {
+       "label": "월 구매한도",
+       "value": "지류 30만원, 모바일 20만원 (연 600만원 이내)",
+       "asof": "2025-07-23",
+       "url": "https://www.suncheon.go.kr/kr/life/0001/0001/0002"
+      }
+     ],
+     "sources": [
+      {
+       "label": "순천시 순천사랑상품권 안내 (최종수정 2025-07-23 표기, 오래됨)",
+       "url": "https://www.suncheon.go.kr/kr/life/0001/0001/0002"
+      },
+      {
+       "label": "순천시 판매대행점 현황 (최종수정 2025-07-23 표기)",
+       "url": "https://www.suncheon.go.kr/kr/life/0001/0001/0003"
+      },
+      {
+       "label": "순천시 순천사랑상품권 메뉴(가맹점 현황 공지 목록, 문의 061-749-5895)",
+       "url": "https://www.suncheon.go.kr/kr/life/0001/0001/0001/"
+      }
+     ],
+     "checked": "2026-11-01"
+    },
+    "나주시": {
+     "name": "나주사랑상품권 (카드형: 나주사랑카드)",
+     "channels": [
+      {
+       "kind": "앱",
+       "name": "지역상품권 chak",
+       "url": "https://www.naju.go.kr/www/field_info/economy/gift/card"
+      },
+      {
+       "kind": "카드",
+       "name": "나주사랑카드",
+       "url": "https://www.naju.go.kr/www/field_info/economy/gift/card"
+      },
+      {
+       "kind": "지류",
+       "name": "관내 금융기관",
+       "url": "https://www.naju.go.kr/www/field_info/economy/gift/naju_gift"
+      }
+     ],
+     "official": {
+      "label": "나주시 나주사랑상품권",
+      "url": "https://www.naju.go.kr/www/field_info/economy/gift/naju_gift"
+     },
+     "phone": {
+      "label": "나주시청 일자리경제과 지역경제",
+      "number": "061-339-8824"
+     },
+     "terms": [
+      {
+       "label": "할인율",
+       "value": "액면가의 5~10% 할인 구매",
+       "asof": "2026-07-03",
+       "url": "https://www.naju.go.kr/www/field_info/economy/gift/naju_gift"
+      },
+      {
+       "label": "월 구매한도",
+       "value": "30만원 (지류는 2026년 7월부터 월 20만원) · 지류·카드·모바일 합산",
+       "asof": "2026-07-03",
+       "url": "https://www.naju.go.kr/www/field_info/economy/gift/naju_gift"
+      }
+     ],
+     "sources": [
+      {
+       "label": "나주시 나주사랑상품권 (최종 업데이트 2026.07.03 표기)",
+       "url": "https://www.naju.go.kr/www/field_info/economy/gift/naju_gift"
+      },
+      {
+       "label": "나주시 나주사랑카드 (최종 업데이트 2026.06.15 표기)",
+       "url": "https://www.naju.go.kr/www/field_info/economy/gift/card"
+      }
+     ],
+     "checked": "2026-11-01"
+    },
+    "광양시": {
+     "name": "광양사랑상품권",
+     "channels": [
+      {
+       "kind": "앱",
+       "name": "지역사랑상품권 chak",
+       "url": "https://gwangyang.go.kr/menu.es?mid=a11206140000"
+      }
+     ],
+     "official": {
+      "label": "광양시 광양사랑상품권 이용 안내",
+      "url": "https://gwangyang.go.kr/menu.es?mid=a11206140000"
+     },
+     "phone": {
+      "label": "광양시청 투자경제과",
+      "number": "061-797-3351"
+     },
+     "notice": {
+      "title": "코리아 그랜드 페스티벌 광양사랑상품권 추가할인 안내",
+      "date": "2026-10-28",
+      "url": "https://gwangyang.go.kr/board.es?mid=a11001000000&bid=0001&act=view&list_no=310357"
+     },
+     "terms": [
+      {
+       "label": "코리아 그랜드 페스티벌 추가 캐시백",
+       "value": "5% · 2026.10.29~예산 소진 시, 기존 할인율에 더해",
+       "asof": "2026-10-28",
+       "url": "https://gwangyang.go.kr/board.es?mid=a11001000000&bid=0001&act=view&list_no=310357"
+      }
+     ],
+     "sources": [
+      {
+       "label": "광양시 광양사랑상품권 이용 안내 (앱 안내, 마지막 수정 2025-03-10 표기)",
+       "url": "https://gwangyang.go.kr/menu.es?mid=a11206140000"
+      },
+      {
+       "label": "광양시 공지 2026.10.28 추가할인 안내",
+       "url": "https://gwangyang.go.kr/board.es?mid=a11001000000&bid=0001&act=view&list_no=310357"
+      }
+     ],
+     "checked": "2026-11-01"
+    }
+   }
+  },
+  "47": {
+   "name": "경북 시군별 지역사랑상품권 (시군이 각자 운영, 앱도 시군마다 다름)",
+   "checked": "2026-11-01",
+   "sigungu": {
+    "포항시": {
+     "name": "포항사랑상품권 (카드형: 포항사랑카드)",
+     "channels": [
+      {
+       "kind": "앱",
+       "name": "iM샵",
+       "url": "https://www.pohang.go.kr//economy/contents.do?mid=0603030000"
+      },
+      {
+       "kind": "카드",
+       "name": "포항사랑카드: 판매대행 금융기관(iM뱅크 등) 방문 발급, 시청·읍면동 행정복지센터 수령",
+       "url": "https://www.pohang.go.kr//economy/contents.do?mid=0603030000"
+      },
+      {
+       "kind": "지류",
+       "name": "포항시 소재 판매대행 금융기관",
+       "url": "https://www.pohang.go.kr/economy/board/post/view.do?idx=1021651&bcIdx=569&mid=0604010000"
+      }
+     ],
+     "official": {
+      "label": "포항시 포항사랑상품권 공지사항",
+      "url": "https://www.pohang.go.kr/economy/board/post/list.do?bcIdx=569&mid=0604010000"
+     },
+     "phone": {
+      "label": "포항시청 문의",
+      "number": "054-270-2471"
+     },
+     "notice": {
+      "title": "2026년 11월 포항사랑카드 · 모바일상품권 10% 할인 판매 안내",
+      "date": "2026-10-21",
+      "url": "https://www.pohang.go.kr/economy/board/post/view.do?idx=1021651&bcIdx=569&mid=0604010000"
+     },
+     "terms": [
+      {
+       "label": "2026년 11월 판매(11/2 09:00~, 예산 소진 시) 할인율: 개인",
+       "value": "10%",
+       "asof": "2026-10-21",
+       "url": "https://www.pohang.go.kr/economy/board/post/view.do?idx=1021651&bcIdx=569&mid=0604010000"
+      },
+      {
+       "label": "2026년 11월 통합 월 구매한도",
+       "value": "40만원",
+       "asof": "2026-10-21",
+       "url": "https://www.pohang.go.kr/economy/board/post/view.do?idx=1021651&bcIdx=569&mid=0604010000"
+      },
+      {
+       "label": "카드 보유한도",
+       "value": "50만원 · 2026년 11월 공지",
+       "asof": "2026-10-21",
+       "url": "https://www.pohang.go.kr/economy/board/post/view.do?idx=1021651&bcIdx=569&mid=0604010000"
+      }
+     ],
+     "sources": [
+      {
+       "label": "포항시 2026년 11월 할인 판매 안내",
+       "url": "https://www.pohang.go.kr/economy/board/post/view.do?idx=1021651&bcIdx=569&mid=0604010000"
+      },
+      {
+       "label": "포항시 카드형·모바일 포항사랑상품권 안내",
+       "url": "https://www.pohang.go.kr//economy/contents.do?mid=0603030000"
+      },
+      {
+       "label": "포항시 포항사랑상품권 소개 (대표전화 054-270-8282, 고객센터 1566-5050는 공지에 표기)",
+       "url": "https://www.pohang.go.kr/economy/contents.do?mid=0601000000"
+      },
+      {
+       "label": "포항시 2026년 설 특별할인 공지 (2026-01-21, 지류 판매 때 한도·판매처 참고)",
+       "url": "https://www.pohang.go.kr/economy/board/post/view.do?idx=1015893&bcIdx=569&mid=0604010000"
+      }
+     ],
+     "checked": "2026-11-01"
+    },
+    "구미시": {
+     "name": "구미사랑상품권 (카드형·지류형)",
+     "channels": [
+      {
+       "kind": "앱",
+       "name": "구미사랑상품권 앱",
+       "url": "http://www.gumi.go.kr/gumigift/"
+      },
+      {
+       "kind": "카드",
+       "name": "아이엠뱅크·새마을금고·하나은행·농협 방문 발급",
+       "url": "http://www.gumi.go.kr/gumigift/"
+      },
+      {
+       "kind": "지류",
+       "name": "판매대행점",
+       "url": "http://www.gumi.go.kr/gumigift/"
+      }
+     ],
+     "official": {
+      "label": "구미시 구미사랑상품권",
+      "url": "http://www.gumi.go.kr/gumigift/"
+     },
+     "phone": {
+      "label": "구미사랑상품권 고객센터",
+      "number": "1661-0539"
+     },
+     "notice": {
+      "title": "2026년 11월 코리아 그랜드 페스티벌 기념 구미사랑상품권(카드형) 추가 할인판매 안내",
+      "date": "2026-10-27",
+      "url": "https://www.gumi.go.kr/gumigift/notice.html?ArticleId=146&kind=&keyword=&page=1"
+     },
+     "terms": [
+      {
+       "label": "카드형 추가 할인판매(11/2 09:00~예산 소진 시): 최대 할인",
+       "value": "최대 15% (선할인 10% + 캐시백 5%)",
+       "asof": "2026-10-27",
+       "url": "https://www.gumi.go.kr/gumigift/notice.html?ArticleId=146&kind=&keyword=&page=1"
+      }
+     ],
+     "sources": [
+      {
+       "label": "구미사랑상품권 소개 (구매방법·문의처, 기준일 표기 없음)",
+       "url": "http://www.gumi.go.kr/gumigift/"
+      },
+      {
+       "label": "구미시 2026-10-27 추가 할인판매 공지",
+       "url": "https://www.gumi.go.kr/gumigift/notice.html?ArticleId=146&kind=&keyword=&page=1"
+      }
+     ],
+     "checked": "2026-11-01"
+    },
+    "경주시": {
+     "name": "경주페이 (경주시 지역사랑상품권)",
+     "official": {
+      "label": "경주시청 공지사항 ([경주페이] 공지가 올라오는 곳)",
+      "url": "https://www.gyeongju.go.kr/open_content/ko/page.do?mnu_uid=416"
+     },
+     "phone": {
+      "label": "경주시청 대표전화",
+      "number": "054-779-8585"
+     },
+     "notice": {
+      "title": "[경주페이] 코리아그랜드 페스티벌 행사기간 내 5% 추가 캐시백 지원",
+      "date": "2026-10-28",
+      "url": "https://www.gyeongju.go.kr/open_content/ko/page.do?mnu_uid=416&parm_bod_uid=337839&step=258"
+     },
+     "terms": [],
+     "sources": [
+      {
+       "label": "경주시청 공지사항 목록 (2026-10-28 경주페이 공지)",
+       "url": "https://www.gyeongju.go.kr/open_content/ko/page.do?mnu_uid=416"
+      },
+      {
+       "label": "경주시 공지 상세 (경제정책과, 2026-10-28)",
+       "url": "https://www.gyeongju.go.kr/open_content/ko/page.do?mnu_uid=416&parm_bod_uid=337839&step=258"
+      }
+     ],
+     "checked": "2026-11-01"
+    },
+    "안동시": {
+     "name": "안동사랑상품권 (모바일·안동사랑카드·지류)",
+     "channels": [
+      {
+       "kind": "앱",
+       "name": "지역상품권 chak",
+       "url": "https://www.andong.go.kr/portal/contents.do?mId=0601150100"
+      },
+      {
+       "kind": "카드",
+       "name": "안동사랑카드",
+       "url": "https://www.andong.go.kr/portal/contents.do?mId=0601150100"
+      },
+      {
+       "kind": "지류",
+       "name": "판매대행점 52개소",
+       "url": "https://www.andong.go.kr/portal/contents.do?mId=0601150100"
+      }
+     ],
+     "official": {
+      "label": "안동시 안동사랑상품권 안내",
+      "url": "https://www.andong.go.kr/portal/contents.do?mId=0601150100"
+     },
+     "phone": {
+      "label": "안동시청 지역경제과",
+      "number": "054-840-5306"
+     },
+     "sources": [
+      {
+       "label": "안동시 상품권 안내 (기준일 표기 없음 → terms 생략)",
+       "url": "https://www.andong.go.kr/portal/contents.do?mId=0601150100"
+      },
+      {
+       "label": "안동시 판매대행점 조회",
+       "url": "https://www.andong.go.kr/portal/contents.do?mId=0601150400"
+      },
+      {
+       "label": "안동시 상품권 공지사항 (최근 글은 가맹점 등록취소 안내뿐)",
+       "url": "https://www.andong.go.kr/portal/contents.do?mId=0601150600"
+      }
+     ],
+     "checked": "2026-11-01"
+    },
+    "경산시": {
+     "name": "경산사랑愛카드 (경산사랑상품권)",
+     "channels": [
+      {
+       "kind": "앱",
+       "name": "그리고",
+       "url": "https://www.gbgs.go.kr/open_content/ko/page.do?mnu_uid=5283"
+      },
+      {
+       "kind": "카드",
+       "name": "경산사랑愛카드",
+       "url": "https://www.gbgs.go.kr/open_content/ko/page.do?mnu_uid=5283"
+      }
+     ],
+     "official": {
+      "label": "경산시 경산사랑愛카드 안내",
+      "url": "https://www.gbgs.go.kr/open_content/ko/page.do?mnu_uid=5283"
+     },
+     "phone": {
+      "label": "경산시청 일자리경제과",
+      "number": "053-810-5137"
+     },
+     "terms": [
+      {
+       "label": "충전 인센티브",
+       "value": "충전금액의 5~10% 이내 · 재정 여건에 따라 조정, 페이지 문구는 2021-01-01 시행 기준",
+       "asof": "2026-03-12",
+       "url": "https://www.gbgs.go.kr/open_content/ko/page.do?mnu_uid=5283"
+      },
+      {
+       "label": "개인별 혜택한도",
+       "value": "월 50만원, 연 600만원 이내",
+       "asof": "2026-03-12",
+       "url": "https://www.gbgs.go.kr/open_content/ko/page.do?mnu_uid=5283"
+      }
+     ],
+     "sources": [
+      {
+       "label": "경산시 경산사랑愛카드 안내 (최종수정 2026-03-12 표기, 고객센터 1811-6663)",
+       "url": "https://www.gbgs.go.kr/open_content/ko/page.do?mnu_uid=5283"
+      },
+      {
+       "label": "경산시 경산사랑愛카드 공지사항 (최근 글은 운영자금 현황·가맹점 취소 안내뿐)",
+       "url": "https://www.gbgs.go.kr/open_content/ko/page.do?mnu_uid=5287"
+      }
+     ],
+     "checked": "2026-11-01"
+    }
+   }
+  },
+  "48": {
+   "name": "경남 시군별 지역사랑상품권 (시군이 각자 운영)",
+   "channels": [
+    {
+     "kind": "앱",
+     "name": "경남지역상품권",
+     "url": "https://apps.apple.com/kr/app/%EA%B2%BD%EB%82%A8%EC%A7%80%EC%97%AD%EC%83%81%ED%92%88%EA%B6%8C/id1493894674"
+    }
+   ],
+   "sources": [
+    {
+     "label": "경남지역상품권 (App Store, 비즈플레이)",
+     "url": "https://apps.apple.com/kr/app/%EA%B2%BD%EB%82%A8%EC%A7%80%EC%97%AD%EC%83%81%ED%92%88%EA%B6%8C/id1493894674"
+    }
+   ],
+   "checked": "2026-11-01",
+   "sigungu": {
+    "창원시": {
+     "name": "창원사랑상품권 (누비전, 모바일 누비전·지류 누비전)",
+     "channels": [
+      {
+       "kind": "앱",
+       "name": "모바일 누비전",
+       "url": "https://www.changwon.go.kr/cwportal/biz/11151/11268/11272.web"
+      },
+      {
+       "kind": "지류",
+       "name": "지류 누비전 판매대행점",
+       "url": "https://www.changwon.go.kr/cwportal/biz/11151/11268/11271.web"
+      }
+     ],
+     "official": {
+      "label": "창원특례시 창원사랑상품권(누비전)",
+      "url": "https://www.changwon.go.kr/biz/contents.do?mId=0605020100"
+     },
+     "phone": {
+      "label": "창원시청 지역경제과",
+      "number": "055-225-3398"
+     },
+     "notice": {
+      "title": "2026년 7월 모바일 누비전(창원사랑상품권) 할인판매 안내",
+      "date": "2026-06-17",
+      "url": "https://www.changwon.go.kr/cwportal/10310/10429/10430.web?gcode=1009&idx=879388&amode=view"
+     },
+     "terms": [
+      {
+       "label": "11월 모바일 누비전 할인 판매(고령자 11/2 9시, 일반 11/3 9시~자금 소진 시): 개인 할인율",
+       "value": "10% (법인 할인 없음)",
+       "asof": "2026-11",
+       "url": "https://www.changwon.go.kr/cwportal/biz/11151/11268/11272.web"
+      },
+      {
+       "label": "11월 모바일 누비전 월 구매한도",
+       "value": "30만원",
+       "asof": "2026-11",
+       "url": "https://www.changwon.go.kr/cwportal/biz/11151/11268/11272.web"
+      },
+      {
+       "label": "1인 보유한도",
+       "value": "200만원 · 7월 판매 공지",
+       "asof": "2026-06-17",
+       "url": "https://www.changwon.go.kr/cwportal/10310/10429/10430.web?gcode=1009&idx=879388&amode=view"
+      }
+     ],
+     "sources": [
+      {
+       "label": "창원시 모바일 누비전 안내 (11월 판매 일정·10%·월 30만원)",
+       "url": "https://www.changwon.go.kr/cwportal/biz/11151/11268/11272.web"
+      },
+      {
+       "label": "창원시 2026년 7월 모바일 누비전 할인판매 공지",
+       "url": "https://www.changwon.go.kr/cwportal/10310/10429/10430.web?gcode=1009&idx=879388&amode=view"
+      },
+      {
+       "label": "창원시 2026년 5월 모바일 누비전 할인판매 공지 (2026-04-15, 개인 구매한도 50만원)",
+       "url": "https://www.changwon.go.kr/cwportal/10310/10429/10430.web?gcode=1009&idx=876209&amode=view"
+      }
+     ],
+     "checked": "2026-11-01"
+    },
+    "김해시": {
+     "name": "김해사랑상품권 (모바일, 제로페이 상품권)",
+     "channels": [
+      {
+       "kind": "앱",
+       "name": "비플페이 외 제로페이 결제앱",
+       "url": "http://www.gimhae.go.kr/00847/03380/06776.web?gcode=2028&idx=2595977&amode=view&"
+      }
+     ],
+     "official": {
+      "label": "김해시 김해사랑상품권 자료실 (발행 안내 게시)",
+      "url": "http://www.gimhae.go.kr/00847/03380/06776.web"
+     },
+     "phone": {
+      "label": "김해시청 민생경제과 소상공인팀",
+      "number": "055-330-3420"
+     },
+     "notice": {
+      "title": "2026년 11월 김해사랑상품권 발행 안내",
+      "date": "2026-10-22",
+      "url": "http://www.gimhae.go.kr/00847/03380/06776.web?gcode=2028&idx=2595977&amode=view&"
+     },
+     "terms": [
+      {
+       "label": "2026년 11월 발행(11/2 11:00, 14:00) 할인율",
+       "value": "10%",
+       "asof": "2026-10-22",
+       "url": "http://www.gimhae.go.kr/00847/03380/06776.web?gcode=2028&idx=2595977&amode=view&"
+      },
+      {
+       "label": "2026년 11월 구매한도",
+       "value": "1인 30만원 · 선물등록한도 동일",
+       "asof": "2026-10-22",
+       "url": "http://www.gimhae.go.kr/00847/03380/06776.web?gcode=2028&idx=2595977&amode=view&"
+      }
+     ],
+     "sources": [
+      {
+       "label": "김해시 2026년 11월 김해사랑상품권 발행 안내",
+       "url": "http://www.gimhae.go.kr/00847/03380/06776.web?gcode=2028&idx=2595977&amode=view&"
+      },
+      {
+       "label": "김해사랑상품권 소개 (앱 목록, 기준일 없음)",
+       "url": "https://www.gimhae.go.kr/00847/03380/05984.web"
+      },
+      {
+       "label": "김해사랑상품권 자주 묻는 질문 (발행 시각·보유한도 200만원 언급, 날짜 없음 → terms 제외)",
+       "url": "https://www.gimhae.go.kr/00847/03380/05985.web"
+      }
+     ],
+     "checked": "2026-11-01"
+    },
+    "진주시": {
+     "name": "진주사랑상품권 (모바일·지류)",
+     "channels": [
+      {
+       "kind": "앱",
+       "name": "제로페이 앱",
+       "url": "https://www.jinju.go.kr/00134/00611/05414.web?gcode=4071&idx=39622085&amode=view&"
+      },
+      {
+       "kind": "지류",
+       "name": "본인 신분증 지참 방문 구매",
+       "url": "https://www.jinju.go.kr/00134/00611/05412.web"
+      }
+     ],
+     "official": {
+      "label": "진주시 진주사랑상품권 공지사항",
+      "url": "https://www.jinju.go.kr/00134/00611/05414.web"
+     },
+     "phone": {
+      "label": "진주시청 일자리경제과 소상공인지원팀",
+      "number": "055-749-5231"
+     },
+     "notice": {
+      "title": "2026년 11월 (모바일)진주사랑상품권 발행 안내",
+      "date": "2026-10-22",
+      "url": "https://www.jinju.go.kr/00134/00611/05414.web?gcode=4071&idx=39622085&amode=view&"
+     },
+     "terms": [
+      {
+       "label": "2026년 11월 모바일 발행(11/2 09시, 120억원) 할인율",
+       "value": "10%",
+       "asof": "2026-10-22",
+       "url": "https://www.jinju.go.kr/00134/00611/05414.web?gcode=4071&idx=39622085&amode=view&"
+      },
+      {
+       "label": "월 구매한도",
+       "value": "1인당 월 20만원 · 선물등록한도 월 40만원",
+       "asof": "2026-10-22",
+       "url": "https://www.jinju.go.kr/00134/00611/05414.web?gcode=4071&idx=39622085&amode=view&"
+      },
+      {
+       "label": "보유한도",
+       "value": "200만원",
+       "asof": "2026-10-22",
+       "url": "https://www.jinju.go.kr/00134/00611/05414.web?gcode=4071&idx=39622085&amode=view&"
+      },
+      {
+       "label": "코리아 그랜드 페스티벌 모바일 추가 캐시백",
+       "value": "5%p · 2026.10.29~11.15, 11월 말~12월 초 지급",
+       "asof": "2026-10-28",
+       "url": "https://www.jinju.go.kr/00134/00611/05414.web?gcode=4071&idx=39622357&amode=view&"
+      }
+     ],
+     "sources": [
+      {
+       "label": "진주시 2026년 11월 모바일 발행 안내",
+       "url": "https://www.jinju.go.kr/00134/00611/05414.web?gcode=4071&idx=39622085&amode=view&"
+      },
+      {
+       "label": "진주시 추가 캐시백 공지",
+       "url": "https://www.jinju.go.kr/00134/00611/05414.web?gcode=4071&idx=39622357&amode=view&"
+      },
+      {
+       "label": "진주시 진주사랑상품권 안내 (기준일 없음)",
+       "url": "https://www.jinju.go.kr/00134/00611/05412.web"
+      },
+      {
+       "label": "진주시 공지사항 목록",
+       "url": "https://www.jinju.go.kr/00134/00611/05414.web"
+      }
+     ],
+     "checked": "2026-11-01"
+    },
+    "양산시": {
+     "name": "양산사랑카드 (양산시 지역화폐, 충전 시 양산포인트 지급)",
+     "channels": [
+      {
+       "kind": "앱",
+       "name": "양산사랑카드 앱",
+       "url": "https://www.yangsan.go.kr/job/contents.do?mid=0502000000"
+      }
+     ],
+     "official": {
+      "label": "양산시 양산사랑카드 발급 및 사용안내",
+      "url": "https://www.yangsan.go.kr/job/contents.do?mid=0502000000"
+     },
+     "phone": {
+      "label": "양산시청 민생경제과",
+      "number": "055-392-2301"
+     },
+     "sources": [
+      {
+       "label": "양산시 발급 및 사용안내 (기준일 표기 없음 → terms 생략, 고객센터 1899-4118)",
+       "url": "https://www.yangsan.go.kr/job/contents.do?mid=0502000000"
+      },
+      {
+       "label": "양산시 혜택안내 (충전 포인트 5~10%, 기준일 없음)",
+       "url": "https://www.yangsan.go.kr/job/contents.do?mid=0502020000"
+      }
+     ],
+     "checked": "2026-11-01"
+    },
+    "거제시": {
+     "name": "거제사랑상품권 (모바일·지류)",
+     "channels": [
+      {
+       "kind": "앱",
+       "name": "비플페이, 올원뱅크 등 스마트폰 전용앱",
+       "url": "https://www.geoje.go.kr/board/view.geoje?boardId=BBS_0000675&menuCd=DOM_000008901003003015&paging=ok&startPage=1&dataSid=306510732"
+      },
+      {
+       "kind": "지류",
+       "name": "농협중앙회·지역 농축협, 거제행복·장승포 신협, 거제·능포·삼성중공업 새마을금고",
+       "url": "https://www.geoje.go.kr/index.geoje?menuCd=DOM_000008901003003001"
+      }
+     ],
+     "official": {
+      "label": "거제시 거제사랑상품권 공지사항",
+      "url": "https://www.geoje.go.kr/board/list.geoje?boardId=BBS_0000675&menuCd=DOM_000008901003003015"
+     },
+     "phone": {
+      "label": "거제시청 민생경제과 소상공인팀",
+      "number": "055-639-4111"
+     },
+     "notice": {
+      "title": "2026년 11월 모바일 거제사랑상품권 판매 안내",
+      "date": "2026-10-30",
+      "url": "https://www.geoje.go.kr/board/view.geoje?boardId=BBS_0000675&menuCd=DOM_000008901003003015&paging=ok&startPage=1&dataSid=306510732"
+     },
+     "terms": [
+      {
+       "label": "2026년 11월 모바일 판매(1회차 11/1 9시, 2회차 11/4 9시~소진 시) 할인율",
+       "value": "10%",
+       "asof": "2026-10-30",
+       "url": "https://www.geoje.go.kr/board/view.geoje?boardId=BBS_0000675&menuCd=DOM_000008901003003015&paging=ok&startPage=1&dataSid=306510732"
+      },
+      {
+       "label": "개인 월 구매한도",
+       "value": "월 최대 50만원 · 선물받기 한도 월 최대 100만원",
+       "asof": "2026-10-30",
+       "url": "https://www.geoje.go.kr/board/view.geoje?boardId=BBS_0000675&menuCd=DOM_000008901003003015&paging=ok&startPage=1&dataSid=306510732"
+      }
+     ],
+     "sources": [
+      {
+       "label": "거제시 2026년 11월 모바일 판매 안내",
+       "url": "https://www.geoje.go.kr/board/view.geoje?boardId=BBS_0000675&menuCd=DOM_000008901003003015&paging=ok&startPage=1&dataSid=306510732"
+      },
+      {
+       "label": "거제시 거제사랑상품권 발매개요 (본문 한도·할인은 2020년 기준이라 제외, 최종수정 2026-01-05 표기)",
+       "url": "https://www.geoje.go.kr/index.geoje?menuCd=DOM_000008901003003001"
+      },
+      {
+       "label": "거제시 상품권 공지사항 목록",
+       "url": "https://www.geoje.go.kr/board/list.geoje?boardId=BBS_0000675&menuCd=DOM_000008901003003015"
+      }
+     ],
+     "checked": "2026-11-01"
+    }
+   }
+  }
+ }
+}

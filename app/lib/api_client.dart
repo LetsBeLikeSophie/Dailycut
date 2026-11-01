@@ -101,6 +101,10 @@ class ApiClient {
   Future<Map<String, dynamic>> localCurrencyPaper({String? sido, String? sgg}) =>
       _memoGet('lcpaper/$sido/$sgg', _min10, () => _getJson('/benefits/localcurrency/paper', {'sido': sido, 'sgg': sgg}));
 
+  /// 상품권 사는 법(운영 앱·공식 공지 페이지·고객센터·최근 공지). 사람이 공식 페이지를 확인해 모은 값이라 자주 안 바뀜.
+  Future<Map<String, dynamic>> localCurrencyGuide({String? sido, String? sgg}) =>
+      _memoGet('lcguide/$sido/$sgg', _min30, () => _getJson('/benefits/localcurrency/guide', {'sido': sido, 'sgg': sgg}));
+
   Future<Map<String, dynamic>> benefitsLoans({String? usage, String? sido}) => _memoGet('loans/$usage/$sido', _min10, () => _getJson('/benefits/loans', {'usage': usage, 'sido': sido}));
 
   /// 이번 주말 한산한 곳(관광지 집중률 예측 + 그날 날씨). 처음 부르는 지역은 몇 초 걸릴 수 있음.

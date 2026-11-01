@@ -180,6 +180,12 @@ def benefits_localcurrency_paper(sido: str | None = None, sgg: str | None = None
     return localcurrency_src.paper(sido, sgg)
 
 
+@app.get("/benefits/localcurrency/guide")
+def benefits_localcurrency_guide(sido: str | None = None, sgg: str | None = None):
+    """상품권 사는 법(운영 앱·공식 안내 페이지·고객센터·최근 공지·기준일 있는 조건). 사람이 공식 페이지를 확인해 모은 값이라 항목마다 출처와 확인일이 붙음."""
+    return localcurrency_src.guide(sido, sgg)
+
+
 @app.get("/benefits/loans")
 def benefits_loans(usage: str | None = None, sido: str | None = None):
     """서민금융진흥원 대출상품 한눈에(전국 공통 + 선택한 시도 상품). usage는 생계·주거·학자금·사업."""

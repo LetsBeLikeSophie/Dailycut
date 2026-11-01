@@ -14,6 +14,8 @@
 
 from __future__ import annotations
 
+import json
+import os
 import threading
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta
@@ -410,3 +412,54 @@ def paper(sido: str | None, sgg: str | None) -> dict:
         _paper_memo.clear()
     _paper_memo[place["key"]] = (datetime.now(), result)
     return result
+
+
+# ───────── 상품권 사는 법(2026-11-01) ─────────
+# 발행 일정·할인율·한도·신청 앱은 지자체가 각자 공지해서 공공데이터가 없음 → 공식 페이지를 직접 열어 확인한 값만
+# data/localcurrency_guide.json에 손으로 모아 두고, 항목마다 출처 URL과 확인일(checked)을 붙여 내려줌.
+# 확인일이 오래된 항목은 앱이 "오래됨"으로 표시하고 tools/check_guide_age.py가 다시 확인할 목록을 뽑아 줌.
+GUIDE_FILE = os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "data", "localcurrency_guide.json")
+_guide_cache: tuple[float, dict] | None = None
+
+
+def _guide_data() -> dict:
+    global _guide_cache
+    try:
+        mtime = os.path.getmtime(GUIDE_FILE)
+    except OSError:
+        return {}
+    if _guide_cache is None or _guide_cache[0] != mtime:
+        with open(GUIDE_FILE, encoding="utf-8") as f:
+            _guide_cache = (mtime, json.load(f))
+    return _guide_cache[1]
+
+
+def _guide_sgg(table: dict, sgg: str | None) -> dict | None:
+    if not sgg or not table:
+        return None
+    if sgg in table:
+        return table[sgg]
+    for k, v in table.items():  # "수원시 영통구"처럼 구가 붙은 이름은 앞의 시로 찾음
+        if sgg.startswith(k):
+            return v
+    return None
+
+
+def guide(sido: str | None, sgg: str | None = None) -> dict:
+    """그 지역 상품권 안내. 시군구 항목이 있으면 시도 항목 위에 덮어씀. 없으면 {found: False}."""
+    entry = (_guide_data().get("regions") or {}).get(sido or "")
+    if not entry:
+        return {"found": False}
+    sub = _guide_sgg(entry.get("sigungu") or {}, sgg)
+    merged = {k: v for k, v in entry.items() if k != "sigungu"}
+    if sub:
+        merged.update(sub)
+        merged["scope"] = "sgg"
+    else:
+        merged["scope"] = "sido"
+        if entry.get("sigungu") and not merged.get("name"):
+            return {"found": False}  # 시군마다 다른 도인데 이 시군 자료가 없음 → 도 전체 안내를 시군 것처럼 보이지 않게
+    if not (merged.get("name") or merged.get("channels") or merged.get("official")):
+        return {"found": False}
+    merged["found"] = True
+    return merged

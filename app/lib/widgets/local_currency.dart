@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../api_client.dart';
 import '../region.dart';
 import '../theme.dart';
 import 'ad_slot.dart';
+import 'buy_guide.dart';
 import 'components.dart';
 import 'local_currency_stores.dart';
 import 'paper_vouchers.dart';
@@ -81,38 +81,12 @@ class _LocalCurrencySectionState extends State<LocalCurrencySection> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (widget.region.sgg != null) ...[
-          _howToBuy(),
+          BuyGuideSection(api: widget.api, region: widget.region),
           PaperVoucherSection(api: widget.api, region: widget.region),
           StoreFinder(key: _finderKey, api: widget.api, region: widget.region, stats: _future),
           const AdSlot(), // 광고(2026-11-01): 가게 목록과 "내 또래" 사이 구분선 자리
         ],
         _stats(),
-      ],
-    );
-  }
-
-  /// 발행 일정·할인율·구매 한도·예산 소진·신청처는 지자체 194곳이 각자 공지해서 전국 공통 공공데이터가 없음(2026-11-01 조사: 조폐공사 API엔
-  /// 결제·가맹점·운영 집계뿐) → 지어낸 값을 보여 주지 않고, 그 지역 공식 안내를 찾아가는 검색 줄을 둠.
-  Widget _howToBuy() {
-    final place = widget.region.label;
-    Widget line(String name, String sub, String query) => ListLine(
-          name: name,
-          sub: sub,
-          onTap: () => launchUrl(Uri.https('search.naver.com', '/search.naver', {'query': '$place $query'}), mode: LaunchMode.externalApplication),
-        );
-    return ListSection(
-      title: '상품권 사는 법',
-      info: const InfoIconButton(
-        title: '발행 안내',
-        lines: [
-          '발행 시기, 할인율, 월 구매 한도, 예산이 떨어졌는지(소진), 어느 앱에서 신청하는지는 지자체마다 따로 정하고 공지해서, 공공데이터로 모아 볼 수 있는 전국 공통 자료가 없어요.',
-          '아래 줄을 누르면 이 지역의 최신 공지를 검색 결과로 열어요. 지자체·운영 앱 공식 공지인지 확인하고 보세요.',
-        ],
-      ),
-      children: [
-        line('$place 상품권 발행 일정·신청 방법', '언제 열리는지, 어느 앱에서 사는지', '지역사랑상품권 발행 일정 구매 방법'),
-        line('$place 할인율·구매 한도', '월 얼마까지, 몇 % 할인인지', '지역사랑상품권 할인율 구매한도'),
-        line('$place 지류 상품권 판매처', '종이 상품권을 살 수 있는 은행·지점', '지역사랑상품권 지류 판매처'),
       ],
     );
   }

@@ -216,9 +216,9 @@ class StoreFinderState extends State<StoreFinder> {
   }
 
   static const _info = [
-    '한국조폐공사 "지역사랑상품권 가맹점 기본정보"(모바일·카드)에서 계속사업자로 표시된 가게만 모았어요. 지류(종이) 상품권 가맹점은 이 자료에 없어요.',
-    '가게마다 정보 기준일이 달라서(2025~2026년), 그 뒤에 문을 닫거나 상품권을 안 받게 된 곳이 섞여 있을 수 있어요. 가기 전에 전화로 확인해 주세요.',
-    '지역마다 상품권 종류와 사용처가 달라서, 내가 가진 상품권이 모바일인지 카드인지에 맞는 가게를 보세요.',
+    '한국조폐공사 "지역사랑상품권 가맹점 기본정보"에서 계속사업자로 표시된 모바일·카드 가맹점이에요.',
+    '지류(종이) 상품권 가맹점은 이 자료에 없어요.',
+    '정보 기준일은 가게마다 달라요. 가게를 누르면 그 가게의 기준일이 나와요.',
   ];
 
   @override
@@ -291,6 +291,13 @@ class StoreFinderState extends State<StoreFinder> {
             ShowMoreButton(count: _items.length - _show, unit: '곳', onTap: () => setState(() => _show = _items.length))
           else if (_more)
             ShowMoreButton(count: 24, unit: '곳', onTap: () => _load(reset: false)),
+          Builder(builder: (_) {
+            final range = dateRange([for (final s in _items) s['asof'] as String? ?? '']);
+            return DataMeta(rows: [
+              const DataMetaRow('출처', '한국조폐공사 가맹점 기본정보'),
+              DataMetaRow('기준일', range.isEmpty ? '' : (range.contains('~') ? '$range (가게마다 달라요)' : range)),
+            ]);
+          }),
         ],
       ],
     );
@@ -314,20 +321,25 @@ class _StoreSheet extends StatelessWidget {
   final Map<String, dynamic> store;
   final Region region;
 
-  String _asof(String ymd) => ymd.length == 8 ? '${ymd.substring(0, 4)}년 ${int.parse(ymd.substring(4, 6))}월' : '';
+  /// 정보 기준일(YYYYMMDD)이 1년 넘게 지났는가 — 그 사이 가게가 바뀌었을 가능성이 커서 "오래됨"을 붙임.
+  bool _old(String ymd) {
+    if (ymd.length != 8) return false;
+    final t = DateTime.tryParse('${ymd.substring(0, 4)}-${ymd.substring(4, 6)}-${ymd.substring(6)}');
+    return t != null && DateTime.now().difference(t).inDays > 365;
+  }
 
   @override
   Widget build(BuildContext context) {
     final name = store['name'] as String;
     final addr = store['addr'] as String;
     final phone = store['phone'] as String?;
-    final asof = _asof(store['asof'] as String);
+    final ymd = store['asof'] as String? ?? '';
     return SheetFrame(
       title: name,
       sub: [if ((store['cat'] as String).isNotEmpty) store['cat'], '${store['kind']} 상품권'].join(' · '),
       gapAfterHeader: 20,
       infoLines: const [
-        '한국조폐공사 지역사랑상품권 가맹점 기본정보예요. 계속사업자로 표시된 가게지만 정보 기준일 뒤에 바뀌었을 수 있어요.',
+        '한국조폐공사 지역사랑상품권 가맹점 기본정보예요.',
         '카드 가맹점은 도로명 주소의 건물 번호가 빠져 있기도 해요. 지도에서 위치를 확인해 주세요.',
       ],
       children: [
@@ -350,11 +362,11 @@ class _StoreSheet extends StatelessWidget {
           const SizedBox(height: 10),
           ActionButton(vertical: 12, label: '전화 걸기', onTap: () => launchUrl(Uri.parse('tel:${phone.replaceAll('-', '')}'))),
         ],
-        const SizedBox(height: 18),
-        Text(
-          '${asof.isEmpty ? '' : '정보 기준 $asof · '}가기 전에 전화로 상품권을 받는지 확인해 주세요.',
-          style: const TextStyle(fontSize: 11, color: AppColors.inkSoft, height: 1.5),
-        ),
+        DataMeta(top: 20, rows: [
+          DataMetaRow('정보 기준일', dotDate(ymd), stale: _old(ymd)),
+          const DataMetaRow('출처', '한국조폐공사 가맹점 기본정보'),
+          const DataMetaRow('가기 전에', '전화로 상품권을 받는지 확인'),
+        ]),
       ],
     );
   }

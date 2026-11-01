@@ -93,3 +93,70 @@ class LicenseFlag extends StatelessWidget {
     );
   }
 }
+
+/// "출처 · 기준일" 같은 자료 정보를 이름-값 두 칸으로 보여 주는 작은 표(2026-11-01).
+/// 줄글 안내("…일 수 있어요 …해 주세요") 대신 언제 기준인지·어디서 온 건지만 짧게 나란히 놓음.
+/// [rows]의 값이 비어 있으면 그 줄은 건너뜀. [stale]이 true인 줄은 값 뒤에 "오래됨"을 붙임.
+class DataMeta extends StatelessWidget {
+  const DataMeta({super.key, required this.rows, this.top = 14});
+
+  final List<DataMetaRow> rows;
+  final double top;
+
+  @override
+  Widget build(BuildContext context) {
+    final shown = [for (final r in rows) if (r.value.isNotEmpty) r];
+    if (shown.isEmpty) return const SizedBox.shrink();
+    return Padding(
+      padding: EdgeInsets.only(top: top),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (final r in shown)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 4),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  SizedBox(width: 64, child: Text(r.label, style: const TextStyle(fontSize: 11, color: AppColors.inkSoft))),
+                  Expanded(
+                    child: Text.rich(
+                      TextSpan(
+                        text: r.value,
+                        children: [if (r.stale) const TextSpan(text: '  오래됨', style: TextStyle(fontWeight: FontWeight.w700))],
+                      ),
+                      style: const TextStyle(fontSize: 11, color: AppColors.inkSoft),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class DataMetaRow {
+  const DataMetaRow(this.label, this.value, {this.stale = false});
+
+  final String label;
+  final String value;
+  final bool stale;
+}
+
+/// 20261101 / 2026-11-01 / 202611 / 2026 → "2026.11.01" / "2026.11" / "2026년" (못 읽으면 빈 문자열).
+String dotDate(String? raw) {
+  final d = (raw ?? '').replaceAll(RegExp(r'[^0-9]'), '');
+  if (d.length == 4) return '$d년'; // 공식 페이지에 연도만 적힌 기준일
+  if (d.length == 8) return '${d.substring(0, 4)}.${d.substring(4, 6)}.${d.substring(6)}';
+  if (d.length == 6) return '${d.substring(0, 4)}.${d.substring(4)}';
+  return '';
+}
+
+/// 기준일 몇 개 → 하나면 "2026.10", 여러 개면 가장 오래된 달~가장 최근 달 "2025.03 ~ 2026.10".
+String dateRange(Iterable<String> ymds) {
+  final months = {for (final v in ymds) if (v.replaceAll(RegExp(r'[^0-9]'), '').length >= 6) v.replaceAll(RegExp(r'[^0-9]'), '').substring(0, 6)}.toList()..sort();
+  if (months.isEmpty) return '';
+  return months.length == 1 ? dotDate(months.first) : '${dotDate(months.first)} ~ ${dotDate(months.last)}';
+}
