@@ -58,10 +58,14 @@ class _LocalCurrencySectionState extends State<LocalCurrencySection> {
 
   static const _title = '지난달 우리 동네 상품권';
   static const _info = [
-    '한국조폐공사가 전국 지역사랑상품권 운영대행사들로부터 모은 "가맹점 업종별 결제정보"를 월 단위로 합산한 값이에요. 취소 내역을 반영한 결제금액·건수예요.',
-    '아직 덜 찬 이번 달은 빼고, 자료가 있는 가장 최근 달을 보여 줘요. 상품권을 막 시작했거나 쓸 수 있는 곳이 적은 지역은 달마다 값이 크게 달라질 수 있어요.',
-    '연령대는 결제한 사람의 나이대 기준이고, 지역은 상품권을 쓴 가게가 있는 시군구예요. 지역마다 상품권 종류(카드·모바일·지류)와 사용처가 달라서 다른 지역과 금액을 그대로 비교하기는 어려워요.',
+    '한국조폐공사가 모은 "가맹점 업종별 결제정보"를 월 단위로 합산했어요. 취소를 반영한 값이에요.',
+    '덜 찬 이번 달은 빼고, 자료가 있는 가장 최근 달이에요.',
+    '지역은 상품권을 쓴 가게가 있는 시군구, 나이대는 결제한 사람 기준이에요.',
+    '지역마다 상품권 종류와 사용처가 달라 다른 지역과 금액을 그대로 비교하기는 어려워요.',
   ];
+
+  /// 위로 올린 통계 그래프에서 지금 보는 쪽(0 결제금액 · 1 많이 쓴 곳 · 2 나이대 · 3 동네).
+  int _heroPage = 0;
 
   Widget _message(Widget child, {VoidCallback? onTap}) => ListSection(
         title: _title,
@@ -76,22 +80,24 @@ class _LocalCurrencySectionState extends State<LocalCurrencySection> {
 
   @override
   Widget build(BuildContext context) {
-    // 위: 쓸 수 있는 가게 찾기(통계를 기다리지 않고 바로 뜸), 아래: 통계(처음 보는 지역은 30초쯤 걸림)
+    // 맨 위: 지난달 통계(화살표로 넘겨 보는 그래프) → 사는 법 → 종이 상품권 → 쓸 수 있는 가게 → 내 또래(통계 응답이 와야 나옴)
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        _statsHero(),
         if (widget.region.sgg != null) ...[
           BuyGuideSection(api: widget.api, region: widget.region),
           PaperVoucherSection(api: widget.api, region: widget.region),
           StoreFinder(key: _finderKey, api: widget.api, region: widget.region, stats: _future),
           const AdSlot(), // 광고(2026-11-01): 가게 목록과 "내 또래" 사이 구분선 자리
         ],
-        _stats(),
+        _peer(),
       ],
     );
   }
 
-  Widget _stats() {
+  /// 통계 그래프(2026-11-01 사용자 의견: 통계를 제목 바로 아래로 올리고 화살표로 한 장씩 시각 자료로). 결제금액 → 업종 → 나이대 → 동네.
+  Widget _statsHero() {
     return FutureBuilder<Map<String, dynamic>>(
       future: _future,
       builder: (context, snap) {
@@ -117,61 +123,78 @@ class _LocalCurrencySectionState extends State<LocalCurrencySection> {
         final pct = (d['pct'] as num?)?.toDouble();
         final industries = (d['industries'] as List).cast<Map<String, dynamic>>();
         final ages = (d['ages'] as List).cast<Map<String, dynamic>>();
-        final byAge = ((d['by_age'] as Map?) ?? const {}).map((k, v) => MapEntry(k as String, (v as List).cast<Map<String, dynamic>>()));
         final dongs = ((d['dongs'] as List?) ?? const []).cast<Map<String, dynamic>>();
         final change = pct == null ? 'flat' : (pct.abs() < 1 ? 'flat' : (pct > 0 ? 'up' : 'down'));
         final month = _monthName(now['ym'] as String);
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            if (byAge.isNotEmpty) _peerSection(month, ages, byAge),
-            if (byAge.isNotEmpty) const AdSlot(),
-            ListSection(
-              title: _title,
-              trailing: d['region'] as String?,
-              info: const InfoIconButton(title: '지역화폐 안내', lines: _info),
-              children: [
-                ListLine(
-                  name: '$month 결제금액',
-                  sub: '지역사랑상품권으로 결제한 총액',
-                  value: wonShort(now['amt'] as int),
-                  valueSub: pct == null || prev == null ? null : (change == 'flat' ? '${_monthName(prev['ym'] as String)}과 비슷해요' : '${_monthName(prev['ym'] as String)}보다 ${changeLabel(change, pct: pct)}'),
-                  valueSubColor: changeColor(change),
-                ),
-                ListLine(name: '$month 결제 건수', sub: '취소를 뺀 결제 횟수', value: countShort(now['nocs'] as int)),
-              ],
-            ),
-            ListSection(
-              title: '많이 쓴 곳',
-              trailing: '$month 업종별 비중',
-              children: [
-                for (final r in industries)
-                  ListLine(
-                    name: r['name'] as String,
-                    sub: r['avg'] == null ? null : '한 번에 평균 ${avgShort(r['avg'] as int)}',
-                    value: '${r['share']}%',
-                    valueSub: wonShort(r['amt'] as int),
+        final pages = <(String, Widget)>[
+          ('$month 결제금액', _amountPage(now, prev, pct, change)),
+          ('많이 쓴 곳', _Bars(rows: [for (final r in industries) (r['name'] as String, (r['share'] as num).toDouble(), '${r['share']}% · ${wonShort(r['amt'] as int)}')])),
+          if (ages.isNotEmpty) ('많이 쓴 나이대', _Bars(rows: [for (final r in ages) (r['label'] as String, (r['share'] as num).toDouble(), '${r['share']}%')])),
+          if (dongs.isNotEmpty) ('동네별로 보면', _Bars(rows: [for (final r in dongs) (r['name'] as String, (r['share'] as num).toDouble(), '${r['share']}%')])),
+        ];
+        final page = _heroPage.clamp(0, pages.length - 1);
+        return Padding(
+          padding: const EdgeInsets.only(top: 8),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              ArrowSelector(label: pages[page].$1, index: page, count: pages.length, onChanged: (i) => setState(() => _heroPage = i)),
+              const SizedBox(height: 14),
+              SizedBox(height: 290, child: KeyedSubtree(key: ValueKey('hp$page'), child: pages[page].$2)),
+              Row(
+                children: [
+                  Expanded(
+                    child: DataMeta(top: 0, rows: [
+                      const DataMetaRow('출처', '한국조폐공사 가맹점 업종별 결제정보'),
+                      DataMetaRow('기준', '${now['ym'].toString().substring(0, 4)}년 $month · ${d['region'] ?? ''}'),
+                    ]),
                   ),
-              ],
-            ),
-            if (dongs.isNotEmpty)
-              ListSection(
-                title: '동네별로 보면',
-                trailing: '$month 결제금액 비중',
-                children: [
-                  for (final r in dongs) ListLine(name: r['name'] as String, value: '${r['share']}%'),
+                  const InfoIconButton(title: '지역화폐 통계 안내', lines: _info),
                 ],
               ),
-            if (ages.isNotEmpty)
-              ListSection(
-                title: '많이 쓴 나이대',
-                trailing: '$month 결제금액 비중',
-                children: [
-                  for (final r in ages) ListLine(name: r['label'] as String, value: '${r['share']}%'),
-                ],
-              ),
-          ],
+            ],
+          ),
         );
+      },
+    );
+  }
+
+  /// 첫 쪽: 지난달 결제금액을 큰 숫자로, 전월 대비와 건수·한 번 평균.
+  Widget _amountPage(Map<String, dynamic> now, Map<String, dynamic>? prev, double? pct, String change) {
+    final amt = now['amt'] as int;
+    final nocs = now['nocs'] as int;
+    final big = amt >= 100000000 ? amt / 100000000 : amt / 10000;
+    final decimals = amt >= 10000000000 || amt < 100000000 ? 0 : 1;
+    final unit = amt >= 100000000 ? '억원' : '만원';
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        BigNumber(key: ValueKey('amt$amt'), to: big, decimals: decimals, unit: unit),
+        const SizedBox(height: 6),
+        Text(
+          pct == null || prev == null ? '지역사랑상품권으로 결제한 총액' : (change == 'flat' ? '${_monthName(prev['ym'] as String)}과 비슷해요' : '${_monthName(prev['ym'] as String)}보다 ${changeLabel(change, pct: pct)}'),
+          style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500, color: pct == null ? AppColors.inkSoft : changeColor(change)),
+        ),
+        const SizedBox(height: 20),
+        Container(height: 1, color: AppColors.hair),
+        ListLine(name: '결제 건수', sub: '취소를 뺀 결제 횟수', value: countShort(nocs)),
+        ListLine(name: '한 번에 평균', sub: '결제금액 ÷ 결제 건수', value: nocs == 0 ? '-' : avgShort((amt / nocs).round())),
+      ],
+    );
+  }
+
+  /// 맨 아래: 내 또래(통계 응답이 와야 나옴. 실패·빈 지역 안내는 위쪽 통계 자리에서 이미 보여 줌).
+  Widget _peer() {
+    return FutureBuilder<Map<String, dynamic>>(
+      future: _future,
+      builder: (context, snap) {
+        final d = snap.data;
+        if (d == null || d['live'] != true || d['empty'] == true || d['need_sgg'] == true) return const SizedBox.shrink();
+        final byAge = ((d['by_age'] as Map?) ?? const {}).map((k, v) => MapEntry(k as String, (v as List).cast<Map<String, dynamic>>()));
+        if (byAge.isEmpty) return const SizedBox.shrink();
+        final ages = (d['ages'] as List).cast<Map<String, dynamic>>();
+        final month = _monthName((d['now'] as Map<String, dynamic>)['ym'] as String);
+        return _peerSection(month, ages, byAge);
       },
     );
   }
@@ -224,4 +247,51 @@ class _LocalCurrencySectionState extends State<LocalCurrencySection> {
   }
 
   String _monthName(String ym) => '${int.parse(ym.substring(4))}월';
+}
+
+
+/// 가로 막대 한 묶음(이름 · 막대 · 오른쪽 값). 막대 길이는 가장 큰 값을 100%로 한 비율. 색은 잉크 한 가지(색은 형광펜·도형에만 쓰는 규칙).
+class _Bars extends StatelessWidget {
+  const _Bars({required this.rows});
+
+  final List<(String, double, String)> rows; // (이름, 비중 %, 오른쪽에 쓸 글)
+
+  @override
+  Widget build(BuildContext context) {
+    final top = rows.fold<double>(0, (m, r) => r.$2 > m ? r.$2 : m);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (final r in rows.take(6))
+          Padding(
+            padding: const EdgeInsets.only(bottom: 14),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Row(
+                  children: [
+                    Expanded(child: Text(r.$1, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 13))),
+                    Text(r.$3, style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w700)),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                LayoutBuilder(
+                  builder: (context, c) => Stack(
+                    children: [
+                      Container(height: 6, color: AppColors.hair),
+                      TweenAnimationBuilder<double>(
+                        tween: Tween(begin: 0, end: top == 0 ? 0 : r.$2 / top),
+                        duration: const Duration(milliseconds: 600),
+                        curve: Curves.easeOutCubic,
+                        builder: (context, v, _) => Container(height: 6, width: c.maxWidth * v, color: AppColors.ink),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+      ],
+    );
+  }
 }
