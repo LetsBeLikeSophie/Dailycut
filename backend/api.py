@@ -174,6 +174,12 @@ def benefits_localcurrency_stores(sido: str | None = None, sgg: str | None = Non
     return localcurrency_src.stores(sido, sgg, q, cat, emd, page)
 
 
+@app.get("/benefits/localcurrency/paper")
+def benefits_localcurrency_paper(sido: str | None = None, sgg: str | None = None):
+    """종이(지류) 지역사랑상품권 판매처와 권종별 재고 있음/없음(한국조폐공사 지류 판매지점·지점별 재고정보). 자료가 있는 지역만."""
+    return localcurrency_src.paper(sido, sgg)
+
+
 @app.get("/benefits/loans")
 def benefits_loans(usage: str | None = None, sido: str | None = None):
     """서민금융진흥원 대출상품 한눈에(전국 공통 + 선택한 시도 상품). usage는 생계·주거·학자금·사업."""

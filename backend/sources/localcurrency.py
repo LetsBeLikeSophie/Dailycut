@@ -323,3 +323,90 @@ def _safe(fn, arg):
         return fn(arg)
     except Exception:
         return None
+
+
+# ───────── 종이(지류) 상품권 판매처·재고(2026-11-01) ─────────
+# 한국조폐공사 지류 판매지점정보(15125218, `paperSale/v2/saleV2`)·지점별 재고정보(15125382, `paperStock/v2/stockV2`) — 활용신청 승인 2026-11-01(만료 2028-11-01).
+# 오퍼레이션 이름이 베이스 뒤에 또 붙어야 함(마이페이지 "상세기능"의 /saleV2·/stockV2). 재고 수량(gt_type_stc_qty)은 **0/1 표시**(있음/없음)이고 권종은 5천·1만·5만원.
+# 자료가 있는 지역은 일부뿐(춘천 92곳·군산 78곳·강릉 4곳, 서울·부산·수원·광주·대전·제주·청주는 0건 — 운영대행사가 지류를 올리지 않음). 있는 곳은 재고 기준일이 최근(2026-10).
+# 모바일·카드 상품권의 예산 소진은 이걸로도 알 수 없음.
+SALE_URL = "https://apis.data.go.kr/B190001/paperSale/v2/saleV2"
+STOCK_URL = "https://apis.data.go.kr/B190001/paperStock/v2/stockV2"
+_paper_memo: dict[str, tuple[datetime, dict]] = {}
+
+
+def paper(sido: str | None, sgg: str | None) -> dict:
+    if not sgg:
+        return {"live": False, "need_sgg": True}
+    if not available():
+        return {"live": False}
+    place = geo.place(sido, sgg)
+    hit = _paper_memo.get(place["key"])
+    if hit and datetime.now() - hit[0] < timedelta(minutes=20):
+        return hit[1]
+    area, targets = outing._targets(sido, sgg)
+    if not targets:
+        return {"live": False}
+    codes = [area + t["code"] for t in targets][:6]
+
+    def fetch(job):
+        url, code = job
+        params = {"page": 1, "perPage": 1000, "returnType": "JSON", "cond[usage_rgn_cd::EQ]": code}
+        if url == SALE_URL:
+            params["cond[ntsl_yn::EQ]"] = "Y"
+        return url, (_http.get(url, params, timeout=60).json().get("data") or [])
+
+    sale: list[dict] = []
+    stock: dict[str, dict[int, bool]] = {}
+    stock_day = ""
+    ok = 0
+    jobs = [(u, c) for c in codes for u in (SALE_URL, STOCK_URL)]
+    with ThreadPoolExecutor(max_workers=6) as ex:
+        for res in ex.map(lambda j: _safe(fetch, j), jobs):
+            if res is None:
+                continue
+            ok += 1
+            url, rows = res
+            if url == SALE_URL:
+                sale.extend(rows)
+            else:
+                for r in rows:
+                    try:
+                        denom = int(r.get("gt_type_dnmn") or 0)
+                        have = int(r.get("gt_type_stc_qty") or 0) > 0
+                    except ValueError:
+                        continue
+                    if denom:
+                        stock.setdefault(str(r.get("brnch_id") or ""), {})[denom] = have
+                    stock_day = max(stock_day, str(r.get("crtr_ymd") or ""))
+    if not ok:
+        return {"live": False}
+    items = []
+    seen = set()
+    for r in sale:
+        bid = str(r.get("brnch_id") or "")
+        name = (r.get("brnch_nm") or "").strip().replace("<출>", "").strip()
+        if not name or (bid, r.get("gt_nm")) in seen:
+            continue
+        seen.add((bid, r.get("gt_nm")))
+        st = stock.get(bid)
+        items.append({
+            "name": name, "addr": ((r.get("brnch_addr") or "").strip() + " " + (r.get("brnch_daddr") or "").strip()).strip(),
+            "phone": _phone(r.get("brnch_rprs_telno")), "gt": (r.get("gt_nm") or "").strip(), "dong": (r.get("emd_nm") or "").strip(),
+            "lat": r.get("lat") if isinstance(r.get("lat"), (int, float)) else None, "lng": r.get("lot") if isinstance(r.get("lot"), (int, float)) else None,
+            "stock": [{"denom": d, "have": h} for d, h in sorted(st.items())] if st else None,
+        })
+    # 재고 있는 곳 → 재고 정보 없는 곳 → 재고 없는 곳 순, 같으면 이름순
+    def rank(it):
+        st = it["stock"]
+        return (0 if st and any(x["have"] for x in st) else (1 if st is None else 2), it["name"])
+    items.sort(key=rank)
+    result = {
+        "live": True, "empty": not items, "items": items[:200], "total": len(items),
+        "with_stock": sum(1 for it in items if it["stock"] and any(x["have"] for x in it["stock"])),
+        "asof": stock_day,
+    }
+    if len(_paper_memo) > 200:
+        _paper_memo.clear()
+    _paper_memo[place["key"]] = (datetime.now(), result)
+    return result

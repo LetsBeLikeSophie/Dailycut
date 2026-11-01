@@ -97,6 +97,10 @@ class ApiClient {
   Future<Map<String, dynamic>> localCurrencyStores({String? sido, String? sgg, String q = '', String cat = '', String emd = '', int page = 1}) =>
       _memoGet('lcstores/$sido/$sgg/$q/$cat/$emd/$page', _min10, () => _getJson('/benefits/localcurrency/stores', {'sido': sido, 'sgg': sgg, 'q': q, 'cat': cat, 'emd': emd, 'page': '$page'}));
 
+  /// 종이 상품권 판매처·권종별 재고(자료가 있는 지역만, 없으면 empty).
+  Future<Map<String, dynamic>> localCurrencyPaper({String? sido, String? sgg}) =>
+      _memoGet('lcpaper/$sido/$sgg', _min10, () => _getJson('/benefits/localcurrency/paper', {'sido': sido, 'sgg': sgg}));
+
   Future<Map<String, dynamic>> benefitsLoans({String? usage, String? sido}) => _memoGet('loans/$usage/$sido', _min10, () => _getJson('/benefits/loans', {'usage': usage, 'sido': sido}));
 
   /// 이번 주말 한산한 곳(관광지 집중률 예측 + 그날 날씨). 처음 부르는 지역은 몇 초 걸릴 수 있음.

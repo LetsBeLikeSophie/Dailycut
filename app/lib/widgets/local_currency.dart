@@ -7,6 +7,7 @@ import '../theme.dart';
 import 'ad_slot.dart';
 import 'components.dart';
 import 'local_currency_stores.dart';
+import 'paper_vouchers.dart';
 import 'support_profile.dart';
 
 /// 혜택 탭 "지역화폐" 구역(2026-10-31): 한국조폐공사 지역사랑상품권 가맹점 업종별 결제정보로 우리 동네 상품권이 지난달 얼마나·어디서·누가 쓰였는지.
@@ -81,6 +82,7 @@ class _LocalCurrencySectionState extends State<LocalCurrencySection> {
       children: [
         if (widget.region.sgg != null) ...[
           _howToBuy(),
+          PaperVoucherSection(api: widget.api, region: widget.region),
           StoreFinder(key: _finderKey, api: widget.api, region: widget.region, stats: _future),
           const AdSlot(), // 광고(2026-11-01): 가게 목록과 "내 또래" 사이 구분선 자리
         ],

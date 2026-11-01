@@ -33,7 +33,7 @@
 - 청약 공고: 한국부동산원 청약홈 https://www.applyhome.co.kr
 - 공공임대 공고: 국토교통부 마이홈포털 https://www.myhome.go.kr / 한국토지주택공사 LH청약플러스 https://apply.lh.or.kr
 - 전월세 시세: 국토교통부 실거래가 공개시스템의 아파트·오피스텔 전월세 실거래가 https://rt.molit.go.kr (데일리컷이 계약을 모아 중위값으로 계산한 참고 통계예요)
-- 지역화폐: 한국조폐공사 지역사랑상품권 가맹점 기본정보·가맹점 업종별 결제정보 https://www.komsco.com (상품권을 쓸 수 있는 가게 찾기, 그리고 데일리컷이 시군구별 월 결제를 합쳐 보여 주는 참고 통계예요)
+- 지역화폐: 한국조폐공사 지역사랑상품권 가맹점 기본정보·지류 판매지점·재고정보·가맹점 업종별 결제정보 https://www.komsco.com (상품권을 쓸 수 있는 가게 찾기, 종이 상품권 판매처와 재고, 그리고 데일리컷이 시군구별 월 결제를 합쳐 보여 주는 참고 통계예요)
 - 서민 대출 상품: 서민금융진흥원 https://www.kinfa.or.kr
 
 ■ 홈 화면 위젯
@@ -60,7 +60,7 @@
 - 청약 공고: 한국부동산원 청약홈 https://www.applyhome.co.kr
 - 공공임대 공고: 국토교통부 마이홈포털 https://www.myhome.go.kr / 한국토지주택공사 LH청약플러스 https://apply.lh.or.kr
 - 전월세 시세(아파트·오피스텔 전월세 실거래가): 국토교통부 실거래가 공개시스템 https://rt.molit.go.kr
-- 지역화폐(지역사랑상품권 가맹점 기본정보·업종별 결제정보): 한국조폐공사 https://www.komsco.com
+- 지역화폐(지역사랑상품권 가맹점 기본정보·지류 판매지점·재고정보·업종별 결제정보): 한국조폐공사 https://www.komsco.com
 - 서민 대출 상품: 서민금융진흥원 https://www.kinfa.or.kr
 - 축제·행사, 관광지 혼잡 예측, 캠핑, 반려동물 동반 여행, 웰니스, 걷기길: 한국관광공사 https://korean.visitkorea.or.kr (고캠핑 https://gocamping.or.kr / 두루누비 https://www.durunubi.kr)
 - 전시·공연, 박물관·미술관: 한국문화정보원 문화포털·전국문화기반시설총람 https://www.culture.go.kr
