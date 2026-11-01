@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../api_client.dart';
 import '../region.dart';
 import '../theme.dart';
+import 'ad_slot.dart';
 import 'components.dart';
 
 /// 혜택 탭 "전월세" 구역(2026-10-31): 국토교통부 아파트·오피스텔 전월세 실거래가로 우리 동네 시세 "체감" — 아파트 전세·아파트 월세·오피스텔 월세의
@@ -85,6 +86,7 @@ class _RentMarketSectionState extends State<RentMarketSection> {
               info: const InfoIconButton(title: '전월세 시세 안내', lines: _info),
               children: [for (final s in sections) _summary(s)],
             ),
+            const AdSlot(), // 광고(2026-11-01): 시세 요약과 최근 계약 사이 구분선 자리
             ListSection(
               title: '최근 계약',
               trailing: '신고된 순',
