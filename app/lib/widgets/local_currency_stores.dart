@@ -12,7 +12,7 @@ import 'map_links.dart';
 /// 지역화폐 "상품권 쓸 수 있는 가게"(2026-11-01): 한국조폐공사 가맹점 기본정보(모바일·카드)에서 계속사업자만, 업종 칩·가게 이름·동네로 찾음.
 /// 통계만 있으면 "그래서 나는?"에 답이 없다는 의견(사용자)에서 나옴 — 눌러서 주소·전화·지도로 이어지게.
 /// 정보 기준일이 가게마다 달라(2025~2026) 그 뒤에 닫았을 수 있음 → 시트에 기준일과 "가기 전에 전화로" 안내.
-const _cats = <(String, String)>[
+const _catChips = <(String, String)>[
   ('food', '음식점'),
   ('cafe', '카페·주점'),
   ('mart', '마트·편의점'),
@@ -22,7 +22,6 @@ const _cats = <(String, String)>[
   ('clinic', '병원·의원'),
   ('academy', '학원'),
   ('stay', '숙박'),
-  ('', '전체'),
 ];
 
 class StoreFinder extends StatefulWidget {
@@ -39,7 +38,7 @@ class StoreFinder extends StatefulWidget {
 }
 
 class StoreFinderState extends State<StoreFinder> {
-  String _cat = 'food';
+  final Set<String> _cats = {'food'}; // 여러 개 고를 수 있음. 비어 있으면 전체 업종
   String _q = '';
   String? _emd; // 읍면동 8자리 코드
   List<Map<String, dynamic>> _items = [];
@@ -53,8 +52,8 @@ class StoreFinderState extends State<StoreFinder> {
   Timer? _debounce;
   final _qCtl = TextEditingController();
   List<Map<String, dynamic>> _dongs = const [];
-  ({String code, String name})? _extraDong; // 칩에 없는 동네(내 또래 줄에서 넘어온 것)
-  ({String key, String name})? _extraCat; // 칩에 없는 업종
+  final Map<String, String> _extraCats = {}; // 칩에 없는 업종(내 또래 줄에서 넘어온 3자리 코드 → 이름)
+  bool _statsFailed = false;
 
   static const _ksicToChip = {'561': 'food', '562': 'cafe', '471': 'mart', '472': 'grocery', '477': 'pharm', '961': 'beauty', '862': 'clinic', '856': 'academy', '551': 'stay'};
 
@@ -62,10 +61,13 @@ class StoreFinderState extends State<StoreFinder> {
   void focus({required String emd, required String dong, required String ksic, required String catName}) {
     final chip = _ksicToChip[ksic];
     setState(() {
-      _cat = chip ?? ksic;
-      _extraCat = chip == null ? (key: ksic, name: catName) : null;
+      _cats
+        ..clear()
+        ..add(chip ?? ksic);
+      _extraCats
+        ..clear()
+        ..addAll(chip == null ? {ksic: catName} : const {});
       _emd = emd;
-      _extraDong = _dongs.any((d) => d['code'] == emd) ? null : (code: emd, name: dong);
       _q = '';
       _qCtl.clear();
     });
@@ -82,9 +84,14 @@ class StoreFinderState extends State<StoreFinder> {
     _load(reset: true);
     widget.stats?.then((d) {
       if (!mounted || d['live'] != true) return;
-      final list = ((d['dongs'] as List?) ?? const []).cast<Map<String, dynamic>>().where((x) => (x['code'] as String?)?.length == 8).toList();
-      if (list.isNotEmpty) setState(() => _dongs = list);
-    }).catchError((_) {});
+      final list = ((d['dong_all'] as List?) ?? const []).cast<Map<String, dynamic>>();
+      setState(() {
+        _dongs = list;
+        _statsFailed = list.isEmpty;
+      });
+    }).catchError((_) {
+      if (mounted) setState(() => _statsFailed = true);
+    });
   }
 
   @override
@@ -103,7 +110,7 @@ class StoreFinderState extends State<StoreFinder> {
       if (reset) _items = [];
     });
     try {
-      final d = await widget.api.localCurrencyStores(sido: widget.region.code, sgg: widget.region.sgg, q: _q, cat: _cat, emd: _emd ?? '', page: page);
+      final d = await widget.api.localCurrencyStores(sido: widget.region.code, sgg: widget.region.sgg, q: _q, cat: (_cats.toList()..sort()).join(','), emd: _emd ?? '', page: page);
       if (!mounted || token != _token) return;
       if (d['live'] != true) throw Exception('no data');
       final got = (d['items'] as List).cast<Map<String, dynamic>>();
@@ -127,6 +134,75 @@ class StoreFinderState extends State<StoreFinder> {
         _failed = true;
       });
     }
+  }
+
+  void _toggleCat(String key) {
+    setState(() {
+      if (!_cats.remove(key)) _cats.add(key);
+      _extraCats.removeWhere((k, _) => !_cats.contains(k)); // 해제한 임시 칩은 사라짐
+    });
+    _load(reset: true);
+  }
+
+  String get _dongLabel {
+    if (_emd == null) return '전체';
+    for (final d in _dongs) {
+      if (d['code'] == _emd) return d['name'] as String;
+    }
+    return '전체';
+  }
+
+  /// 동네 고르기: 알약 대신 줄 하나(동네 · 전체 ▾)를 눌러 시트에서 고름(읍면동이 많아 칩으로 늘어놓으면 화면을 다 차지함).
+  Widget _dongField() {
+    final ready = _dongs.isNotEmpty;
+    return GestureDetector(
+      onTap: ready ? _pickDong : null,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        margin: const EdgeInsets.only(top: 14),
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: AppColors.line))),
+        child: Row(
+          children: [
+            const Text('동네', style: TextStyle(fontSize: 13, color: AppColors.inkSoft)),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Text(ready ? _dongLabel : '불러오는 중이에요', style: TextStyle(fontSize: 16, fontWeight: ready ? FontWeight.w700 : FontWeight.w400, color: ready ? AppColors.ink : AppColors.inkSoft)),
+            ),
+            if (ready) const Icon(Icons.keyboard_arrow_down, size: 22, color: AppColors.ink),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _pickDong() {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppColors.background,
+      showDragHandle: true,
+      constraints: BoxConstraints(maxHeight: MediaQuery.of(context).size.height * 0.75),
+      builder: (ctx) {
+        void pick(String? code) {
+          Navigator.of(ctx).pop();
+          if (code == _emd) return;
+          setState(() => _emd = code);
+          _load(reset: true);
+        }
+
+        return SheetFrame(
+          title: '동네 고르기',
+          sub: '상품권 결제가 많은 동네부터 보여 줘요',
+          gapAfterHeader: 12,
+          children: [
+            Container(height: 1, color: AppColors.ink),
+            ListLine(name: '동네 전체', value: _emd == null ? '선택됨' : null, onTap: () => pick(null)),
+            for (final d in _dongs) ListLine(name: d['name'] as String, value: _emd == d['code'] ? '선택됨' : null, onTap: () => pick(d['code'] as String)),
+          ],
+        );
+      },
+    );
   }
 
   void _onQuery(String v) {
@@ -158,52 +234,14 @@ class StoreFinderState extends State<StoreFinder> {
             spacing: 8,
             runSpacing: 8,
             children: [
-              if (_extraCat != null) PillChip(label: _extraCat!.name, selected: _cat == _extraCat!.key, onTap: () {}),
-              for (final c in _cats)
-                PillChip(
-                  label: c.$2,
-                  selected: c.$1 == _cat,
-                  onTap: () {
-                    if (c.$1 == _cat) return;
-                    _cat = c.$1;
-                    _extraCat = null;
-                    _load(reset: true);
-                  },
-                ),
+              for (final e in _extraCats.entries) PillChip(label: e.value, selected: _cats.contains(e.key), onTap: () => _toggleCat(e.key)),
+              for (final c in _catChips) PillChip(label: c.$2, selected: _cats.contains(c.$1), onTap: () => _toggleCat(c.$1)),
             ],
           ),
         ),
-        if (_dongs.isNotEmpty || _extraDong != null)
-          Padding(
-            padding: const EdgeInsets.only(top: 10),
-            child: Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                PillChip(
-                  label: '동네 전체',
-                  selected: _emd == null,
-                  onTap: () {
-                    if (_emd == null) return;
-                    _emd = null;
-                    _extraDong = null;
-                    _load(reset: true);
-                  },
-                ),
-                if (_extraDong != null) PillChip(label: _extraDong!.name, selected: _emd == _extraDong!.code, onTap: () {}),
-                for (final d in _dongs)
-                  PillChip(
-                    label: d['name'] as String,
-                    selected: _emd == d['code'],
-                    onTap: () {
-                      _emd = _emd == d['code'] ? null : d['code'] as String;
-                      _extraDong = null;
-                      _load(reset: true);
-                    },
-                  ),
-              ],
-            ),
-          ),
+        if (_cats.isEmpty)
+          const Padding(padding: EdgeInsets.only(top: 8), child: Text('업종을 고르지 않아서 모든 업종을 보여 드려요', style: TextStyle(fontSize: 11, color: AppColors.inkSoft))),
+        if (!_statsFailed) _dongField(),
         Padding(
           padding: const EdgeInsets.only(top: 12, bottom: 4),
           child: TextField(

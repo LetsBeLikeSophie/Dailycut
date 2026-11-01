@@ -153,9 +153,11 @@ def _build(sido: str | None, sgg: str | None) -> dict:
             for k, v in sorted(combos.items(), key=lambda x: -x[1][0])[:6]
         ]
     dongs = [{"name": n, "code": dong_code.get(n, ""), "share": round(a / total * 100, 1)} for n, a in sorted(dong.items(), key=lambda x: -x[1])[:5]] if len(dong) > 1 else []
+    # 가게 찾기의 "동네" 고르기용 전체 목록(결제금액 많은 순, 최대 80곳)
+    dong_all = [{"name": n, "code": dong_code.get(n, "")} for n, _ in sorted(dong.items(), key=lambda x: -x[1])[:80] if len(dong_code.get(n, "")) == 8]
     return {
         "live": True, "empty": False, "now": now, "prev": prev, "pct": pct,
-        "industries": industries, "ages": ages, "by_age": by_age, "dongs": dongs,
+        "industries": industries, "ages": ages, "by_age": by_age, "dongs": dongs, "dong_all": dong_all,
         "asof": _kst.now().isoformat(timespec="minutes"),
     }
 
@@ -193,7 +195,7 @@ def get(sido: str | None, sgg: str | None = None) -> dict:
         return {**base, "live": False, "need_sgg": True}
     if not available():
         return {**base, "live": False}
-    key = f"lc4:{place['key']}"  # lc1 → lc2(나이대별 업종·평균 결제·읍면동 순위) → lc3(읍면동 코드, 가맹점 찾기의 동네 필터용) — 응답 모양이 바뀔 때마다 올림(2026-11-01)
+    key = f"lc5:{place['key']}"  # lc1 → lc2(나이대별 업종·평균 결제·읍면동 순위) → lc3(읍면동 코드, 가맹점 찾기의 동네 필터용) — 응답 모양이 바뀔 때마다 올림(2026-11-01)
     hit = store.load_cache(key, True)
     if hit and datetime.now() - datetime.fromisoformat(hit[1]) < timedelta(minutes=_TTL + 180):
         # 신선하거나 만료 직후(3시간 안)면 바로 — 만료 직후는 cached()가 옛 값을 주고 새 값은 뒤에서 받음
@@ -253,11 +255,16 @@ def stores(sido: str | None, sgg: str | None, q: str = "", cat: str = "", emd: s
     if not available():
         return {"live": False}
     q = (q or "").strip()[:20]
-    ksic = CATS.get(cat) or (cat if cat.isdigit() and len(cat) == 3 else None)  # 3자리 숫자는 업종 코드를 그대로(내 또래 줄에서 넘어옴)
+    # 업종은 쉼표로 여러 개(칩 키 또는 3자리 업종 코드 — 숫자는 내 또래 줄에서 넘어옴). 없으면 전체
+    ksics = []
+    for c in (cat or "").split(",")[:6]:
+        k = CATS.get(c.strip()) or (c.strip() if c.strip().isdigit() and len(c.strip()) == 3 else None)
+        if k and k not in ksics:
+            ksics.append(k)
     emd = emd if emd.isdigit() and len(emd) == 8 else ""
     page = max(1, min(page, 50))
     place = geo.place(sido, sgg)
-    mkey = f"{place['key']}|{q}|{ksic}|{emd}|{page}"
+    mkey = f"{place['key']}|{q}|{','.join(sorted(ksics))}|{emd}|{page}"
     hit = _store_memo.get(mkey)
     if hit and datetime.now() - hit[0] < _STORE_TTL:
         return hit[1]
@@ -266,11 +273,11 @@ def stores(sido: str | None, sgg: str | None, q: str = "", cat: str = "", emd: s
         return {"live": False}
     codes = [area + t["code"] for t in targets][:6]
     cutoff = (_kst.today() - timedelta(days=548)).strftime("%Y%m%d")  # 1년 반보다 오래 갱신 안 된 가게는 뺌
-    jobs = [(url, kind, code) for url, kind in ((MOBILE_URL, "모바일"), (CARD_URL, "카드")) for code in codes]
-    per = max(6, -(-STORE_PER // len(jobs)))
+    jobs = [(url, kind, code, k) for url, kind in ((MOBILE_URL, "모바일"), (CARD_URL, "카드")) for code in codes for k in (ksics or [None])]
+    per = max(4, -(-STORE_PER // len(jobs)))
 
     def call(job):
-        url, kind, code = job
+        url, kind, code, ksic = job
         params = {"page": page, "perPage": per, "returnType": "JSON",
                   "cond[usage_rgn_cd::EQ]": code, "cond[bzmn_stts::EQ]": "01", "cond[crtr_ymd::GTE]": cutoff}
         if ksic:
@@ -286,7 +293,7 @@ def stores(sido: str | None, sgg: str | None, q: str = "", cat: str = "", emd: s
     total = 0
     more = False
     ok = 0
-    with ThreadPoolExecutor(max_workers=6) as ex:
+    with ThreadPoolExecutor(max_workers=8) as ex:
         for res in ex.map(lambda j: _safe(call, j), jobs):
             if res is None:
                 continue
