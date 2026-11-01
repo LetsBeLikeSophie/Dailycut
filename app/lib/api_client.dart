@@ -93,6 +93,10 @@ class ApiClient {
     });
   }
 
+  /// 지역사랑상품권 가맹점 찾기(업종 칩·가게 이름·동네). 가게 이름은 주소창 쿼리로 가지만 개인 정보가 아니고 지역은 코드로만 보냄.
+  Future<Map<String, dynamic>> localCurrencyStores({String? sido, String? sgg, String q = '', String cat = '', String emd = '', int page = 1}) =>
+      _memoGet('lcstores/$sido/$sgg/$q/$cat/$emd/$page', _min10, () => _getJson('/benefits/localcurrency/stores', {'sido': sido, 'sgg': sgg, 'q': q, 'cat': cat, 'emd': emd, 'page': '$page'}));
+
   Future<Map<String, dynamic>> benefitsLoans({String? usage, String? sido}) => _memoGet('loans/$usage/$sido', _min10, () => _getJson('/benefits/loans', {'usage': usage, 'sido': sido}));
 
   /// 이번 주말 한산한 곳(관광지 집중률 예측 + 그날 날씨). 처음 부르는 지역은 몇 초 걸릴 수 있음.

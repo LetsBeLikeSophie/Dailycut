@@ -4,6 +4,7 @@ import '../api_client.dart';
 import '../region.dart';
 import '../theme.dart';
 import 'components.dart';
+import 'local_currency_stores.dart';
 import 'support_profile.dart';
 
 /// 혜택 탭 "지역화폐" 구역(2026-10-31): 한국조폐공사 지역사랑상품권 가맹점 업종별 결제정보로 우리 동네 상품권이 지난달 얼마나·어디서·누가 쓰였는지.
@@ -41,6 +42,7 @@ String ageCodeOf(int age) => age < 20 ? '01' : '0${(age ~/ 10).clamp(2, 6)}';
 
 class _LocalCurrencySectionState extends State<LocalCurrencySection> {
   late Future<Map<String, dynamic>> _future = _load();
+  final _finderKey = GlobalKey<StoreFinderState>();
 
   /// 내 또래로 볼 연령대. "내 조건"에 생년월일이 있으면 그 나이로 시작하고(기기 안에서만 계산, 서버엔 안 보냄), 없으면 직접 고름.
   late String? _ageCode = SupportProfile.instance.age == null ? null : ageCodeOf(SupportProfile.instance.age!);
@@ -71,6 +73,17 @@ class _LocalCurrencySectionState extends State<LocalCurrencySection> {
 
   @override
   Widget build(BuildContext context) {
+    // 위: 쓸 수 있는 가게 찾기(통계를 기다리지 않고 바로 뜸), 아래: 통계(처음 보는 지역은 30초쯤 걸림)
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (widget.region.sgg != null) StoreFinder(key: _finderKey, api: widget.api, region: widget.region, stats: _future),
+        _stats(),
+      ],
+    );
+  }
+
+  Widget _stats() {
     return FutureBuilder<Map<String, dynamic>>(
       future: _future,
       builder: (context, snap) {
@@ -103,6 +116,7 @@ class _LocalCurrencySectionState extends State<LocalCurrencySection> {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            if (byAge.isNotEmpty) _peerSection(month, ages, byAge),
             ListSection(
               title: _title,
               trailing: d['region'] as String?,
@@ -131,7 +145,6 @@ class _LocalCurrencySectionState extends State<LocalCurrencySection> {
                   ),
               ],
             ),
-            if (byAge.isNotEmpty) _peerSection(month, ages, byAge),
             if (dongs.isNotEmpty)
               ListSection(
                 title: '동네별로 보면',
@@ -154,18 +167,20 @@ class _LocalCurrencySectionState extends State<LocalCurrencySection> {
     );
   }
 
-  /// "내 또래는 어디서 쓸까" — 고른 나이대가 쓴 돈의 업종 비중. 자료가 있는 나이대만 칩으로 보여 줌.
+  /// "내 또래는 어디서 쓸까" — 고른 나이대가 쓴 돈이 많은 동네×업종 순위. 가게별 결제액은 자료에 없어서 가장 잘게 쪼갠 단위가 이거고,
+  /// 줄을 누르면 위의 "상품권 쓸 수 있는 가게"가 그 동네·업종으로 맞춰짐(2026-11-01 사용자 의견: 통계보다 실제 가게로 이어져야 도움이 됨).
   Widget _peerSection(String month, List<Map<String, dynamic>> ages, Map<String, List<Map<String, dynamic>>> byAge) {
     final labels = {for (final a in ages) a['code'] as String: a['label'] as String};
     final codes = labels.keys.where(byAge.containsKey).toList();
     final code = codes.contains(_ageCode) ? _ageCode : null;
     return ListSection(
       title: '내 또래는 어디서 쓸까',
-      trailing: code == null ? '나이대를 골라 보세요' : '${labels[code]} 결제금액 중 비중',
+      trailing: code == null ? '나이대를 골라 보세요' : '${labels[code]}이 많이 쓴 동네·업종',
       info: const InfoIconButton(
         title: '내 또래 안내',
         lines: [
-          '결제한 사람의 나이대별로 가게 업종 비중과 한 번 결제 평균을 보여 줘요. 이 지역 전체가 아니라, 고른 나이대가 쓴 돈만 100%로 봐요.',
+          '결제한 사람의 나이대별로, 돈이 많이 쓰인 동네와 업종을 순서대로 보여 줘요. 줄을 누르면 그 동네·업종의 상품권 가게 목록이 위에 열려요.',
+          '가게별 결제액은 공개 자료에 없어서 "어느 가게가 1등인지"는 알 수 없어요. 숫자는 그 나이대 결제금액 안에서의 비중이에요.',
           '"내 조건"에 생년월일을 저장해 두면 내 나이대로 바로 열려요. 생년월일은 이 기기 안에서만 쓰고 서버로 보내지 않아요.',
         ],
       ),
@@ -189,9 +204,10 @@ class _LocalCurrencySectionState extends State<LocalCurrencySection> {
           ...[
             for (final r in byAge[code]!)
               ListLine(
-                name: r['name'] as String,
-                sub: r['avg'] == null ? null : '한 번에 평균 ${avgShort(r['avg'] as int)}',
+                name: '${r['dong']} · ${r['cat']}',
+                sub: r['avg'] == null ? '눌러서 가게 보기' : '한 번에 평균 ${avgShort(r['avg'] as int)} · 눌러서 가게 보기',
                 value: '${r['share']}%',
+                onTap: () => _finderKey.currentState?.focus(emd: r['emd'] as String, dong: r['dong'] as String, ksic: r['ksic'] as String, catName: r['cat'] as String),
               ),
           ],
       ],

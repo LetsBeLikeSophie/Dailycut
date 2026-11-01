@@ -168,6 +168,12 @@ def benefits_localcurrency(sido: str | None = None, sgg: str | None = None):
     return localcurrency_src.get(sido, sgg)
 
 
+@app.get("/benefits/localcurrency/stores")
+def benefits_localcurrency_stores(sido: str | None = None, sgg: str | None = None, q: str = "", cat: str = "", emd: str = "", page: int = 1):
+    """지역사랑상품권 가맹점 찾기(업종·이름·읍면동). 한국조폐공사 가맹점 기본정보(모바일·카드)."""
+    return localcurrency_src.stores(sido, sgg, q, cat, emd, page)
+
+
 @app.get("/benefits/loans")
 def benefits_loans(usage: str | None = None, sido: str | None = None):
     """서민금융진흥원 대출상품 한눈에(전국 공통 + 선택한 시도 상품). usage는 생계·주거·학자금·사업."""

@@ -110,8 +110,9 @@ def _build(sido: str | None, sgg: str | None) -> dict:
 
     ind: dict[str, list[int]] = {}  # 업종 → [금액, 건수]
     age: dict[str, int] = {}
-    age_ind: dict[str, dict[str, list[int]]] = {}  # 나이대 → 업종 → [금액, 건수]
+    age_combo: dict[str, dict[tuple, list[int]]] = {}  # 나이대 → (읍면동코드, 읍면동, 업종코드, 업종) → [금액, 건수]
     dong: dict[str, int] = {}
+    dong_code: dict[str, str] = {}
     for r in rows:
         amt = int(r.get("stlm_amt") or 0)
         if amt <= 0:
@@ -125,13 +126,16 @@ def _build(sido: str | None, sgg: str | None) -> dict:
             v[1] += nocs
         if code in AGE_LABELS:
             age[code] = age.get(code, 0) + amt
-            if name:
-                v = age_ind.setdefault(code, {}).setdefault(name, [0, 0])
+            emd_n = (r.get("emd_nm") or "").strip()
+            ksic_c = str(r.get("ksic") or "")
+            if name and emd_n and ksic_c:
+                v = age_combo.setdefault(code, {}).setdefault((str(r.get("emd_cd") or ""), emd_n, ksic_c, name), [0, 0])
                 v[0] += amt
                 v[1] += nocs
         emd = (r.get("emd_nm") or "").strip()
         if emd:
             dong[emd] = dong.get(emd, 0) + amt
+            dong_code.setdefault(emd, str(r.get("emd_cd") or ""))
     total = now["amt"] or 1
     industries = [
         {"name": n, "amt": v[0], "share": round(v[0] / total * 100, 1), "avg": round(v[0] / v[1]) if v[1] else None}
@@ -139,15 +143,16 @@ def _build(sido: str | None, sgg: str | None) -> dict:
     ]
     age_total = sum(age.values()) or 1
     ages = [{"code": c, "label": AGE_LABELS[c], "share": round(age.get(c, 0) / age_total * 100, 1)} for c in AGE_LABELS if age.get(c)]
-    # 나이대별로 "내 또래는 어디서 쓰나": 그 나이대 결제금액 안에서의 업종 비중과 한 번 결제 평균(2026-11-01 개인용 항목)
+    # 나이대별 "어느 동네의 어떤 업종에서 많이 쓰나" TOP 6(2026-11-01). 가게별 결제액은 자료에 없어서 가장 잘게 쪼갠 단위가 동네×업종 —
+    # 앱에서 줄을 누르면 그 동네·업종의 실제 가맹점 목록(stores)으로 이어짐.
     by_age = {}
-    for c, inds in age_ind.items():
+    for c, combos in age_combo.items():
         t = age.get(c) or 1
         by_age[c] = [
-            {"name": n, "share": round(v[0] / t * 100, 1), "avg": round(v[0] / v[1]) if v[1] else None}
-            for n, v in sorted(inds.items(), key=lambda x: -x[1][0])[:5]
+            {"dong": k[1], "emd": k[0], "ksic": k[2], "cat": k[3], "share": round(v[0] / t * 100, 1), "avg": round(v[0] / v[1]) if v[1] else None}
+            for k, v in sorted(combos.items(), key=lambda x: -x[1][0])[:6]
         ]
-    dongs = [{"name": n, "share": round(a / total * 100, 1)} for n, a in sorted(dong.items(), key=lambda x: -x[1])[:5]] if len(dong) > 1 else []
+    dongs = [{"name": n, "code": dong_code.get(n, ""), "share": round(a / total * 100, 1)} for n, a in sorted(dong.items(), key=lambda x: -x[1])[:5]] if len(dong) > 1 else []
     return {
         "live": True, "empty": False, "now": now, "prev": prev, "pct": pct,
         "industries": industries, "ages": ages, "by_age": by_age, "dongs": dongs,
@@ -188,7 +193,7 @@ def get(sido: str | None, sgg: str | None = None) -> dict:
         return {**base, "live": False, "need_sgg": True}
     if not available():
         return {**base, "live": False}
-    key = f"lc2:{place['key']}"  # lc1 → lc2: 나이대별 업종·평균 결제·읍면동 순위를 더하면서 응답 모양이 바뀜(2026-11-01)
+    key = f"lc4:{place['key']}"  # lc1 → lc2(나이대별 업종·평균 결제·읍면동 순위) → lc3(읍면동 코드, 가맹점 찾기의 동네 필터용) — 응답 모양이 바뀔 때마다 올림(2026-11-01)
     hit = store.load_cache(key, True)
     if hit and datetime.now() - datetime.fromisoformat(hit[1]) < timedelta(minutes=_TTL + 180):
         # 신선하거나 만료 직후(3시간 안)면 바로 — 만료 직후는 cached()가 옛 값을 주고 새 값은 뒤에서 받음
@@ -201,3 +206,113 @@ def get(sido: str | None, sgg: str | None = None) -> dict:
         return {**base, "live": False}  # 방금 실패한 지역은 5분 동안 다시 시도하지 않음
     _start(key, sido, sgg)
     return {**base, "live": True, "pending": True}
+
+
+# ───────── 가맹점 찾기(2026-11-01) ─────────
+# 한국조폐공사 가맹점 기본정보(모바일 15108285·카드 15108279)로 "내 동네에서 상품권 쓸 수 있는 가게". 처음엔 "낡았다"고 접었지만
+# 맨 앞 몇 줄(2022년·폐업자)만 보고 한 판단이었음 — 춘천은 모바일 3.7만 건 중 2026년 기준이 3.1만, 계속사업자 2.5만(카드는 152건뿐).
+# 필터가 서버에서 먹음: usage_rgn_cd(시군구)·emd_cd(읍면동)·ksic_cd(업종 3자리)·bzmn_stts(01 계속 / 03 폐업)·crtr_ymd(GTE)·frcs_nm(LIKE=포함). 호출 하나 2~3초.
+# 정렬 옵션이 없어 순서는 서버 기준(무작위처럼 보임). 기준일이 지난 뒤 문을 닫았을 수 있어서 앱에서 "가기 전에 전화로" 안내.
+MOBILE_URL = "https://apis.data.go.kr/B190001/mobileFranchisesV4/mobileV4"
+CARD_URL = "https://apis.data.go.kr/B190001/cardFranchisesV4/cardV4"
+CATS = {  # 앱 칩 → KSIC 3자리(한 칩에 한 코드: 코드마다 호출이 따로라 늘리면 느려짐)
+    "food": "561", "cafe": "562", "mart": "471", "grocery": "472", "pharm": "477",
+    "beauty": "961", "clinic": "862", "academy": "856", "stay": "551",
+}
+CAT_NAMES = {"561": "음식점", "562": "카페·주점", "471": "마트·편의점", "472": "식료품", "477": "약국·화장품", "961": "미용·세탁", "862": "병원·의원", "856": "학원", "551": "숙박"}
+STORE_PER = 24
+_STORE_TTL = timedelta(minutes=30)
+_store_memo: dict[str, tuple[datetime, dict]] = {}
+
+
+def _phone(raw) -> str | None:
+    """'0331234567' → '033-123-4567'. 자리표시(0310000000 같은 뒤가 전부 0)는 없는 걸로."""
+    d = "".join(c for c in str(raw or "") if c.isdigit())
+    if len(d) < 9 or not d.startswith("0") or d[3:].strip("0") == "" or d[2:].strip("0") == "":
+        return None
+    if d.startswith("02"):
+        return f"02-{d[2:-4]}-{d[-4:]}"
+    return f"{d[:3]}-{d[3:-4]}-{d[-4:]}"
+
+
+def _store_item(r: dict, kind: str) -> dict:
+    addr = (r.get("frcs_addr") or "").strip()
+    return {
+        "name": (r.get("frcs_nm") or "").strip(), "addr": addr, "dong": (r.get("emd_nm") or "").strip(),
+        "phone": _phone(r.get("frcs_rprs_telno")), "kind": kind,
+        "cat": CAT_NAMES.get(str(r.get("ksic_cd") or ""), (r.get("ksic_cd_nm") or "").split(";")[0]),
+        "asof": str(r.get("crtr_ymd") or ""),
+        "lat": r.get("lat") if isinstance(r.get("lat"), (int, float)) else None,
+        "lng": r.get("lot") if isinstance(r.get("lot"), (int, float)) else None,
+    }
+
+
+def stores(sido: str | None, sgg: str | None, q: str = "", cat: str = "", emd: str = "", page: int = 1) -> dict:
+    if not sgg:
+        return {"live": False, "need_sgg": True}
+    if not available():
+        return {"live": False}
+    q = (q or "").strip()[:20]
+    ksic = CATS.get(cat) or (cat if cat.isdigit() and len(cat) == 3 else None)  # 3자리 숫자는 업종 코드를 그대로(내 또래 줄에서 넘어옴)
+    emd = emd if emd.isdigit() and len(emd) == 8 else ""
+    page = max(1, min(page, 50))
+    place = geo.place(sido, sgg)
+    mkey = f"{place['key']}|{q}|{ksic}|{emd}|{page}"
+    hit = _store_memo.get(mkey)
+    if hit and datetime.now() - hit[0] < _STORE_TTL:
+        return hit[1]
+    area, targets = outing._targets(sido, sgg)
+    if not targets:
+        return {"live": False}
+    codes = [area + t["code"] for t in targets][:6]
+    cutoff = (_kst.today() - timedelta(days=548)).strftime("%Y%m%d")  # 1년 반보다 오래 갱신 안 된 가게는 뺌
+    jobs = [(url, kind, code) for url, kind in ((MOBILE_URL, "모바일"), (CARD_URL, "카드")) for code in codes]
+    per = max(6, -(-STORE_PER // len(jobs)))
+
+    def call(job):
+        url, kind, code = job
+        params = {"page": page, "perPage": per, "returnType": "JSON",
+                  "cond[usage_rgn_cd::EQ]": code, "cond[bzmn_stts::EQ]": "01", "cond[crtr_ymd::GTE]": cutoff}
+        if ksic:
+            params["cond[ksic_cd::EQ]"] = ksic
+        if emd:
+            params["cond[emd_cd::EQ]"] = emd
+        if q:
+            params["cond[frcs_nm::LIKE]"] = q
+        d = _http.get(url, params, timeout=60).json()
+        return kind, int(d.get("matchCount") or 0), d.get("data") or []
+
+    items: list[dict] = []
+    total = 0
+    more = False
+    ok = 0
+    with ThreadPoolExecutor(max_workers=6) as ex:
+        for res in ex.map(lambda j: _safe(call, j), jobs):
+            if res is None:
+                continue
+            ok += 1
+            kind, match, rows = res
+            total += match
+            more = more or match > page * per
+            items.extend(_store_item(r, kind) for r in rows)
+    if not ok:
+        return {"live": False}
+    seen: set[tuple[str, str]] = set()
+    out = []
+    for it in sorted(items, key=lambda x: x["name"]):  # 모바일·카드에 같이 올라온 가게는 한 번만
+        k = (it["name"], it["addr"])
+        if it["name"] and k not in seen:
+            seen.add(k)
+            out.append(it)
+    result = {"live": True, "total": total, "items": out, "page": page, "has_more": more}
+    if len(_store_memo) > 300:
+        _store_memo.clear()
+    _store_memo[mkey] = (datetime.now(), result)
+    return result
+
+
+def _safe(fn, arg):
+    try:
+        return fn(arg)
+    except Exception:
+        return None
