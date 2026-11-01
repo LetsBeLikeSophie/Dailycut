@@ -9,7 +9,7 @@ import 'components.dart';
 /// 상품권 사는 법(2026-11-01): 이 지역 상품권 이름, 사는 앱·곳, 공식 공지 페이지, 고객센터, 최근 공지.
 /// 값은 사람이 지자체·운영사 공식 페이지를 직접 열어 확인해 모은 것(backend/data/localcurrency_guide.json)이라
 /// 항목마다 출처와 확인일이 붙음. 발행 일정·할인율은 회차마다 바뀌어서, 기준 날짜가 적힌 값만 보여 주고
-/// 날짜가 오래되면 "오래됨"을 붙임. 이 지역 자료가 없으면 구역을 통째로 숨김(예전엔 네이버 검색 줄을 뒀지만 폐기).
+/// 날짜는 항상 같이 보여 주고(공식 페이지가 그 뒤로 안 바뀌었다는 뜻일 수 있어 "오래됨" 표시는 안 씀), 너무 오래된 값(300일)만 숨김. 이 지역 자료가 없으면 구역을 통째로 숨김(예전엔 네이버 검색 줄을 뒀지만 폐기).
 class BuyGuideSection extends StatefulWidget {
   const BuyGuideSection({super.key, required this.api, required this.region});
 
@@ -35,8 +35,6 @@ bool _ended(String? until) {
 class _BuyGuideSectionState extends State<BuyGuideSection> {
   late final Future<Map<String, dynamic>> _future = widget.api.localCurrencyGuide(sido: widget.region.code, sgg: widget.region.sgg);
 
-  static const _staleDays = 90; // 확인한 지 이만큼 지나면 "오래됨"
-  static const _termStaleDays = 120; // 조건의 기준일이 이만큼 지나면 "오래됨"
   static const _termDropDays = 300; // 이만큼 지나면 아예 안 보여 줌
   static const _noticeDays = 180; // 최근 공지는 이보다 오래되면 보여 주지 않음(옛 회차 공지를 지금 것처럼 보이지 않게)
 
@@ -79,7 +77,7 @@ class _BuyGuideSectionState extends State<BuyGuideSection> {
         if (play.isNotEmpty) shown.add((' (Google Play)', play.first['url'] as String));
       }
       for (final (tag, url) in shown) {
-        lines.add(ListLine(name: '$name$tag', sub: product == null ? '앱' : '앱 · $product', value: '앱 받기', onTap: () => _open(url)));
+        lines.add(ListLine(name: '$name$tag', sub: product == null ? '앱' : '앱 · $product', value: '앱으로 이동', onTap: () => _open(url)));
       }
     });
     for (final c in others) {
@@ -118,7 +116,7 @@ class _BuyGuideSectionState extends State<BuyGuideSection> {
   Widget _termLine(Map<String, dynamic> t) {
     final value = t['value'] as String;
     final asof = t['asof'] as String?;
-    final date = '기준 ${dotDate(asof)}${(_ageDays(asof) ?? 0) >= _termStaleDays ? ' · 오래됨' : ''}';
+    final date = '기준 ${dotDate(asof)}';
     final until = dotDate(t['until'] as String?);
     final tail = until.isEmpty ? date : '$date · ~$until까지';
     final short = _shortOf(t);
@@ -140,8 +138,6 @@ class _BuyGuideSectionState extends State<BuyGuideSection> {
         final d = snap.data;
         if (d == null || d['found'] != true) return const SizedBox.shrink();
         final checked = d['checked'] as String?;
-        final age = _ageDays(checked);
-        final stale = age != null && age >= _staleDays;
         final channels = ((d['channels'] as List?) ?? const []).cast<Map<String, dynamic>>();
         final official = d['official'] as Map<String, dynamic>?;
         final phone = d['phone'] as Map<String, dynamic>?;
@@ -157,7 +153,7 @@ class _BuyGuideSectionState extends State<BuyGuideSection> {
         final name = d['name'] as String?;
         final others = _channelLines(channels, name);
         final rows = <Widget>[
-          ...others.where((w) => w is ListLine && w.value == '앱 받기'),
+          ...others.where((w) => w is ListLine && w.value == '앱으로 이동'),
           if (official != null) ListLine(name: '발행 일정·공지', sub: official['label'] as String?, value: '열기', onTap: () => _open(official['url'] as String)),
           if (showNotice)
             ListLine(
@@ -166,7 +162,7 @@ class _BuyGuideSectionState extends State<BuyGuideSection> {
               onTap: (notice['url'] as String?) == null ? null : () => _open(notice['url'] as String),
             ),
           for (final t in terms) _termLine(t),
-          ...others.where((w) => !(w is ListLine && w.value == '앱 받기')),
+          ...others.where((w) => !(w is ListLine && w.value == '앱으로 이동')),
           if (phone != null)
             ListLine(
               name: phone['label'] as String? ?? '문의',
@@ -185,7 +181,7 @@ class _BuyGuideSectionState extends State<BuyGuideSection> {
             ExpandableList(unit: '개', children: rows),
             DataMeta(rows: [
               DataMetaRow('출처', _hosts(sources)),
-              DataMetaRow('확인일', dotDate(checked), stale: stale),
+              DataMetaRow('확인일', dotDate(checked)),
             ]),
           ],
         );

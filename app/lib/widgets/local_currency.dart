@@ -129,7 +129,7 @@ class _LocalCurrencySectionState extends State<LocalCurrencySection> {
         final pages = <(String, Widget)>[
           ('$month 결제금액', _amountPage(now, prev, pct, change)),
           ('많이 쓴 곳', _Bars(rows: [for (final r in industries) (r['name'] as String, (r['share'] as num).toDouble(), '${r['share']}% · ${wonShort(r['amt'] as int)}')])),
-          if (ages.isNotEmpty) ('많이 쓴 나이대', _Columns(rows: [for (final r in ages) (r['label'] as String, (r['share'] as num).toDouble())])),
+          if (ages.isNotEmpty) ('많이 쓴 나이대', Align(alignment: Alignment.topCenter, child: SizedBox(height: 236, child: _Columns(rows: [for (final r in ages) (r['label'] as String, (r['share'] as num).toDouble())])))),
           if (dongs.isNotEmpty) ('동네별로 보면', _Bars(rows: [for (final r in dongs) (r['name'] as String, (r['share'] as num).toDouble(), '${r['share']}%')])),
         ];
         final page = _heroPage.clamp(0, pages.length - 1);

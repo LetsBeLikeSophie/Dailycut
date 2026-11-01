@@ -321,13 +321,6 @@ class _StoreSheet extends StatelessWidget {
   final Map<String, dynamic> store;
   final Region region;
 
-  /// 정보 기준일(YYYYMMDD)이 1년 넘게 지났는가 — 그 사이 가게가 바뀌었을 가능성이 커서 "오래됨"을 붙임.
-  bool _old(String ymd) {
-    if (ymd.length != 8) return false;
-    final t = DateTime.tryParse('${ymd.substring(0, 4)}-${ymd.substring(4, 6)}-${ymd.substring(6)}');
-    return t != null && DateTime.now().difference(t).inDays > 365;
-  }
-
   @override
   Widget build(BuildContext context) {
     final name = store['name'] as String;
@@ -363,7 +356,7 @@ class _StoreSheet extends StatelessWidget {
           ActionButton(vertical: 12, label: '전화 걸기', onTap: () => launchUrl(Uri.parse('tel:${phone.replaceAll('-', '')}'))),
         ],
         DataMeta(top: 20, rows: [
-          DataMetaRow('정보 기준일', dotDate(ymd), stale: _old(ymd)),
+          DataMetaRow('정보 기준일', dotDate(ymd)),
           const DataMetaRow('출처', '한국조폐공사 가맹점 기본정보'),
           const DataMetaRow('가기 전에', '전화로 상품권을 받는지 확인'),
         ]),
