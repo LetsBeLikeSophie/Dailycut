@@ -143,10 +143,10 @@ class _LocalCurrencySectionState extends State<LocalCurrencySection> {
                 index: page,
                 count: pages.length,
                 onChanged: (i) => setState(() => _heroPage = i),
-                info: const InfoIconButton(title: '지역화폐 통계 안내', lines: _info, sources: [('한국조폐공사', 'https://www.komsco.com')]),
+                info: const InfoIconButton(title: '지역화폐 통계 안내', lines: _info),
               ),
               const SizedBox(height: 14),
-              SizedBox(height: 316, child: KeyedSubtree(key: ValueKey('hp$page'), child: pages[page].$2)),
+              SizedBox(height: 272, child: KeyedSubtree(key: ValueKey('hp$page'), child: pages[page].$2)),
             ],
           ),
         );

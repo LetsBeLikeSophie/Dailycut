@@ -40,17 +40,6 @@ class _BuyGuideSectionState extends State<BuyGuideSection> {
 
   Future<void> _open(String url) => launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication);
 
-  /// ⓘ의 출처 링크: 공식 페이지마다 사이트 주소(host)를 이름으로, 사이트마다 첫 주소 하나만(글 제목은 길어서 안 씀).
-  List<(String, String)> _sourceLinks(List<Map<String, dynamic>> sources) {
-    final byHost = <String, String>{};
-    for (final s in sources) {
-      final url = s['url'] as String? ?? '';
-      final host = Uri.tryParse(url)?.host ?? '';
-      if (host.isNotEmpty && !host.contains('apple.com') && !host.contains('google.com')) byHost.putIfAbsent(host, () => url); // 앱 스토어 주소는 출처가 아님
-    }
-    return [for (final e in byHost.entries.take(5)) (e.key, e.value)];
-  }
-
   static final _storeSuffix = RegExp(r'\s*\((아이폰|안드로이드)\)$');
 
   /// 사는 곳 줄들. 앱은 지금 쓰는 기기에 맞는 스토어 링크 하나만(안드로이드는 Play, 아이폰은 App Store, 컴퓨터는 둘 다).
@@ -153,7 +142,6 @@ class _BuyGuideSectionState extends State<BuyGuideSection> {
           for (final t in ((d['terms'] as List?) ?? const []).cast<Map<String, dynamic>>())
             if (!_ended(t['until'] as String?) && (_ageDays(t['asof'] as String?) ?? 0) <= _termDropDays) t,
         ];
-        final sources = ((d['sources'] as List?) ?? const []).cast<Map<String, dynamic>>();
         final name = d['name'] as String?;
         final others = _channelLines(channels, name);
         final rows = <Widget>[
@@ -179,7 +167,6 @@ class _BuyGuideSectionState extends State<BuyGuideSection> {
           info: InfoIconButton(
             title: '사는 법 안내',
             lines: const ['데일리컷이 지자체·운영사 공식 홈페이지를\n직접 확인해서 정리해요.', '할인율·한도는 줄마다 적힌 날짜가 기준이에요.'],
-            sources: _sourceLinks(sources),
           ),
           children: [
             ExpandableList(unit: '개', children: rows),

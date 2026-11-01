@@ -44,7 +44,7 @@ class _PaperVoucherSectionState extends State<PaperVoucherSection> {
         return ListSection(
           title: '종이 상품권 살 수 있는 곳',
           trailing: (d['with_stock'] as int) > 0 ? '재고 있는 곳 ${d['with_stock']}곳' : null,
-          info: InfoIconButton(title: '종이 상품권 안내', lines: _info(asof), sources: const [('한국조폐공사', 'https://www.komsco.com')]),
+          info: InfoIconButton(title: '종이 상품권 안내', lines: _info(asof)),
           children: [
             ExpandableList(
               unit: '곳',
@@ -91,7 +91,6 @@ class _PaperVoucherSectionState extends State<PaperVoucherSection> {
         sub: '${it['gt']} · 종이 상품권 판매',
         gapAfterHeader: 20,
         infoLines: [if (dotDate(asof).isNotEmpty) '재고는 ${dotDate(asof)} 기준이에요.', '가기 전에 전화로 재고를 확인해 주세요.'],
-        infoSources: const [('한국조폐공사', 'https://www.komsco.com')],
         children: [
           if (st != null && st.isNotEmpty) ...[
             Text('권종별 재고', style: AppTheme.subheading),

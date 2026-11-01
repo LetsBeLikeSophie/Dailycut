@@ -228,7 +228,7 @@ class StoreFinderState extends State<StoreFinder> {
     return ListSection(
       title: '상품권 쓸 수 있는 가게',
       trailing: _loading && _items.isEmpty ? null : (_total > 0 ? '약 ${formatNumber(_total)}곳' : null),
-      info: InfoIconButton(title: '가맹점 안내', lines: _info, sources: const [('한국조폐공사', 'https://www.komsco.com')]),
+      info: InfoIconButton(title: '가맹점 안내', lines: _info),
       children: [
         Padding(
           padding: const EdgeInsets.only(top: 12),
@@ -331,7 +331,6 @@ class _StoreSheet extends StatelessWidget {
         '카드 가맹점은 도로명 주소의 건물 번호가\n빠져 있기도 해요. 지도에서 위치를 확인해 주세요.',
         '가기 전에 전화로 상품권을 받는지 확인해 주세요.',
       ],
-      infoSources: const [('한국조폐공사', 'https://www.komsco.com')],
       children: [
         Text('주소', style: AppTheme.subheading),
         const SizedBox(height: 6),
