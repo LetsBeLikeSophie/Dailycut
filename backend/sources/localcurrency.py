@@ -108,25 +108,49 @@ def _build(sido: str | None, sgg: str | None) -> dict:
             if abs(pct) > 100:  # 상품권을 막 시작한 곳 등은 배로 뛰어서 비교가 의미 없음
                 pct = None
 
-    ind: dict[str, int] = {}
+    ind: dict[str, list[int]] = {}  # 업종 → [금액, 건수]
     age: dict[str, int] = {}
+    age_ind: dict[str, dict[str, list[int]]] = {}  # 나이대 → 업종 → [금액, 건수]
+    dong: dict[str, int] = {}
     for r in rows:
         amt = int(r.get("stlm_amt") or 0)
         if amt <= 0:
             continue
+        nocs = int(r.get("stlm_nocs") or 0)
         name = (r.get("ksic_nm") or "").strip()
-        if name:
-            ind[name] = ind.get(name, 0) + amt
         code = r.get("par_ag")
+        if name:
+            v = ind.setdefault(name, [0, 0])
+            v[0] += amt
+            v[1] += nocs
         if code in AGE_LABELS:
             age[code] = age.get(code, 0) + amt
+            if name:
+                v = age_ind.setdefault(code, {}).setdefault(name, [0, 0])
+                v[0] += amt
+                v[1] += nocs
+        emd = (r.get("emd_nm") or "").strip()
+        if emd:
+            dong[emd] = dong.get(emd, 0) + amt
     total = now["amt"] or 1
-    industries = [{"name": n, "amt": a, "share": round(a / total * 100, 1)} for n, a in sorted(ind.items(), key=lambda x: -x[1])[:6]]
+    industries = [
+        {"name": n, "amt": v[0], "share": round(v[0] / total * 100, 1), "avg": round(v[0] / v[1]) if v[1] else None}
+        for n, v in sorted(ind.items(), key=lambda x: -x[1][0])[:6]
+    ]
     age_total = sum(age.values()) or 1
     ages = [{"code": c, "label": AGE_LABELS[c], "share": round(age.get(c, 0) / age_total * 100, 1)} for c in AGE_LABELS if age.get(c)]
+    # 나이대별로 "내 또래는 어디서 쓰나": 그 나이대 결제금액 안에서의 업종 비중과 한 번 결제 평균(2026-11-01 개인용 항목)
+    by_age = {}
+    for c, inds in age_ind.items():
+        t = age.get(c) or 1
+        by_age[c] = [
+            {"name": n, "share": round(v[0] / t * 100, 1), "avg": round(v[0] / v[1]) if v[1] else None}
+            for n, v in sorted(inds.items(), key=lambda x: -x[1][0])[:5]
+        ]
+    dongs = [{"name": n, "share": round(a / total * 100, 1)} for n, a in sorted(dong.items(), key=lambda x: -x[1])[:5]] if len(dong) > 1 else []
     return {
         "live": True, "empty": False, "now": now, "prev": prev, "pct": pct,
-        "industries": industries, "ages": ages,
+        "industries": industries, "ages": ages, "by_age": by_age, "dongs": dongs,
         "asof": _kst.now().isoformat(timespec="minutes"),
     }
 
@@ -164,7 +188,7 @@ def get(sido: str | None, sgg: str | None = None) -> dict:
         return {**base, "live": False, "need_sgg": True}
     if not available():
         return {**base, "live": False}
-    key = f"lc1:{place['key']}"
+    key = f"lc2:{place['key']}"  # lc1 → lc2: 나이대별 업종·평균 결제·읍면동 순위를 더하면서 응답 모양이 바뀜(2026-11-01)
     hit = store.load_cache(key, True)
     if hit and datetime.now() - datetime.fromisoformat(hit[1]) < timedelta(minutes=_TTL + 180):
         # 신선하거나 만료 직후(3시간 안)면 바로 — 만료 직후는 cached()가 옛 값을 주고 새 값은 뒤에서 받음

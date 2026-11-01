@@ -4,6 +4,7 @@ import '../api_client.dart';
 import '../region.dart';
 import '../theme.dart';
 import 'components.dart';
+import 'support_profile.dart';
 
 /// 혜택 탭 "지역화폐" 구역(2026-10-31): 한국조폐공사 지역사랑상품권 가맹점 업종별 결제정보로 우리 동네 상품권이 지난달 얼마나·어디서·누가 쓰였는지.
 /// 시군구를 골라야 보임. 상품권이 없는 지역은 자료가 없다고 안내. 처음 부르는 지역은 서버가 뒤에서 계산해서(큰 도시 30~50초) 로딩이 길 수 있음.
@@ -28,8 +29,21 @@ String wonShort(int won) {
 /// 건수 → "28.2만건" / "9,500건".
 String countShort(int n) => n >= 10000 ? '${(n / 10000).toStringAsFixed(1)}만건' : '${formatNumber(n)}건';
 
+/// 한 번 결제 평균 → "2.1만원" / "9,500원".
+String avgShort(int won) {
+  if (won < 10000) return '${formatNumber(won)}원';
+  final s = (won / 10000).toStringAsFixed(1);
+  return '${s.endsWith('.0') ? s.substring(0, s.length - 2) : s}만원';
+}
+
+/// 만 나이 → 지역화폐 자료의 연령 코드(01 19세 이하 … 06 60대 이상).
+String ageCodeOf(int age) => age < 20 ? '01' : '0${(age ~/ 10).clamp(2, 6)}';
+
 class _LocalCurrencySectionState extends State<LocalCurrencySection> {
   late Future<Map<String, dynamic>> _future = _load();
+
+  /// 내 또래로 볼 연령대. "내 조건"에 생년월일이 있으면 그 나이로 시작하고(기기 안에서만 계산, 서버엔 안 보냄), 없으면 직접 고름.
+  late String? _ageCode = SupportProfile.instance.age == null ? null : ageCodeOf(SupportProfile.instance.age!);
 
   Future<Map<String, dynamic>> _load() => widget.api.localCurrency(sido: widget.region.code, sgg: widget.region.sgg);
 
@@ -82,6 +96,8 @@ class _LocalCurrencySectionState extends State<LocalCurrencySection> {
         final pct = (d['pct'] as num?)?.toDouble();
         final industries = (d['industries'] as List).cast<Map<String, dynamic>>();
         final ages = (d['ages'] as List).cast<Map<String, dynamic>>();
+        final byAge = ((d['by_age'] as Map?) ?? const {}).map((k, v) => MapEntry(k as String, (v as List).cast<Map<String, dynamic>>()));
+        final dongs = ((d['dongs'] as List?) ?? const []).cast<Map<String, dynamic>>();
         final change = pct == null ? 'flat' : (pct.abs() < 1 ? 'flat' : (pct > 0 ? 'up' : 'down'));
         final month = _monthName(now['ym'] as String);
         return Column(
@@ -106,9 +122,24 @@ class _LocalCurrencySectionState extends State<LocalCurrencySection> {
               title: '많이 쓴 곳',
               trailing: '$month 업종별 비중',
               children: [
-                for (final r in industries) ListLine(name: r['name'] as String, value: '${r['share']}%', valueSub: wonShort(r['amt'] as int)),
+                for (final r in industries)
+                  ListLine(
+                    name: r['name'] as String,
+                    sub: r['avg'] == null ? null : '한 번에 평균 ${avgShort(r['avg'] as int)}',
+                    value: '${r['share']}%',
+                    valueSub: wonShort(r['amt'] as int),
+                  ),
               ],
             ),
+            if (byAge.isNotEmpty) _peerSection(month, ages, byAge),
+            if (dongs.isNotEmpty)
+              ListSection(
+                title: '동네별로 보면',
+                trailing: '$month 결제금액 비중',
+                children: [
+                  for (final r in dongs) ListLine(name: r['name'] as String, value: '${r['share']}%'),
+                ],
+              ),
             if (ages.isNotEmpty)
               ListSection(
                 title: '많이 쓴 나이대',
@@ -120,6 +151,50 @@ class _LocalCurrencySectionState extends State<LocalCurrencySection> {
           ],
         );
       },
+    );
+  }
+
+  /// "내 또래는 어디서 쓸까" — 고른 나이대가 쓴 돈의 업종 비중. 자료가 있는 나이대만 칩으로 보여 줌.
+  Widget _peerSection(String month, List<Map<String, dynamic>> ages, Map<String, List<Map<String, dynamic>>> byAge) {
+    final labels = {for (final a in ages) a['code'] as String: a['label'] as String};
+    final codes = labels.keys.where(byAge.containsKey).toList();
+    final code = codes.contains(_ageCode) ? _ageCode : null;
+    return ListSection(
+      title: '내 또래는 어디서 쓸까',
+      trailing: code == null ? '나이대를 골라 보세요' : '${labels[code]} 결제금액 중 비중',
+      info: const InfoIconButton(
+        title: '내 또래 안내',
+        lines: [
+          '결제한 사람의 나이대별로 가게 업종 비중과 한 번 결제 평균을 보여 줘요. 이 지역 전체가 아니라, 고른 나이대가 쓴 돈만 100%로 봐요.',
+          '"내 조건"에 생년월일을 저장해 두면 내 나이대로 바로 열려요. 생년월일은 이 기기 안에서만 쓰고 서버로 보내지 않아요.',
+        ],
+      ),
+      children: [
+        Padding(
+          padding: const EdgeInsets.only(top: 12, bottom: 4),
+          child: Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final c in codes) PillChip(label: labels[c]!, selected: c == code, onTap: () => setState(() => _ageCode = c)),
+            ],
+          ),
+        ),
+        if (code == null)
+          const Padding(
+            padding: EdgeInsets.symmetric(vertical: 24),
+            child: Text('위에서 나이대를 고르면 또래가 많이 쓰는 곳을 보여 드려요.', style: TextStyle(fontSize: 13, color: AppColors.inkSoft)),
+          )
+        else
+          ...[
+            for (final r in byAge[code]!)
+              ListLine(
+                name: r['name'] as String,
+                sub: r['avg'] == null ? null : '한 번에 평균 ${avgShort(r['avg'] as int)}',
+                value: '${r['share']}%',
+              ),
+          ],
+      ],
     );
   }
 

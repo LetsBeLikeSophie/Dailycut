@@ -151,3 +151,11 @@ claude.ai/artifact/17gytwYuXMFkF4vx8tWv65 (사용 중 · 일부만 · 미사용 
   출처 세 곳 반영: `store/listing-ko.md`(혜택 문단·출처)·`sources_info.dart`(한국조폐공사 추가)·`about.html`. **Play 설명(콘솔)에도 지역화폐·한국조폐공사 출처를 앱 1.3.8 올릴 때 같이.** 화면의 출처 링크는 한국조폐공사 https://www.komsco.com + 공공데이터포털.
   **포털 신청 방법 메모**: 이 브라우저(Claude 브라우저 창)는 새 창을 못 열어서 활용신청 버튼이 막힘 → `…/tcs/dss/redirectDevAcountRequestForm.do?publicDataPk=<번호>&isBusinessApply=undefined` 로 직접 이동하면 신청서가 열림. "신청하시겠습니까?" confirm 창은 브라우저가 자동 취소해서 `window.confirm=()=>true` 를 먼저 설정해야 제출됨. 신청 상세(호출 주소·키)는 마이페이지 `selectAcountList.do`의 항목 링크 → `selectAPIAcountView.do?publicDataDetailPk=…&prcuseReqstSeqNo=…`(키가 화면에 같이 찍히니 출력하지 말 것).
 
+
+### 지역화폐에 "개인용" 항목 추가 (2026-11-01)
+- 사용자 의견: 합산 통계만으론 개인에게 쓸모가 적음 → 같은 업종별 결제 자료(`localGiftsKsciPaymentV1`)에서 새 호출 없이 더 뽑음. 응답 모양이 바뀌어 캐시 키를 `lc1` → `lc2`로 올림(지역마다 첫 방문에 다시 계산).
+- 업종 줄마다 **한 번 결제 평균**(금액÷건수): 음식점 3.4만원, 교육기관 18.7만원처럼 "얼마쯤 쓰게 되나"를 가늠하게 함.
+- **내 또래는 어디서 쓸까**(`by_age`): 나이대별 업종 TOP 5와 평균 결제. "내 조건"에 생년월일이 있으면 그 나이대(`ageCodeOf`)가 먼저 켜지고, 없으면 칩으로 고름. 생년월일은 기기 안에서만 쓰고 서버엔 안 보냄(요청은 지역만).
+- **동네별로 보면**(`dongs`): 읍면동 결제금액 비중 TOP 5(읍면동이 둘 이상일 때만).
+- 성별(`par_gend` M/F)은 자료에 있지만 나이대×성별로 쪼개면 작은 지역에서 표본이 너무 작아 안 씀.
+- 가맹점 "쓸 수 있는 가게" 목록은 여전히 보류(자료가 낡음). 개인에게 가장 쓸모 있을 항목이라, 포털이 가맹점 자료를 갱신하면 다시 볼 것.
