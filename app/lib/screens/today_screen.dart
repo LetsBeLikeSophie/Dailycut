@@ -122,7 +122,7 @@ class _TodayScreenState extends State<TodayScreen> {
                     Expanded(
                       child: BigNumber(
                         to: today['temp'] as num,
-                        suffix: '°',
+                        suffix: '°C', // 2026-11-01: 맨 위 큰 숫자만 단위까지(시간대별·주간은 좁아서 ° 그대로)
                         unit: today['condition'] as String,
                       ),
                     ),
