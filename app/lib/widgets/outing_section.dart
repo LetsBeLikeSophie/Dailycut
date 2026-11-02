@@ -64,7 +64,7 @@ class _OutingSectionState extends State<OutingSection> {
           info: GestureDetector(
             onTap: () {
               Analytics.instance.track('sources_open');
-              showSourcesSheet(context, current: _explain, section: Section.place);
+              showSourcesSheet(context, current: _explain);
             },
             behavior: HitTestBehavior.opaque,
             child: const Padding(

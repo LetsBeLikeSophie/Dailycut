@@ -574,7 +574,7 @@ def _headline(w: dict) -> str:
     wet = any(h.get("pop", 0) >= 60 for h in w.get("hourly", [])[:4])
     air_bad = w.get("air_quality", {}).get("pm25") in ("나쁨", "매우나쁨")
     tail = " · 우산을 챙기세요" if wet else (" · 마스크를 챙기세요" if air_bad else "")
-    return f"오늘은 {t['condition']}, 낮 최고 {t['high']}°C예요{tail}"
+    return f"오늘은 {t['condition']}, 낮 최고 {t['high']}°예요{tail}"
 
 
 @app.get("/today")

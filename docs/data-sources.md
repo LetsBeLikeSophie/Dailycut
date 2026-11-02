@@ -222,3 +222,10 @@ claude.ai/artifact/17gytwYuXMFkF4vx8tWv65 (사용 중 · 일부만 · 미사용 
 - **모든 탭 맨 아래**: "원본은 공식 사이트에서 확인하세요 + 기관 링크 + 민간 서비스예요"(`OfficialSourceLinks(section:)`, `kSectionLinks`). 투데이·생활·문화·나들이는 `SectionScreen(footer:)`로, 혜택 탭은 구역별 링크.
 - 투데이 "오늘의 섹션" 카드를 누르면 그 탭으로(`boot.dart`의 `openTabKey`, 생활=제철·문화=이번 주 행사·혜택="money:gov").
 - 새 데이터를 붙일 때: `kAllSources`에 화면 값까지 적고(없으면 그 화면 시트에 안 나옴), 필요하면 `kSectionLinks`도.
+
+## 출처 표시 정리 2차 (2026-11-03)
+- 맨 위 날짜 옆 ⓘ 시트에서 "이 화면의 데이터"·"다른 화면 출처도 보기" 목록을 뺌(화면 맨 아래 링크와 중복). 남은 것: 데이터 출처 문단(민간 서비스 안내), 광고, 아침 날씨 알림, 익명 통계, 그리고 맨 아래 "서비스 소개 · 전체 출처 보기 · 개인정보처리방침". `showSourcesSheet`의 `section` 인자는 없앰.
+- 각 탭 맨 아래 "원본은 공식 사이트에서 확인하세요" 링크는 대표 기관만이 아니라 `kAllSources`에서 그 화면 태그가 붙은 출처 전부(`sectionLinks()`, 긴 이름은 `_kShortNames`로 줄임). 혜택 탭만 칩마다 직접 적은 목록.
+- `app/web/sources.html`("전체 출처") 새로 만듦 — kAllSources와 같은 내용(이름·공식 사이트 링크·설명·쓰이는 화면). about/privacy/download 상단과 index.html에서도 링크. 새 소스를 붙이면 이 페이지도 같이 고칠 것.
+- 온도 "°C"는 취소하고 전부 "°"로 되돌림(큰 숫자·한 문장 제목).
+

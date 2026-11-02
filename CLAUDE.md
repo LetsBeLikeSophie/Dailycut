@@ -61,7 +61,7 @@ UI 약속: 여러 개 중 고르기 = `PillChip`, 하나 켜고 끄기 = `CheckT
 - 광고(상업 이용) 때문에 **뺀 소스는 허락 없이 되살리지 말 것**: 금융위 지수·상품, 금감원 금융상품, KOBIS, 문화포털 사진. 사진은 위키미디어 CC·관광공사 Type1만.
 - 에어코리아(3유형)는 **가공 금지** — 측정소 한 곳의 원값·등급을 그대로.
 - 위치 좌표는 저장·로그 금지(`/region`은 POST 본문). 통계는 익명 카운터만, 서버에 개인·기기 ID 안 둠. 생년월일·"내 조건"은 기기에만.
-- **새 공공데이터 소스를 붙이면 세 곳을 같이 고칠 것**: ①`store/listing-ko.md`(+Play Console 설명) ②앱 출처 시트 `widgets/sources_info.dart`(`kAllSources`, 공식 사이트 주소 포함) ③`app/web/about.html`. (플레이가 "설명에 모든 출처를 나열하라"며 세 번 거부함)
+- **새 공공데이터 소스를 붙이면 네 곳을 같이 고칠 것**: ①`store/listing-ko.md`(+Play Console 설명) ②`widgets/sources_info.dart`의 `kAllSources`(공식 사이트 주소·화면 태그 포함 — 각 탭 맨 아래 출처 링크가 이걸로 만들어짐) ③`app/web/about.html` ④`app/web/sources.html`("전체 출처" 페이지, ⓘ 시트 맨 아래 "전체 출처 보기"). (플레이가 "설명에 모든 출처를 나열하라"며 세 번 거부함)
 - 지역 규칙: 나들이는 시군구에 없으면 상위 지역으로 채우지 않음, 혜택 청약·공공임대는 시도 전체로 채움. UTC 서버라 날짜는 `sources/_kst.py`.
 
 ## 출시 상태 (Play) — 상세는 `docs/play-console.md`·`docs/android-release.md`
