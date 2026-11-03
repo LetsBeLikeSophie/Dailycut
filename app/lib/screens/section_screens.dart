@@ -58,7 +58,7 @@ class _SectionScreenState extends State<SectionScreen> {
       future: _future,
       builder: (context, snapshot) {
         if (snapshot.connectionState != ConnectionState.done) {
-          return const Center(child: CircularProgressIndicator());
+          return ScreenSkeleton(section: widget.section);
         }
         if (snapshot.hasError) {
           return Center(child: Text('불러오지 못했어요\n${snapshot.error}', textAlign: TextAlign.center));

@@ -65,7 +65,7 @@ class _TodayScreenState extends State<TodayScreen> {
       builder: (context, snapshot) {
         final waiting = snapshot.connectionState != ConnectionState.done;
         if (waiting && !snapshot.hasData) {
-          return const Center(child: CircularProgressIndicator());
+          return ScreenSkeleton(section: Section.weather, eyebrow: '오늘 · ${RegionStore.instance.label}');
         }
         // 첫 화면 데이터가 준비됐으니 웹 스플래시를 걷음(받는 동안은 스플래시가 덮고 있어서 스피너가 또 보이지 않음)
         if (!kFirstScreenReady.value) {

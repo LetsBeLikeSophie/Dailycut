@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 
 import '../../analytics.dart';
 import '../../theme.dart';
+import 'hero.dart';
 
 /// 받는 중 표시(작은 원 + 문구). 목록 자리에서 쓰는 공용 모양.
 class LoadingNote extends StatelessWidget {
@@ -22,6 +23,69 @@ class LoadingNote extends StatelessWidget {
           const SizedBox(height: 14),
           Text(label!, style: const TextStyle(fontSize: 13, color: AppColors.inkSoft)),
         ],
+      ],
+    );
+  }
+}
+
+/// 화면 전체를 받는 동안 보이는 뼈대(2026-11-03): 빈 화면에 큰 로딩 원만 돌면 오래 걸리는 것처럼 느껴져서,
+/// 맨 위 큰 도형·날짜·지역 줄은 바로 그리고 내용 자리에 옅은 줄만 천천히 깜빡임. 데이터가 오면 그 자리가 내용으로 바뀜.
+class ScreenSkeleton extends StatefulWidget {
+  const ScreenSkeleton({super.key, required this.section, this.eyebrow});
+
+  final Section section;
+  final String? eyebrow;
+
+  @override
+  State<ScreenSkeleton> createState() => _ScreenSkeletonState();
+}
+
+class _ScreenSkeletonState extends State<ScreenSkeleton> with SingleTickerProviderStateMixin {
+  late final AnimationController _pulse = AnimationController(vsync: this, duration: const Duration(milliseconds: 1100))..repeat(reverse: true);
+
+  @override
+  void dispose() {
+    _pulse.dispose();
+    super.dispose();
+  }
+
+  Widget _bar(double widthFactor, {double height = 14}) => FractionallySizedBox(
+        alignment: Alignment.centerLeft,
+        widthFactor: widthFactor,
+        child: Container(height: height, color: AppColors.hair),
+      );
+
+  @override
+  Widget build(BuildContext context) {
+    return ListView(
+      physics: const NeverScrollableScrollPhysics(),
+      padding: const EdgeInsets.fromLTRB(20, 24, 20, 32),
+      children: [
+        PageHero(
+          section: widget.section,
+          eyebrow: widget.eyebrow,
+          headline: ' ',
+          headlineLines: 1,
+          body: const [SizedBox(height: 40)],
+        ),
+        const SizedBox(height: 20),
+        FadeTransition(
+          opacity: Tween<double>(begin: 0.45, end: 1).animate(CurvedAnimation(parent: _pulse, curve: Curves.easeInOut)),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _bar(0.3, height: 16),
+              const SizedBox(height: 12),
+              Container(height: 1, color: AppColors.ink),
+              for (final w in const [0.62, 0.48, 0.7, 0.4, 0.56]) ...[
+                const SizedBox(height: 22),
+                _bar(w),
+                const SizedBox(height: 22),
+                Container(height: 1, color: AppColors.hair),
+              ],
+            ],
+          ),
+        ),
       ],
     );
   }

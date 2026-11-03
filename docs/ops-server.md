@@ -68,3 +68,6 @@
   적용 결과: DB 44→32MB, 캐시 228→197행, 가격 이력 죽은 품목 15행 삭제. 나머지 보관: nginx 접속 로그 14일(logrotate), DB 백업 14일(같은 서버 안이라 서버 자체 유실엔 못 막음 → 다른 곳 보관은 TODO).
   ⑤**nginx 요청 제한·보안 헤더**(`/etc/nginx/sites-available/itssophie.dev`, 백업 `.bak-20261019004916`): `/dailycut-api/`에 IP당 초당 20회·순간 60회(`limit_req zone=dc_api`, 초과 시 429 — 400회 동시 요청 시험에서 288회 차단되고 잠깐 쉬면 풀림), `/dailycut/`에 HSTS(180일, 호스트 전체에 적용되지만 모든 프로젝트가 HTTPS 전용)·nosniff·Referrer-Policy·X-Frame-Options·Permissions-Policy(geolocation=self). CSP는 CanvasKit(wasm)·구글 CDN 때문에 일부러 안 넣음. 같은 서버의 다른 프로젝트(포트폴리오·Cortex 등)엔 안 걸리게 데일리컷 구간에만 적용.
   **아직 남은 것(점검 보고)**: 실제 애드몹 ID 교체(지금 테스트 ID)·EEA 배포 시 UMP·"정부와 무관" 문구, 소스별 최대 허용 나이(갱신이 오래 실패해도 옛 값을 계속 보여 줌), `components.dart` 1,752줄 분리·상세 시트 틀 통일(SheetFrame 미사용 4종)·하드코딩 색 21곳·핵심 계산 테스트(현재 5개), AAB 서명 키스토어, `--obfuscate --split-debug-info`, DB 백업 외부 보관.
+
+- **로딩 뼈대 (2026-11-03)**: 웹 스플래시가 걷힌 뒤(또는 앱에는 스플래시가 없어서) 탭 내용을 받는 동안 흰 화면에 큰 로딩 원만 돌던 것을 `ScreenSkeleton`(`widgets/components/notes.dart`)으로 바꿈 — 맨 위 큰 도형·날짜·지역 줄은 바로 그리고 내용 자리에 옅은 줄이 깜빡임. 투데이·`SectionScreen`(생활·문화·나들이·혜택)·지역 준비 전(`main.dart _regional`)에 적용. 다른 탭을 뒤에서 미리 만드는 간격도 0.7초 → 0.45초. 웹 스플래시는 투데이 날씨가 오면 걷는 기존 방식 그대로(20초 지나면 어쨌든 걷음). 가짜로 느린 API(25초 지연)를 붙여 뼈대가 뜨는 것을 확인.
+

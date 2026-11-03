@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'api_client.dart';
 import 'boot.dart';
 import 'location_flow.dart';
+import 'widgets/components.dart' show ScreenSkeleton;
 import 'widgets/swipe.dart';
 import 'screens/today_screen.dart';
 import 'screens/section_screens.dart';
@@ -121,7 +122,7 @@ class _RootShellState extends State<RootShell> {
       if (mounted) offerLocationOnFirstRun(context);
     });
     for (var i = 1; i < _tabs.length; i++) {
-      Future<void>.delayed(Duration(milliseconds: 700 * i), () {
+      Future<void>.delayed(Duration(milliseconds: 450 * i), () {
         if (mounted) setState(() => _visited.add(i));
       });
     }
@@ -129,9 +130,9 @@ class _RootShellState extends State<RootShell> {
 
   /// 지역에 따라 달라지는 화면(투데이·생활·문화)은 지역이 바뀌면 새로 만들어서 다시 받아옴.
   /// [keyed]가 false면 지역이 바뀌어도 화면을 새로 만들지 않고 그 화면이 스스로 새 지역을 받게 함(투데이: 로딩 원 깜빡임 방지).
-  Widget _regional(Widget Function(Region) build, {bool keyed = true}) {
+  Widget _regional(Widget Function(Region) build, {bool keyed = true, Section section = Section.weather}) {
     final store = RegionStore.instance;
-    if (!store.ready) return const Center(child: CircularProgressIndicator());
+    if (!store.ready) return ScreenSkeleton(section: section);
     if (!keyed) return build(store.current);
     return KeyedSubtree(key: ValueKey('${store.current.code}/${store.current.sgg ?? ''}'), child: build(store.current));
   }
@@ -147,10 +148,10 @@ class _RootShellState extends State<RootShell> {
   Widget _scaffold(BuildContext context) {
     final builders = <Widget Function()>[
       () => _regional((r) => TodayScreen(api: _api, region: r), keyed: false),
-      () => _regional((r) => marketScreen(_api, r, context)),
-      () => _regional((r) => cultureScreen(_api, r, context)),
-      () => _regional((r) => placesScreen(_api, r, context)),
-      () => _regional((r) => benefitsScreen(_api, r, context)),
+      () => _regional((r) => marketScreen(_api, r, context), section: Section.market),
+      () => _regional((r) => cultureScreen(_api, r, context), section: Section.culture),
+      () => _regional((r) => placesScreen(_api, r, context), section: Section.place),
+      () => _regional((r) => benefitsScreen(_api, r, context), section: Section.money),
       if (_showAi) () => aiScreen(_api),
     ];
     final screens = [for (var i = 0; i < builders.length; i++) _visited.contains(i) ? builders[i]() : const SizedBox.shrink()];
