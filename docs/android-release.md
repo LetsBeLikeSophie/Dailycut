@@ -61,3 +61,9 @@
   **교훈**: 에뮬레이터가 `Can't find service: package`로 설치가 안 되면 프로세스를 죽이고(`-no-snapshot-load`) 콜드 부팅. adb 설치 중 빈 오류만 나오면 이 상태.
 
 - **1.3.8(코드 16) 테스트 APK (2026-11-01)**: 지역화폐 대개편(통계 그래프를 제목 아래로, "상품권 사는 법" 공식 안내, 가맹점 찾기·종이 상품권, 기준일 표)과 전월세·박물관·광고 칸 포함. 구글 테스트 광고 ID, 58.3MB, SHA-256 `38e27304…70cf8d`, 에뮬레이터(Pixel_3a)에서 켜지고 충돌 없음 확인. 서버 `dailycut.apk`·`download.html` 갱신, 웹 배포 완료. **AAB는 2026-11-01에 만듦**(`bash app/tools/build_release.sh appbundle test` → `store/dailycut-release-1.3.8.aab`, 59.6MB, 코드 16; 프로덕션은 `real`로 코드 17 이상). 온도는 전부 "°"(한때 맨 위 숫자·헤드라인을 "°C"로 했다가 2026-11-03에 취소). Play 스토어 설명에 전월세·박물관·미술관·문예회관·지역화폐(한국조폐공사 가맹점·지류 판매지점·재고정보)·국토부·문화정보원 출처 추가 필요(`store/listing-ko.md`는 반영됨).
+
+## 1.3.9 (코드 17) — 2026-11-07
+- Play Console 확인: Alpha 트랙에 1.3.8(코드 16)이 11/1 22:48 게시돼 있었음(1.3.7은 건너뜀). 테스터는 약 10일째 참여 중. 1.3.8 번들에는 11/3 변경(출처 표시 정리·전체 출처 페이지·로딩 뼈대·°C 취소)이 없어서 코드 17로 새로 만듦.
+- 테스트 APK: `dist/dailycut-1.3.9.apk`(58.3MB, 61,100,046바이트, SHA-256 `a89fc04c7ea3465376136438f4d097af6d48e675dbc7e22f52566c13501a23f4`, versionCode 17), 서버 `dailycut.apk`와 `download.html`(버전·크기·SHA) 갱신, 웹 배포 완료. 서버 파일 SHA가 로컬과 일치함을 확인.
+- 번들: `bash app/tools/build_release.sh appbundle test` → `store/dailycut-release-1.3.9.aab`(59.6MB, 테스트 광고 ID, git 제외). 업로드·제출은 사용자가 직접. 프로덕션 번들은 `real`로 코드 18 이상.
+- `flutter analyze` 이슈 없음, `flutter test` 통과. 기기·에뮬레이터 실행 확인은 하지 않음(11/1~11/3 사이 앱 코드 변경은 UI 문구·로딩 화면 위주).
