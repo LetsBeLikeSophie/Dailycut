@@ -18,5 +18,5 @@
 """
 
 # 2026-10-13: 광고(상업 이용) 약관 때문에 금융위 지수·상품(money), 금감원 금리(finance), KOBIS(boxoffice)는 등록하지 않음.
-# 파일(money.py·finance.py·boxoffice.py)은 남겨 뒀고, 허락을 받으면 아래 import에 다시 넣으면 작업이 등록됨.
+# 2026-11-08: 되살아나지 않게 코드(money.py·finance.py·boxoffice.py)와 .env 값도 지움. 이력에는 남아 있음(`git log --diff-filter=D -- backend/sources/money.py`). 허락을 받으면 이력에서 되살릴 것(docs/licensing.md).
 from sources import benefits, culture, gov_support, livestock, maintenance, market, markets, outing, places, weather  # noqa: F401  (market 등은 import하면 작업이 등록됨)
