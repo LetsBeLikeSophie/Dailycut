@@ -99,6 +99,11 @@ def save_cache(name: str, payload: dict) -> None:
     )
 
 
+def cache_stamps(prefix: str) -> dict[str, str]:
+    """이름이 prefix로 시작하는 캐시의 저장 시각(미리 데우기용 — 어느 지역을 언제 받았는지)."""
+    return {r["name"]: r["fetched_at"] for r in _query("SELECT name, fetched_at FROM cache WHERE name LIKE ?", (prefix + "%",))}
+
+
 _parsed: "OrderedDict[str, tuple[str, dict]]" = OrderedDict()
 _PARSED_MAX = 8  # 메모리가 작은 서버라 큰 캐시 몇 개만(가장 오래 안 쓴 것부터 버림)
 

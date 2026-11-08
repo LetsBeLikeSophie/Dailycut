@@ -17,11 +17,13 @@ from __future__ import annotations
 import json
 import os
 import threading
+import time
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime, timedelta
 
 import config
 import geo
+import jobs
 import store
 from sources import _cache, _http, _kst, outing
 
@@ -165,6 +167,9 @@ def _build(sido: str | None, sgg: str | None) -> dict:
 
 
 _TTL = 1440
+# 2026-11-08: 결제 자료는 달 단위(crtr_ym)라 며칠 묵은 값도 숫자가 같음 → 만료돼도 7일까지는 옛 값을 바로 주고 새 값은 뒤에서 받음.
+# (예전엔 3시간뿐이라 하루 넘게 아무도 안 열면 다음 방문자가 공공 API 5~50초를 기다렸음 — 사용자 의견 "너무 걸린다")
+_STALE_MIN = 7 * 1440
 _inflight: set[str] = set()
 _failed: dict[str, datetime] = {}
 _lock = threading.Lock()
@@ -199,10 +204,10 @@ def get(sido: str | None, sgg: str | None = None) -> dict:
         return {**base, "live": False}
     key = f"lc5:{place['key']}"  # lc1 → lc2(나이대별 업종·평균 결제·읍면동 순위) → lc3(읍면동 코드, 가맹점 찾기의 동네 필터용) — 응답 모양이 바뀔 때마다 올림(2026-11-01)
     hit = store.load_cache(key, True)
-    if hit and datetime.now() - datetime.fromisoformat(hit[1]) < timedelta(minutes=_TTL + 180):
-        # 신선하거나 만료 직후(3시간 안)면 바로 — 만료 직후는 cached()가 옛 값을 주고 새 값은 뒤에서 받음
+    if hit and datetime.now() - datetime.fromisoformat(hit[1]) < timedelta(minutes=_TTL + _STALE_MIN):
+        # 신선하거나 만료 직후(_STALE_MIN 안)면 바로 — 만료 직후는 cached()가 옛 값을 주고 새 값은 뒤에서 받음
         try:
-            return {**base, **_cache.cached("localcur", key, _TTL, lambda: _build(sido, sgg), shared=True)}
+            return {**base, **_cache.cached("localcur", key, _TTL, lambda: _build(sido, sgg), shared=True, stale_min=_STALE_MIN)}
         except Exception:
             return {**base, "live": False}
     failed = _failed.get(key)
@@ -210,6 +215,69 @@ def get(sido: str | None, sgg: str | None = None) -> dict:
         return {**base, "live": False}  # 방금 실패한 지역은 5분 동안 다시 시도하지 않음
     _start(key, sido, sgg)
     return {**base, "live": True, "pending": True}
+
+
+# ───────── 미리 데워 두기(2026-11-08) ─────────
+# 방문자가 없어도 서버가 뒤에서 ①이미 받아 둔 지역을 만료 전에 새로 받고 ②아직 한 번도 안 받은 지역을 조금씩 채움 →
+# 앱은 거의 항상 저장된 값을 바로 받음(처음 보는 지역 한 곳에 공공 API를 5~50초 부르던 것이 사라짐).
+# 호출 수: 한 지역에 대략 6~10번(2개월 × 1~5쪽). 시군구 약 230곳을 3일쯤에 한 바퀴 채우고 이후엔 12시간마다 새로 받아도 하루 수백 번이라 한도(개발계정 하루 1만 회)에 한참 못 미침.
+_REFRESH_AFTER = timedelta(hours=12)  # 이보다 오래된 지역은 다시 받음(캐시 수명 24시간보다 짧게)
+_SEED_PER_RUN = 25  # 한 번에 새로 채울 지역 수
+_RETRY_FAILED = timedelta(hours=24)  # 실패한 지역(상품권 코드 없음 등)은 하루 뒤에 다시
+_warm_lock = threading.Lock()
+
+
+def _all_regions() -> list[tuple[str, str]]:
+    return [(s["code"], g["name"]) for s in geo.regions_tree() for g in s["sigungu"]]
+
+
+def _warm_run() -> None:
+    try:
+        stamps = store.cache_stamps("lc5:")
+        now = datetime.now()
+        stale: list[tuple[str, str, str, str]] = []  # (저장 시각, 시도, 시군구, 키)
+        missing: list[tuple[str, str, str]] = []
+        for code, name in _all_regions():
+            key = f"lc5:{geo.place(code, name)['key']}"
+            at = stamps.get(key)
+            failed = _failed.get(key)
+            if failed and now - failed < _RETRY_FAILED:
+                continue
+            if at is None:
+                missing.append((code, name, key))
+            elif now - datetime.fromisoformat(at) > _REFRESH_AFTER:
+                stale.append((at, code, name, key))
+        stale.sort()
+        todo = [(c, n, k) for _, c, n, k in stale] + missing[:_SEED_PER_RUN]
+        for code, name, key in todo:
+            with _lock:
+                if key in _inflight:  # 방문자가 지금 받는 중이면 건너뜀
+                    continue
+                _inflight.add(key)
+            try:
+                store.save_cache(key, _build(code, name))
+                store.set_status("localcur", ok=True)
+                _failed.pop(key, None)
+            except Exception as e:
+                _failed[key] = datetime.now()
+                store.set_status("localcur", ok=False, error=f"{type(e).__name__}: {e}")
+            finally:
+                with _lock:
+                    _inflight.discard(key)
+            time.sleep(1.5)  # 1코어급 서버와 공공 API에 숨 쉴 틈
+    finally:
+        _warm_lock.release()
+
+
+def _warm() -> dict:
+    """스케줄러(한 줄로 차례대로 도는 스레드)를 오래 붙잡지 않게 따로 스레드를 띄우고 바로 돌아옴. 이미 도는 중이면 아무것도 안 함."""
+    if _warm_lock.acquire(blocking=False):
+        threading.Thread(target=_warm_run, daemon=True, name="localcur-warm").start()
+        return {"started": True}
+    return {"started": False}
+
+
+jobs.register(jobs.Job(name="localcur_warm", run=_warm, env_keys=[_http.KEY_ENV], interval_min=360))
 
 
 # ───────── 가맹점 찾기(2026-11-01) ─────────

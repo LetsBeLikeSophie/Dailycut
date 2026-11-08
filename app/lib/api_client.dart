@@ -77,17 +77,17 @@ class ApiClient {
   /// 전월세 시세(국토부 실거래가 요약). 시군구를 고른 경우만 값이 있고, 처음 부르는 지역은 몇 초 걸릴 수 있음.
   Future<Map<String, dynamic>> rentMarket({String? sido, String? sgg}) =>
       _memoGet('rentmarket/$sido/$sgg', _min30, () => _getJson('/benefits/rentmarket', {'sido': sido, 'sgg': sgg}));
-  /// 지역화폐(한국조폐공사 지역사랑상품권 업종별 결제). 처음 부르는 지역은 서버가 뒤에서 계산(30~50초)하고 pending을 줘서, 끝날 때까지 4초마다 다시 물어봄.
+  /// 지역화폐(한국조폐공사 지역사랑상품권 업종별 결제). 서버가 지역별로 미리 계산해 둬서(2026-11-08~) 보통은 바로 오고, 아직 안 받은 지역만 서버가 뒤에서 계산(5~50초)하고 pending을 줘서 끝날 때까지 2초마다 다시 물어봄(예전 4초 — 끝난 뒤 평균 2초 더 기다렸음).
   Future<Map<String, dynamic>> localCurrency({String? sido, String? sgg}) {
     final key = 'localcur/$sido/$sgg';
     return _memoGet(key, _min30, () async {
-      for (var i = 0; i < 40; i++) {
+      for (var i = 0; i < 80; i++) {
         final d = await _getJson('/benefits/localcurrency', {'sido': sido, 'sgg': sgg});
         if (d['pending'] != true) {
           if (d['live'] != true && d['need_sgg'] != true) _memo.remove(key); // 실패는 기억하지 않음(눌러서 다시 시도가 진짜로 다시 부르게)
           return d;
         }
-        await Future<void>.delayed(const Duration(seconds: 4));
+        await Future<void>.delayed(const Duration(seconds: 2));
       }
       throw Exception('지역화폐 응답 시간 초과');
     });
