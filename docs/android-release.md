@@ -67,3 +67,8 @@
 - 테스트 APK: `dist/dailycut-1.3.9.apk`(58.3MB, 61,100,046바이트, SHA-256 `a89fc04c7ea3465376136438f4d097af6d48e675dbc7e22f52566c13501a23f4`, versionCode 17), 서버 `dailycut.apk`와 `download.html`(버전·크기·SHA) 갱신, 웹 배포 완료. 서버 파일 SHA가 로컬과 일치함을 확인.
 - 번들: `bash app/tools/build_release.sh appbundle test` → `store/dailycut-release-1.3.9.aab`(59.6MB, 테스트 광고 ID, git 제외). 업로드·제출은 사용자가 직접. 프로덕션 번들은 `real`로 코드 18 이상.
 - `flutter analyze` 이슈 없음, `flutter test` 통과. 기기·에뮬레이터 실행 확인은 하지 않음(11/1~11/3 사이 앱 코드 변경은 UI 문구·로딩 화면 위주).
+
+## 1.3.10 (코드 18) — 2026-11-08
+- 번들: `bash app/tools/build_release.sh appbundle test` → `store/dailycut-release-1.3.10.aab`(59.5MB, 62,399,531바이트, 테스트 광고 ID, git 제외). 분석·테스트(7개) 통과 후 빌드. 업로드·제출은 사용자가 직접. **테스트 APK(`dailycut.apk`)·download.html은 1.3.9 그대로** — 1.3.10 승인 뒤 필요하면 갱신.
+- 1.3.9 이후 담긴 것: 가게 찾기 필터 줄 정리(업종 칩 한 줄 가로 스크롤 + 이름 검색·동네 한 줄), 지역화폐 통계 폴링 2초, 점검에서 고친 것(애니메이션 리스너 누수·요청 캐시 상한·통계 재시도 후 동네 고르기 복구·통계 중복 집계), cupertino_icons 제거, **광고 칸이 안 보이는 탭에서 숨겨지도록 `Visibility.of`로 교체 + 안 보이는 탭 애니메이션 정지**(실제 폰 확인은 설치 후).
+- 프로덕션 번들(`real`)은 코드 **19 이상**.
