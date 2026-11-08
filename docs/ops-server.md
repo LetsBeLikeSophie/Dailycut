@@ -87,6 +87,6 @@
 **확인했지만 일부러 안 건드린 것(사용자 결정 필요 또는 위험)**
 - `LicenseFlag`(`?license=1` 점검 표시)는 쓰는 곳이 없지만 `docs/licensing.md`가 "위젯만 남겨 둠"이라고 한 것이라 둠.
 - `backend/sources/{money,finance,boxoffice}.py`(693줄): 어디서도 import 안 돼 돌지 않음(licensing.md와 일치). 그러나 `.env`에 값이 남아 있어 import 한 줄이면 되살아남 → 지울지 사용자 결정. 서버 DB `cache`에도 10/13의 `finance`·`boxoffice`·`money` 행이 남아 있음(화면엔 안 나감, 백업에도 들어감).
-- `AdSlot`의 "다른 탭이 앞이면 광고 숨김" 검사는 `TickerMode`에 기대는데 `IndexedStack`은 TickerMode를 끄지 않음(SDK 3.47.1 소스 확인) → 실제로는 숨은 탭의 광고도 그려질 수 있음. 기기에서 확인 안 해서 안 고침(`Visibility.of(context)`가 후보).
+- **고침(2026-11-08, 앱 1.3.10부터)**: `AdSlot`의 "다른 탭이 앞이면 광고 숨김" 검사가 `TickerMode`에 기대는데 `IndexedStack`은 TickerMode를 끄지 않아(SDK 3.47.1 소스) 늘 "앞에 있음"으로 나왔음 → `Visibility.of(context)`로 교체. 같은 이유로 안 보이는 탭의 애니메이션도 계속 돌던 것을 `RootShell`에서 탭마다 `TickerMode(enabled: 앞에 있는 탭만)`로 멈춤. `test/visibility_test.dart`가 두 동작을 지킴(폰에서 직접 보지는 못했고, 플러터 위젯 테스트로 확인).
 - 서버: 옛 `api.py.bak-*` 4개, nginx `itssophie.dev.bak-*` 8개, systemd 로그 453MB, 메모리 954MB에 스왑 1.8GB 사용(이슈팝과 같이 씀).
 - 낮은 우선: `localCurrency` 폴링을 취소 못 함(최대 160초), `MyBasketToday`·`_SavedRegionLine`이 지역을 바꿔도 다시 안 받음, 안 쓰는 `FlipCard`·`ListLine.nameIcon`·`TrendChart` 옵션들, `/ai`·`/culture`의 `spotify_top`·`youtube_trending`·`/market`의 `essentials` 스텁, 쓰이지 않는 통계 이름 3개, 문서·도구 안 `tools_*.py` 옛 이름, `viewport-test.html`(디버그 페이지가 웹에 배포됨), 안 쓰는 `ic_launcher.png`, macos/linux/windows 폴더.

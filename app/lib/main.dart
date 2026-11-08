@@ -154,7 +154,8 @@ class _RootShellState extends State<RootShell> {
       () => _regional((r) => benefitsScreen(_api, r, context), section: Section.money),
       if (_showAi) () => aiScreen(_api),
     ];
-    final screens = [for (var i = 0; i < builders.length; i++) _visited.contains(i) ? builders[i]() : const SizedBox.shrink()];
+    // 2026-11-08: IndexedStack은 앞에 없는 탭의 애니메이션(배경 도형·로딩 뼈대)을 멈추지 않아서 TickerMode로 멈춤(배터리·CPU). 다시 앞에 오면 이어서 돎.
+    final screens = [for (var i = 0; i < builders.length; i++) TickerMode(enabled: i == _index, child: _visited.contains(i) ? builders[i]() : const SizedBox.shrink())];
 
     MediaQuery.sizeOf(context); // iosBrowserBarPad()가 화면 크기가 바뀔 때마다 다시 재게
     return Scaffold(

@@ -72,9 +72,11 @@ class _AdmobBannerState extends State<_AdmobBanner> with AutomaticKeepAliveClien
     super.build(context);
     final ad = _ad;
     if (!_loaded || ad == null) return const SizedBox.shrink();
-    // 다른 탭이 앞에 있을 땐(IndexedStack이 TickerMode를 꺼 줌) 네이티브 광고 뷰를 그리지 않고 같은 크기의 빈 칸만 둠 —
+    // 다른 탭이 앞에 있을 땐 네이티브 광고 뷰를 그리지 않고 같은 크기의 빈 칸만 둠 —
     // 광고는 플러터 화면 위에 따로 얹히는 네이티브 뷰라 탭을 바꿀 때 비쳐 보일 수 있었음(폰 테스트 피드백).
-    final active = TickerMode.valuesOf(context).enabled;
+    // 2026-11-08: 예전엔 TickerMode로 판단했는데 IndexedStack은 TickerMode를 끄지 않아(SDK 3.47 소스) 늘 켜진 것으로 나왔음 →
+    // IndexedStack이 알려 주는 Visibility.of로 바꿈(test/visibility_test.dart가 그 동작을 지킴).
+    final active = Visibility.of(context);
     return Padding(
       padding: const EdgeInsets.only(top: 32, bottom: 16),
       child: Column(
