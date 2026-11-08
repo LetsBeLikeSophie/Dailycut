@@ -97,8 +97,12 @@ class _TrendChartState extends State<TrendChart>
     }
   }
 
+  // 2026-11-08: build 안에서 매번 만들던 것을 한 번만 만듦(만들 때마다 컨트롤러에 리스너가 붙어 눌러 볼 때마다 쌓였음)
+  late final CurvedAnimation _curve = CurvedAnimation(parent: _c, curve: Curves.easeOutCubic);
+
   @override
   void dispose() {
+    _curve.dispose();
     _c.dispose();
     super.dispose();
   }
@@ -109,7 +113,7 @@ class _TrendChartState extends State<TrendChart>
     final now = DateTime.now();
     final monthly = widget.xMax == null;
     final days = widget.xMax ?? DateTime(now.year, now.month + 1, 0).day;
-    final curve = CurvedAnimation(parent: _c, curve: Curves.easeOutCubic);
+    final curve = _curve;
     // 눈금: 1, 5, 10, 15, 20, 25, 말일
     final ticks = widget.ticks ?? <int>[1, 5, 10, 15, 20, 25, days];
     return Column(

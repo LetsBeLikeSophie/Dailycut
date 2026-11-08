@@ -8,7 +8,7 @@
 Flutter(웹 + 안드로이드) + FastAPI(SQLite). 이름은 "데일리컷"으로 확정(2026-09-29, 기획 문서에 남은 "moum"은 무시).
 - 기획 문서: https://claude.ai/artifact/U8h2Ukqj5FfBkLaPGVgtBZ · 디자인 캔버스: https://claude.ai/artifact/3oFPf9sqBPZKhk5J43bvz5
 - 사이트 https://itssophie.dev/dailycut/ · API https://itssophie.dev/dailycut-api/ · 저장소 `github.com/LetsBeLikeSophie/Dailycut`(SSH, `master`)
-- **현재(2026-10-28)**: 실데이터 연동 끝, 웹 배포 중, 안드로이드는 **Play 비공개 테스트 단계**(1.3.5 승인·게시 10/27, 1.3.6 번들 준비). 상세는 "출시 상태" 절.
+- **현재(2026-11-08)**: 실데이터 연동 끝, 웹 배포 중, 안드로이드는 **Play 비공개 테스트 단계**(1.3.8 게시, 1.3.9 번들 업로드·제출 11/8, 테스터 약 10일째). 상세는 "출시 상태" 절.
 
 ## 폴더 지도
 
@@ -17,15 +17,15 @@ app/            Flutter 앱(웹+안드로이드+iOS)
   lib/            main·boot·region·api_client·analytics … / screens/(탭 화면) / widgets/(공용 부품·기능별 위젯)
     widgets/components.dart = 공용 부품의 **목차(export만)**, 실제 코드는 widgets/components/ 8개 파일
       (basics 서식·색 / text 형광펜·큰 숫자 / hero 화면 맨 위 / charts 차트 / lists 목록 / controls 선택·버튼 / sheets ⓘ·시트 / notes 로딩·라이선스 표시)
-  assets/         fonts(한글 서브셋)·icon(원본)·produce(농산물 사진 62장)·shapes(탭 도형)
+  assets/         fonts(한글 서브셋)·icon(원본)·produce(농산물 사진 68장)·shapes(탭 도형)
   android/        매니페스트·위젯(Kotlin)·서명 설정(key.properties는 git 밖)
-  web/            index.html·about/privacy/download.html·아이콘(생성물)
+  web/            index.html·about/privacy/sources/download.html·아이콘(생성물)
   tools/          build_release.sh(스토어 번들)·make_fonts.py(글꼴 서브셋)
   test/           단위·골든 테스트
 backend/        FastAPI
   api.py          라우트 / jobs.py·store.py·config.py·geo.py
   sources/        소스별 수집기(weather·market·culture·places·benefits·gov_support·livestock·outing …)
-  tools/          일회성 데이터 생성 스크립트 9+1개(build_*·guide_*·photo_candidates·build_nutrition)
+  tools/          데이터 생성 스크립트 10개(build_*·guide_*·photo_candidates·cache_produce_images) + 주기 점검 2개(check_guide_age·watch_guide)
   data/           편집·생성 데이터(regions·produce_guide·nutrition·traditional_markets …)
 store/          Play 등록 자료(listing-ko.md = 설명 원본, 아이콘·대표 이미지·스크린샷). *.aab는 git 제외 — store/README.md
 docs/           주제별 상세 기록(아래 문서 지도)

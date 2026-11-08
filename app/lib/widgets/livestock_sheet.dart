@@ -5,20 +5,7 @@ import '../theme.dart';
 import 'components.dart';
 import 'widget_item_button.dart';
 
-/// 축산물 시세 한 줄: 이름·100g당 가격·지난주 대비(다른 시세 목록과 같은 모양). 누르면 평년 대비·가격 범위가 있는 상세.
-Widget livestockLine(BuildContext context, Map<String, dynamic> it) {
-  final change = (it['change'] as String?) ?? 'flat';
-  final pct = it['pct'] as num?;
-  return ListLine(
-    name: it['label'] as String,
-    sub: it['sub'] as String?,
-    value: it['value'] as String,
-    valueSub: pct == null ? null : changeLabel(change, pct: pct),
-    valueSubColor: changeColor(change),
-    onTap: it['detail'] == null ? null : () => showLivestockSheet(context, it),
-  );
-}
-
+/// 축산물 시세 상세 시트(평년 대비·가격 범위). 목록 줄은 시세 화면이 직접 그림.
 Future<void> showLivestockSheet(BuildContext context, Map<String, dynamic> it) {
   Analytics.instance.track('life_open', 'livestock');
   return showModalBottomSheet<void>(

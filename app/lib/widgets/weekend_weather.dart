@@ -23,7 +23,11 @@ class WeekendWeatherLine extends StatefulWidget {
 
   static Future<Map<String, dynamic>> fetch(ApiClient api, Region r) {
     final f = api.weather(sido: r.code, sgg: r.sgg);
-    f.then((v) => _done[_key(r)] = v, onError: (_) => <String, dynamic>{});
+    f.then((v) {
+      _done[_key(r)] = v;
+      if (_done.length > 12) _done.remove(_done.keys.first); // 지역을 많이 바꿔도 날씨 응답이 쌓이지 않게(2026-11-08)
+      return v;
+    }, onError: (_) => <String, dynamic>{});
     return f;
   }
 

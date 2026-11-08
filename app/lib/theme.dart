@@ -88,7 +88,6 @@ class AppColors {
   static const ink = Color(0xFF191919);
   static const inkSoft = Color(0xFF8B8B8B);
   static const line = Color(0xFFEBEBEB);
-  static const sectionDivider = Color(0xFFF5F5F5);
   static const hair = Color(0xFFEEEEEE);
   static const up = Color(0xFFD13A2A);
   static const down = Color(0xFF2F42B0);

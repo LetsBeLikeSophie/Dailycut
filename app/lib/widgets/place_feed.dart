@@ -12,18 +12,6 @@ import 'dog_icon.dart';
 /// 누르면 같은 상세 시트가 열림. 지역은 앱 전체 지역(시도·시군구)을 따름. 사진은 쓰지 않음(저작권 구분 확인 전).
 enum PlaceKind { library, camp, pet, wellness, trail, museum, hall }
 
-const _labels = {
-  PlaceKind.library: '도서관',
-  PlaceKind.camp: '캠핑',
-  PlaceKind.pet: '반려동물',
-  PlaceKind.wellness: '웰니스',
-  PlaceKind.trail: '걷기길',
-  PlaceKind.museum: '박물관·미술관',
-  PlaceKind.hall: '문예회관·문화센터',
-};
-
-String placeKindLabel(PlaceKind k) => _labels[k]!;
-
 const _titles = {
   PlaceKind.library: '도서관 열람실 빈자리',
   PlaceKind.camp: '근처 캠핑장',

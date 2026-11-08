@@ -71,3 +71,22 @@
 
 - **로딩 뼈대 (2026-11-03)**: 웹 스플래시가 걷힌 뒤(또는 앱에는 스플래시가 없어서) 탭 내용을 받는 동안 흰 화면에 큰 로딩 원만 돌던 것을 `ScreenSkeleton`(`widgets/components/notes.dart`)으로 바꿈 — 맨 위 큰 도형·날짜·지역 줄은 바로 그리고 내용 자리에 옅은 줄이 깜빡임. 투데이·`SectionScreen`(생활·문화·나들이·혜택)·지역 준비 전(`main.dart _regional`)에 적용. 다른 탭을 뒤에서 미리 만드는 간격도 0.7초 → 0.45초. 웹 스플래시는 투데이 날씨가 오면 걷는 기존 방식 그대로(20초 지나면 어쨌든 걷음). 가짜로 느린 API(25초 지연)를 붙여 뼈대가 뜨는 것을 확인.
 
+
+## 전체 점검: 정리 안 된 것·남은 것 (2026-11-08)
+앱 코드·저장소·서버를 읽어서(앱 코드와 저장소는 하위 점검 두 개 + 직접 확인, 서버는 SSH로 읽기만) 확인된 것만 적음.
+
+**고친 것(앱 1.3.10부터, 웹은 11/8 배포)**
+- `CurvedAnimation`을 build 안에서 매번 만들어 리스너가 쌓이던 3곳(TrendChart·_Blob·ScreenSkeleton) → State에서 한 번만 만들고 dispose.
+- `ApiClient._memo`가 실패 때만 지워져 지역·검색을 바꿀수록 쌓이던 것 → 150개 넘으면 오래된 것부터 지움(`_evict`). `WeekendWeatherLine._done`도 12개로 제한.
+- 통계를 "눌러서 다시 시도"해도 가게 찾기의 동네 고르기가 안 돌아오던 것(`StoreFinder`가 처음 future만 읽음) → `didUpdateWidget`.
+- `sources_open` 통계가 나들이 ⓘ에서 두 번 세지던 것, 지역 시트에서 위치 찾는 동안 시트를 닫으면 엉뚱한 화면이 닫히던 것(`context.mounted`).
+- 안 쓰는 `cupertino_icons` 패키지(글꼴 250KB), 죽은 코드(`livestockLine`·`placeKindLabel`·`AppColors.sectionDivider`·`LocalPrefs.getList`) 삭제.
+- 서버: 지역화폐 통계 미리 데우기(`docs/data-sources.md` 맨 아래).
+- 저장소: `.env.example`에 빠진 주소 11개 추가·뺀 소스(FSC·KOBIS 등) 줄 제거, CLAUDE.md 낡은 숫자(사진 68장·tools 10+2·web/sources.html·현재 상태) 정정, `.gitignore`에 `*.apk`·`*.aab`.
+
+**확인했지만 일부러 안 건드린 것(사용자 결정 필요 또는 위험)**
+- `LicenseFlag`(`?license=1` 점검 표시)는 쓰는 곳이 없지만 `docs/licensing.md`가 "위젯만 남겨 둠"이라고 한 것이라 둠.
+- `backend/sources/{money,finance,boxoffice}.py`(693줄): 어디서도 import 안 돼 돌지 않음(licensing.md와 일치). 그러나 `.env`에 값이 남아 있어 import 한 줄이면 되살아남 → 지울지 사용자 결정. 서버 DB `cache`에도 10/13의 `finance`·`boxoffice`·`money` 행이 남아 있음(화면엔 안 나감, 백업에도 들어감).
+- `AdSlot`의 "다른 탭이 앞이면 광고 숨김" 검사는 `TickerMode`에 기대는데 `IndexedStack`은 TickerMode를 끄지 않음(SDK 3.47.1 소스 확인) → 실제로는 숨은 탭의 광고도 그려질 수 있음. 기기에서 확인 안 해서 안 고침(`Visibility.of(context)`가 후보).
+- 서버: 옛 `api.py.bak-*` 4개, nginx `itssophie.dev.bak-*` 8개, systemd 로그 453MB, 메모리 954MB에 스왑 1.8GB 사용(이슈팝과 같이 씀).
+- 낮은 우선: `localCurrency` 폴링을 취소 못 함(최대 160초), `MyBasketToday`·`_SavedRegionLine`이 지역을 바꿔도 다시 안 받음, 안 쓰는 `FlipCard`·`ListLine.nameIcon`·`TrendChart` 옵션들, `/ai`·`/culture`의 `spotify_top`·`youtube_trending`·`/market`의 `essentials` 스텁, 쓰이지 않는 통계 이름 3개, 문서·도구 안 `tools_*.py` 옛 이름, `viewport-test.html`(디버그 페이지가 웹에 배포됨), 안 쓰는 `ic_launcher.png`, macos/linux/windows 폴더.

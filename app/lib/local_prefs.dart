@@ -50,11 +50,6 @@ class LocalPrefs {
     } catch (_) {}
   }
 
-  static Future<List<String>> getList(String key) async {
-    if (_p == null) await init();
-    return listSync(key);
-  }
-
   static Future<void> setList(String key, List<String> value) async {
     try {
       if (_p == null) await init();

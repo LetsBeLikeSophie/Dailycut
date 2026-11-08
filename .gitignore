@@ -35,3 +35,7 @@ dist/
 # 스토어 제출용 빌드 산출물(62MB, 키로 서명됨) — 저장소엔 올리지 않음
 store/*.aab
 backend/data/guide_watch.json
+
+# 2026-11-08: APK·AAB는 어디 두든 git에 안 올림(테스트 APK는 dist/, 번들은 store/)
+*.apk
+*.aab

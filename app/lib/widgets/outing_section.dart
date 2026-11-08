@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-import '../analytics.dart';
 import '../api_client.dart';
 import '../region.dart';
 import '../theme.dart';
@@ -62,10 +61,7 @@ class _OutingSectionState extends State<OutingSection> {
         return ListSection(
           title: '이번 주말 한산한 곳',
           info: GestureDetector(
-            onTap: () {
-              Analytics.instance.track('sources_open');
-              showSourcesSheet(context, current: _explain);
-            },
+            onTap: () => showSourcesSheet(context, current: _explain), // sources_open 통계는 showSourcesSheet가 셈(여기서도 세면 두 번 셈, 2026-11-08)
             behavior: HitTestBehavior.opaque,
             child: const Padding(
               padding: EdgeInsets.fromLTRB(8, 4, 0, 4),

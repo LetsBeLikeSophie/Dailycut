@@ -24,12 +24,27 @@ class ApiClient {
     final hit = _memo[key];
     if (hit != null && DateTime.now().difference(hit.at) < ttl) return hit.future;
     final f = load();
+    _memo.remove(key); // 다시 넣어 "가장 최근" 자리로(아래 _evict가 오래된 것부터 지움)
     _memo[key] = (at: DateTime.now(), future: f);
+    _evict();
     f.catchError((_) {
       _memo.remove(key);
       return <String, dynamic>{};
     });
     return f;
+  }
+
+  /// 2026-11-08: 지워지는 건 요청이 실패했을 때뿐이라 지역을 바꾸거나 가게 이름을 칠 때마다 응답이 계속 쌓였음(오래 켜 둔 웹 탭) →
+  /// 150개를 넘으면 가장 긴 TTL(30분)이 지난 것부터, 그래도 넘치면 오래된 것부터 지움. 받는 중인 요청은 쓰는 쪽이 future를 쥐고 있어 지워도 안전.
+  static const _memoMax = 150;
+
+  void _evict() {
+    if (_memo.length <= _memoMax) return;
+    final now = DateTime.now();
+    _memo.removeWhere((_, v) => now.difference(v.at) > _min30);
+    while (_memo.length > _memoMax) {
+      _memo.remove(_memo.keys.first); // Map은 넣은 순서대로라 맨 앞이 가장 오래됨
+    }
   }
 
   static const _min1 = Duration(minutes: 1);

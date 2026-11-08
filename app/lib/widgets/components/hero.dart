@@ -218,6 +218,10 @@ class _BlobState extends State<_Blob> with SingleTickerProviderStateMixin {
     duration: const Duration(seconds: 10),
   );
   bool _started = false;
+  // 2026-11-08: build 안에서 매번 만들던 것을 한 번만 만듦(PageHero가 다시 그려질 때마다 리스너가 쌓였음)
+  late final Animation<double> _turns = Tween<double>(begin: -0.014, end: 0.017).animate(_curve);
+  late final CurvedAnimation _curve = CurvedAnimation(parent: _c, curve: Curves.easeInOut);
+
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
@@ -231,6 +235,7 @@ class _BlobState extends State<_Blob> with SingleTickerProviderStateMixin {
 
   @override
   void dispose() {
+    _curve.dispose();
     _c.dispose();
     super.dispose();
   }
@@ -245,10 +250,7 @@ class _BlobState extends State<_Blob> with SingleTickerProviderStateMixin {
       height: 200,
       child: IgnorePointer(
         child: RotationTransition(
-          turns: Tween<double>(
-            begin: -0.014,
-            end: 0.017,
-          ).animate(CurvedAnimation(parent: _c, curve: Curves.easeInOut)),
+          turns: _turns,
           child: Image.asset(t.shapeAsset, fit: BoxFit.contain),
         ),
       ),

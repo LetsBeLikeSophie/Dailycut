@@ -88,16 +88,31 @@ class StoreFinderState extends State<StoreFinder> {
     super.initState();
     _focus.addListener(() => setState(() {})); // 찾기 줄 밑줄이 켜졌을 때만 진하게
     _load(reset: true);
-    widget.stats?.then((d) {
-      if (!mounted || d['live'] != true) return;
+    _listenStats();
+  }
+
+  void _listenStats() {
+    final f = widget.stats;
+    f?.then((d) {
+      if (!mounted || widget.stats != f || d['live'] != true) return;
       final list = ((d['dong_all'] as List?) ?? const []).cast<Map<String, dynamic>>();
       setState(() {
         _dongs = list;
         _statsFailed = list.isEmpty;
       });
     }).catchError((_) {
-      if (mounted) setState(() => _statsFailed = true);
+      if (mounted && widget.stats == f) setState(() => _statsFailed = true);
     });
+  }
+
+  /// 통계를 "눌러서 다시 시도"로 새로 받으면 새 future가 들어옴 — 예전엔 처음 것만 읽어 동네 고르기가 안 돌아왔음(2026-11-08).
+  @override
+  void didUpdateWidget(StoreFinder old) {
+    super.didUpdateWidget(old);
+    if (old.stats != widget.stats) {
+      _statsFailed = false;
+      _listenStats();
+    }
   }
 
   @override

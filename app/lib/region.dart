@@ -217,7 +217,7 @@ class _RegionSheetState extends State<_RegionSheet> {
               onTap: () async {
                 final nav = Navigator.of(context);
                 final ok = await useMyLocation(context, fromPicker: true);
-                if (ok) nav.pop();
+                if (ok && context.mounted) nav.pop(); // 위치 찾는 동안(최대 8초) 시트를 닫았으면 엉뚱한 화면을 닫지 않게(2026-11-08)
               },
             ),
             const SizedBox(height: 4),

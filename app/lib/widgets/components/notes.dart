@@ -42,9 +42,12 @@ class ScreenSkeleton extends StatefulWidget {
 
 class _ScreenSkeletonState extends State<ScreenSkeleton> with SingleTickerProviderStateMixin {
   late final AnimationController _pulse = AnimationController(vsync: this, duration: const Duration(milliseconds: 1100))..repeat(reverse: true);
+  late final CurvedAnimation _curve = CurvedAnimation(parent: _pulse, curve: Curves.easeInOut); // build마다 만들지 않음(2026-11-08)
+  late final Animation<double> _opacity = Tween<double>(begin: 0.45, end: 1).animate(_curve);
 
   @override
   void dispose() {
+    _curve.dispose();
     _pulse.dispose();
     super.dispose();
   }
@@ -70,7 +73,7 @@ class _ScreenSkeletonState extends State<ScreenSkeleton> with SingleTickerProvid
         ),
         const SizedBox(height: 20),
         FadeTransition(
-          opacity: Tween<double>(begin: 0.45, end: 1).animate(CurvedAnimation(parent: _pulse, curve: Curves.easeInOut)),
+          opacity: _opacity,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
