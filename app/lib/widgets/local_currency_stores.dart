@@ -51,6 +51,8 @@ class StoreFinderState extends State<StoreFinder> {
   int _token = 0; // 늦게 온 옛 요청이 새 결과를 덮지 않게
   Timer? _debounce;
   final _qCtl = TextEditingController();
+  final _focus = FocusNode();
+  final Map<String, GlobalKey> _chipKeys = {}; // 한 줄로 민 칩 줄에서 고른 칩이 화면 밖이면 보이게 함
   List<Map<String, dynamic>> _dongs = const [];
   final Map<String, String> _extraCats = {}; // 칩에 없는 업종(내 또래 줄에서 넘어온 3자리 코드 → 이름)
   bool _statsFailed = false;
@@ -74,13 +76,17 @@ class StoreFinderState extends State<StoreFinder> {
     _load(reset: true);
     final ctx = context;
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (ctx.mounted) Scrollable.ensureVisible(ctx, duration: const Duration(milliseconds: 350), curve: Curves.easeOut);
+      if (!ctx.mounted) return;
+      final chipCtx = _chipKeys[chip ?? ksic]?.currentContext;
+      if (chipCtx != null && chipCtx.mounted) Scrollable.ensureVisible(chipCtx, alignment: 0.5, duration: const Duration(milliseconds: 250));
+      Scrollable.ensureVisible(ctx, duration: const Duration(milliseconds: 350), curve: Curves.easeOut);
     });
   }
 
   @override
   void initState() {
     super.initState();
+    _focus.addListener(() => setState(() {})); // 찾기 줄 밑줄이 켜졌을 때만 진하게
     _load(reset: true);
     widget.stats?.then((d) {
       if (!mounted || d['live'] != true) return;
@@ -98,6 +104,7 @@ class StoreFinderState extends State<StoreFinder> {
   void dispose() {
     _debounce?.cancel();
     _qCtl.dispose();
+    _focus.dispose();
     super.dispose();
   }
 
@@ -144,6 +151,11 @@ class StoreFinderState extends State<StoreFinder> {
     _load(reset: true);
   }
 
+  Widget _chip(String key, String label) => KeyedSubtree(
+        key: _chipKeys.putIfAbsent(key, GlobalKey.new),
+        child: PillChip(label: label, selected: _cats.contains(key), onTap: () => _toggleCat(key)),
+      );
+
   String get _dongLabel {
     if (_emd == null) return '전체';
     for (final d in _dongs) {
@@ -152,26 +164,73 @@ class StoreFinderState extends State<StoreFinder> {
     return '전체';
   }
 
-  /// 동네 고르기: 알약 대신 줄 하나(동네 · 전체 ▾)를 눌러 시트에서 고름(읍면동이 많아 칩으로 늘어놓으면 화면을 다 차지함).
-  Widget _dongField() {
+  /// 이름 찾기 + 동네 고르기를 한 줄에(2026-11-08): 예전엔 "동네" 줄과 테두리 있는 검색 상자가 따로 쌓여 필터가 세 가지 모양으로 보였음.
+  /// 왼쪽은 가는 선 위의 검색칸, 오른쪽은 "동네 전체 ▾"(눌러서 시트에서 고름 — 읍면동이 많아 칩으로 늘어놓으면 화면을 다 차지함).
+  /// 동네를 골랐으면 값이 진하게, 전체면 옅게 보여 걸러졌는지 한눈에 알 수 있음.
+  Widget _filterLine() {
     final ready = _dongs.isNotEmpty;
-    return GestureDetector(
-      onTap: ready ? _pickDong : null,
-      behavior: HitTestBehavior.opaque,
-      child: Container(
-        margin: const EdgeInsets.only(top: 14),
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        decoration: const BoxDecoration(border: Border(bottom: BorderSide(color: AppColors.line))),
-        child: Row(
-          children: [
-            const Text('동네', style: TextStyle(fontSize: 13, color: AppColors.inkSoft)),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Text(ready ? _dongLabel : '불러오는 중이에요', style: TextStyle(fontSize: 16, fontWeight: ready ? FontWeight.w700 : FontWeight.w400, color: ready ? AppColors.ink : AppColors.inkSoft)),
+    final picked = ready && _emd != null;
+    return Container(
+      margin: const EdgeInsets.only(top: 12, bottom: 4),
+      decoration: BoxDecoration(border: Border(bottom: BorderSide(color: _focus.hasFocus ? AppColors.ink : AppColors.line))),
+      child: Row(
+        children: [
+          const Icon(Icons.search, size: 20, color: AppColors.inkSoft),
+          const SizedBox(width: 8),
+          Expanded(
+            child: TextField(
+              controller: _qCtl,
+              focusNode: _focus,
+              onChanged: _onQuery,
+              onSubmitted: (v) {
+                _debounce?.cancel();
+                final q = v.trim();
+                if (q == _q) return;
+                _q = q;
+                _load(reset: true);
+              },
+              textInputAction: TextInputAction.search,
+              style: const TextStyle(fontSize: 16),
+              decoration: const InputDecoration(
+                hintText: '가게 이름 (예: 김밥)',
+                hintStyle: TextStyle(fontSize: 13, color: AppColors.inkSoft),
+                isDense: true,
+                filled: false,
+                contentPadding: EdgeInsets.symmetric(vertical: 14),
+                border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+              ),
             ),
-            if (ready) const Icon(Icons.keyboard_arrow_down, size: 22, color: AppColors.ink),
+          ),
+          if (!_statsFailed) ...[
+            Container(width: 1, height: 18, margin: const EdgeInsets.symmetric(horizontal: 12), color: AppColors.line),
+            GestureDetector(
+              onTap: ready ? _pickDong : null,
+              behavior: HitTestBehavior.opaque,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text('동네', style: TextStyle(fontSize: 13, color: AppColors.inkSoft)),
+                    const SizedBox(width: 6),
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 88),
+                      child: Text(
+                        _dongLabel,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(fontSize: 13, fontWeight: picked ? FontWeight.w700 : FontWeight.w500, color: picked ? AppColors.ink : AppColors.inkSoft),
+                      ),
+                    ),
+                    Icon(Icons.keyboard_arrow_down, size: 20, color: ready ? AppColors.ink : AppColors.line),
+                  ],
+                ),
+              ),
+            ),
           ],
-        ),
+        ],
       ),
     );
   }
@@ -232,42 +291,17 @@ class StoreFinderState extends State<StoreFinder> {
       children: [
         Padding(
           padding: const EdgeInsets.only(top: 12),
-          child: Wrap(
-            spacing: 8,
-            runSpacing: 8,
+          // 2026-11-08: 칩 9개가 3줄로 접혀 화면을 차지해서 한 줄로 밀어 보게 함(자주 찾는 음식점·카페·마트가 앞)
+          child: FadeScrollRow(
             children: [
-              for (final e in _extraCats.entries) PillChip(label: e.value, selected: _cats.contains(e.key), onTap: () => _toggleCat(e.key)),
-              for (final c in _catChips) PillChip(label: c.$2, selected: _cats.contains(c.$1), onTap: () => _toggleCat(c.$1)),
+              for (final e in _extraCats.entries) _chip(e.key, e.value),
+              for (final c in _catChips) _chip(c.$1, c.$2),
             ],
           ),
         ),
         if (_cats.isEmpty)
           const Padding(padding: EdgeInsets.only(top: 8), child: Text('업종을 고르지 않아서 모든 업종을 보여 드려요', style: TextStyle(fontSize: 11, color: AppColors.inkSoft))),
-        if (!_statsFailed) _dongField(),
-        Padding(
-          padding: const EdgeInsets.only(top: 12, bottom: 4),
-          child: TextField(
-            controller: _qCtl,
-            onChanged: _onQuery,
-            onSubmitted: (v) {
-              _debounce?.cancel();
-              final q = v.trim();
-              if (q == _q) return;
-              _q = q;
-              _load(reset: true);
-            },
-            textInputAction: TextInputAction.search,
-            style: const TextStyle(fontSize: 16),
-            decoration: InputDecoration(
-              hintText: '가게 이름으로 찾기 (예: 김밥, 미용실)',
-              hintStyle: const TextStyle(fontSize: 13, color: AppColors.inkSoft),
-              isDense: true,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: AppColors.line)),
-              enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: const BorderSide(color: AppColors.line)),
-            ),
-          ),
-        ),
+        _filterLine(),
         if (_items.isEmpty && _loading)
           const Padding(padding: EdgeInsets.symmetric(vertical: 40), child: Center(child: LoadingNote(label: '가게를 찾는 중이에요')))
         else if (_items.isEmpty && _failed)

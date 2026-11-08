@@ -144,6 +144,76 @@ class CheckToggle extends StatelessWidget {
   }
 }
 
+/// 줄바꿈 없이 한 줄로 가로로 밀어 보는 칩 줄(2026-11-08): 칩이 9개쯤 되면 3줄로 접혀 화면을 차지해서 한 줄로 바꿈.
+/// 더 있으면 오른쪽 끝이 흐려지며 화살표가 뜸(SegmentToggle과 같은 방식). 안의 칩은 `Scrollable.ensureVisible`로 불러올 수 있음.
+class FadeScrollRow extends StatefulWidget {
+  const FadeScrollRow({super.key, required this.children, this.gap = 8});
+
+  final List<Widget> children;
+  final double gap;
+
+  @override
+  State<FadeScrollRow> createState() => _FadeScrollRowState();
+}
+
+class _FadeScrollRowState extends State<FadeScrollRow> {
+  final _c = ScrollController();
+  bool _more = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _c.addListener(_check);
+  }
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  void _check() {
+    if (!mounted || !_c.hasClients) return;
+    final more = _c.position.maxScrollExtent - _c.offset > 4;
+    if (more != _more) setState(() => _more = more);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    WidgetsBinding.instance.addPostFrameCallback((_) => _check()); // 칩이 바뀌어도 다시 확인(값이 같으면 다시 그리지 않음)
+    return Stack(
+      children: [
+        SingleChildScrollView(
+          controller: _c,
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              for (var i = 0; i < widget.children.length; i++) ...[
+                if (i > 0) SizedBox(width: widget.gap),
+                widget.children[i],
+              ],
+            ],
+          ),
+        ),
+        if (_more)
+          Positioned(
+            right: 0,
+            top: 0,
+            bottom: 0,
+            child: IgnorePointer(
+              child: Container(
+                width: 44,
+                alignment: Alignment.centerRight,
+                decoration: const BoxDecoration(gradient: LinearGradient(colors: [Color(0x00FFFFFF), AppColors.background], stops: [0, 0.7])),
+                child: const Icon(Icons.chevron_right, size: 18, color: AppColors.inkSoft),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
 class PillChip extends StatelessWidget {
   const PillChip({super.key, required this.label, required this.selected, required this.onTap, this.vertical = 8, this.dotColor, this.large = false, this.emphasized = false});
 
