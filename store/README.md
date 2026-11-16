@@ -13,3 +13,6 @@
 `bash app/tools/build_release.sh appbundle`        — 프로덕션용(실제 광고 ID, 버전 코드를 올릴 것)
 
 자세한 내용은 `docs/play-console.md`.
+
+## 2026-11-16 스크린샷 새 세트
+`screenshots/1~8_*.png`(1080x2160, 비율 2:1): 실제 웹 앱 화면(헤드리스 크롬, 390x844 @3x, 광고 없음)을 섹션 색 배경 + 세리프 제목 + 형광펜 + 둥근 폰 틀로 감쌈. 만드는 코드는 `store/make_screenshots.py`(원본 캡처 8장은 스크래치에 있어 재촬영 필요 — 웹 앱에서 지역 강남구, 지역화폐만 성북구로 찍음).
