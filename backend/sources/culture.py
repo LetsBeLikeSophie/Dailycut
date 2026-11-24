@@ -20,7 +20,7 @@ import config
 import geo
 import jobs
 import store
-from sources import _cache, _http
+from sources import _cache, _http, _kst
 
 IMAGE_HOSTS = ("tong.visitkorea.or.kr",)  # 사진을 대신 받아 전달하는 호스트(api.py의 /proxy/image)
 
@@ -149,7 +149,7 @@ def _event_kcisa(r: dict, place: dict) -> dict | None:
 
 def _build(code: str, sgg: str | None) -> dict:
     place = geo.place(code, sgg)
-    today = datetime.now()
+    today = _kst.now()  # 2026-11-25: UTC 서버에서 한국 새벽엔 하루 전 날짜가 나오던 것을 한국 시각으로
     month_start = today.replace(day=1).date().isoformat()
     window_end = (today + timedelta(days=45)).date().isoformat()
     out: dict = {}
@@ -288,7 +288,7 @@ def detail(event_id: str) -> dict:
 def warm() -> dict:
     """전국 행사 목록(관광공사 + 문화정보원 10여 쪽)을 미리 받아 캐시에 채움 — 지역별 요청이 처음 와도 기다리지 않게.
     목록 캐시(2시간)보다 짧은 100분마다 다시 채움."""
-    today = datetime.now()
+    today = _kst.now()  # 2026-11-25: UTC 서버에서 한국 새벽엔 하루 전 날짜가 나오던 것을 한국 시각으로
     return {"tour": len(_tour_all(today)), "kcisa": len(_kcisa_all(today))}
 
 

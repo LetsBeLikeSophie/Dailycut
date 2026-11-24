@@ -17,7 +17,7 @@ from datetime import date, datetime, timedelta
 import config
 import geo
 import jobs
-from sources import _cache, _http
+from sources import _cache, _http, _kst
 
 WEEKDAYS = ["월", "화", "수", "목", "금", "토", "일"]
 SKY = {"1": "맑음", "3": "구름 많음", "4": "흐림"}
@@ -362,7 +362,9 @@ def _next_holiday(today: date) -> dict | None:
 def fetch(code: str, sgg: str | None = None) -> dict:
     # 고른 시군구의 중심 좌표 기준(시군구 없이 시도만 고르면 시도청 소재지 기준)
     region = geo.place(code, sgg)
-    now = datetime.now()
+    # 2026-11-25: datetime.now()는 UTC 서버에서 한국 시각보다 9시간 느려, 한국 새벽~아침(0~9시)에 "오늘"이 하루 전 날짜로 나가고
+    # 발표 시각도 9시간 묵은 것을 골랐음(기상청 base_date/time은 한국 시각 기준). 한국 시각으로 통일.
+    now = _kst.now()
     today = now.date()
     nx, ny = geo.to_grid(region["lat"], region["lon"])
     land_reg, temp_reg = geo.mid_regions(region["lat"], region["lon"])

@@ -25,7 +25,7 @@ from pathlib import Path
 import config
 import jobs
 import store
-from sources import _http
+from sources import _http, _kst
 
 SOURCE = "at_recent"
 DATA = Path(__file__).resolve().parent.parent / "data"
@@ -219,7 +219,7 @@ def run() -> dict:
     h = data[HERO]
     day = h["day"]
     month_start = day.replace(day=1).isoformat()
-    month = datetime.now().month
+    month = _kst.now().month  # 2026-11-25: 월이 바뀌는 날 한국 시각 기준으로
     catalog = _catalog(data, month, day)
     basket = _basket(data, month_start)
 

@@ -16,7 +16,7 @@ from datetime import date, timedelta
 import config
 import jobs
 import store
-from sources import _http
+from sources import _http, _kst
 
 SOURCE = "ekape_consumer"
 KINDS = (("4304", "돼지"), ("4301", "소"))
@@ -38,7 +38,7 @@ def run() -> dict:
     for kind, kname in KINDS:
         items: list[dict] = []
         for back in range(1, 5):  # 어제 집계가 아직 없으면 그제…(최대 4일 전)
-            day = date.today() - timedelta(days=back)
+            day = _kst.today() - timedelta(days=back)
             items = _fetch(kind, day)
             if items:
                 used_day = used_day or day
